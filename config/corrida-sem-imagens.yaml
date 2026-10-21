@@ -1,0 +1,10 @@
+base_url: http://localhost:4174
+raiz_cenarios: ../UI_docs/_cenarios_teste
+pasta_corridas: ./corridas-b
+modelo: sonnet
+timeout_ms: 3600000
+imagens: omit
+
+# --bare exige ANTHROPIC_API_KEY (modo da VM). Sem a chave, deixar em falso.
+# Omitido = decide-se pela presenca da variavel de ambiente.
+bare: false

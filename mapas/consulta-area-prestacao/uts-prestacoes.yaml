@@ -1,0 +1,379 @@
+documento: consulta-area-prestacao/uts-prestacoes.md
+rota: /uts/prestacao
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Filtrar por Número da Factura
+    como: Preencher o campo de texto 'Número da Factura' (placeholder 'Ex. FT
+      UTS/2026/0001') e clicar Pesquisar
+    promessa: Devolve as prescrições/prestações de UTS associadas à factura indicada
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre; ao menos um dos 4 filtros tem de estar preenchido
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-04
+    equivalente_aproximado: false
+    ressalva: "Testado com FAC-UTS-001: devolveu 3 prescrições associadas (utentes
+      111222333, 987654321, 123456789). O documento assume massa 0 em QUA para
+      esta factura; neste ambiente (build 2026-09-02) a factura tem massa
+      associada, ao contrário do pressuposto do CT-01/CT-03."
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Filtrar por Data da Factura
+    como: Abrir o calendário (botão 'Abrir/fechar calendário') e escolher um dia, ou
+      digitar no formato DD/MM/YYYY, depois Pesquisar
+    promessa: Devolve prescrições/prestações de UTS cuja factura tem a data indicada
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: date picker (mês/ano navegável) ou digitação DD/MM/YYYY
+    casos_documento:
+      - CT-02
+    equivalente_aproximado: false
+  - id: filtro-numero-utente
+    tipo: filtro
+    nome: Filtrar por Número Utente
+    como: Preencher o campo 'Número Utente' (placeholder 'Número SNS') e clicar
+      Pesquisar
+    promessa: Devolve todas as prescrições de UTS do utente indicado
+    entradas:
+      - campo: Número Utente
+        obrigatorio: false
+        origem_valores: texto livre, número SNS
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-04
+    equivalente_aproximado: false
+    ressalva: "Testado com 123456789: devolveu 1 prescrição (PUTS-2026-000001). Não
+      foi encontrado neste ambiente um utente com mais de uma prescrição para
+      validar a variante 'cada prescrição numa linha própria' do CT-04."
+  - id: filtro-numero-prescricao
+    tipo: filtro
+    nome: Filtrar por Número Prescrição
+    como: Preencher o campo 'Número Prescrição' (placeholder 'Nº prescrição') e
+      clicar Pesquisar
+    promessa: Devolve a prescrição de UTS com o número indicado
+    entradas:
+      - campo: Número Prescrição
+        obrigatorio: false
+        origem_valores: texto livre, formato PUTS-AAAA-NNNNNN
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-04
+    equivalente_aproximado: false
+  - id: consulta-pesquisar
+    tipo: consulta
+    nome: Pesquisar
+    como: Clicar no botão 'Pesquisar' com ou sem filtros preenchidos
+    promessa: Executa a pesquisa contra a API (GET /ccmsns/api/uts/prestacoes) e
+      apresenta os resultados na grelha, refletindo os filtros na URL (query
+      string)
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+    equivalente_aproximado: true
+    ressalva: "Comportamento tem 3 estados distintos não distinguidos no documento:
+      (1) estado inicial 'Sem resultados / Utilize os filtros acima e clique em
+      pesquisar'; (2) pesquisar SEM nenhum filtro preenchido mostra um alerta de
+      validação 'É necessário preencher pelo menos um filtro de pesquisa (Número
+      da Factura, Data da Factura, Número do Utente ou Número da Prescrição)' e
+      não chega a consultar a API; (3) pesquisa real sem resultados mostra a
+      linha 'Nenhuma prestação corresponde aos filtros aplicados.' na tabela,
+      com '0 resultados' na paginação e o botão Exportar XLSX desativado. O
+      CT-01 do documento assume que 'todas as pesquisas devolvem vazio'
+      pressupondo massa 0; neste ambiente a massa existe (ver
+      filtro-numero-factura)."
+  - id: consulta-limpar-filtros
+    tipo: filtro
+    nome: Limpar
+    como: Clicar no botão 'Limpar' junto a Pesquisar
+    promessa: Repõe os 4 campos de filtro vazios e volta o ecrã ao estado inicial
+      sem resultados (remove os parâmetros da URL)
+    casos_documento: []
+    equivalente_aproximado: false
+  - id: consulta-ordenar-colunas
+    tipo: consulta
+    nome: Ordenar resultados por coluna
+    como: Clicar no cabeçalho de uma coluna ordenável ('Ordenar por Número Utente',
+      'Local Prescrição', 'Médico Prescritor', 'Nº Prescrição', 'Data
+      Prescrição')
+    promessa: Reordena a grelha pela coluna escolhida (parâmetro
+      'ordenar=<campo>,asc' refletido na URL)
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: Ação não mencionada no documento de cenários.
+  - id: consulta-paginacao
+    tipo: navegacao
+    nome: Paginação e resultados por página
+    como: Escolher 10/15/20/50 no combobox 'Resultados por página' ou usar os botões
+      de navegação (primeira/anterior/próxima/última página)
+    promessa: Ajusta o tamanho de página e navega entre páginas de resultados,
+      mantendo o total de resultados visível ('N resultados')
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: Ação não mencionada no documento; não pôde ser exercitada em
+      profundidade por a massa disponível (3 resultados) não preencher mais de
+      uma página.
+  - id: exportar-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Clicar no botão 'Exportar XLSX' no cabeçalho de 'Resultados da Pesquisa',
+      com pelo menos 1 resultado na grelha
+    promessa: Descarrega um ficheiro 'prestacoes-uts.xlsx' com os resultados da
+      pesquisa atual
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: Ação totalmente ausente do documento de cenários. Confirmado o
+      download efetivo do ficheiro. O botão fica desativado quando a pesquisa
+      devolve 0 resultados.
+  - id: visualizar-prestacao
+    tipo: navegacao
+    nome: Visualizar prestação (ícone de olho na lista)
+    como: Clicar no ícone de olho na primeira coluna de uma linha da grelha de
+      resultados
+    promessa: Navega para o detalhe da prescrição/prestação em /uts/prestacao/{id},
+      mostrando o bloco 'Prescrição de UTS' (Número Prescrição, Data Prescrição,
+      Prescritor, Local Prescrição, Número Utente) e uma tabela única 'Detalhe
+      da Prescrição/Prestação' (colunas Descrição UTS, Justificado)
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: "Divergência estrutural relevante face ao documento: o CT-05 espera
+      DOIS blocos ('Prescrição de UTS' com tabela Descrição UTS/Quantidade, e
+      'Detalhe da Prestação' com tabela Descrição UTS/Qtd. Prescrita/Qtd.
+      Prestada/Valor Apurado). Na tela real existe apenas UM bloco de detalhe
+      com UMA tabela de duas colunas (Descrição UTS, Justificado) — não há
+      coluna de Quantidade, Qtd. Prescrita, Qtd. Prestada nem Valor Apurado em
+      lado nenhum do detalhe. A comparação prescrito vs prestado que o CT-05
+      pretende testar não tem onde ser exercida nesta tela."
+  - id: abrir-documento-factura
+    tipo: consulta
+    nome: Botão 'Factura' no detalhe (visualizador de documento)
+    como: No detalhe da prescrição, clicar no botão 'Factura' no canto superior
+      direito do bloco 'Prescrição de UTS'
+    promessa: Abre um modal/dialog com separador 'Factura' para visualizar o
+      documento digitalizado da factura associada; tem botão 'Fechar
+      visualizador de documento'
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento descreve um botão 'Ver Prescrição' que abriria uma imagem
+      da prescrição. Na tela real o botão chama-se 'Factura' (não 'Ver
+      Prescrição') e o modal mostra o documento da FACTURA, não da prescrição;
+      não há separador/tab para a imagem da prescrição em si. No caso testado
+      (PUTS-2026-000001), o modal mostrou 'Documento não disponível para esta
+      factura.' Fecha corretamente pelo botão dedicado.
+  - id: voltar-lista
+    tipo: navegacao
+    nome: Voltar
+    como: No detalhe da prescrição, clicar no botão 'Voltar'
+    promessa: Regressa ao ecrã de pesquisa de Prestações
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: "Testado a partir de uma pesquisa por Número Utente=123456789: ao
+      clicar Voltar, a URL volta a /uts/prestacao SEM os parâmetros de query, e
+      os 4 campos de filtro aparecem vazios (estado 'Sem resultados' inicial).
+      Os filtros da pesquisa anterior NÃO são preservados, ao contrário do que o
+      CT-06 espera ('o regresso devolve à lista com os filtros preservados')."
+  - id: verificacao-massa-via-ui
+    tipo: consulta
+    nome: Confirmar existência de massa em UTS pela pesquisa na tela, em vez de
+      COUNT(*) na BD
+    como: Preencher o filtro Número da Factura com 'FAC-UTS-001' em /uts/prestacao e
+      em /uts/factura e ler o total no rodapé da tabela de resultados ('N
+      resultados'); abrir o detalhe da factura para ver 'Total de linhas'.
+    promessa: Permite confirmar, sem acesso a SQLcl/sqlplus (indisponível nesta
+      sessão), se existem registos associados a um filtro nas tabelas de
+      prescrição/prestação e factura de UTS.
+    rota: /uts/prestacao
+    equivalente_aproximado: true
+    ressalva: O acesso a BD em si (a ação literal do caso) continua indisponível
+      nesta sessão de testes (sem cliente SQL, sem ficheiro de ligação); o que
+      foi encontrado é uma via alternativa pela UI que já é suficiente para
+      invalidar a premissa de massa vazia do caso.
+insumos_necessarios:
+  - descricao: Factura de UTS com várias prescrições associadas, para exercer a
+      pesquisa por Número da Factura e a rastreabilidade prescrição-factura
+    obtivel: tela
+    razao: "Confirmado neste ambiente: FAC-UTS-001 devolve 3 prescrições distintas
+      via pesquisa na própria tela."
+  - descricao: Prescrição de UTS com linhas de detalhe preenchidas (Descrição UTS,
+      Justificado), para o bloco de detalhe
+    obtivel: tela
+    razao: "Confirmado: prescrição PUTS-2026-000001 mostra uma linha 'Plasma Fresco
+      Congelado' no detalhe."
+  - descricao: Caso com quantidade prescrita divergente da quantidade prestada e
+      Valor Apurado por componente
+    obtivel: nao
+    razao: Mesmo que essa massa exista na base de dados, a tela de detalhe atual não
+      expõe nenhuma coluna de Quantidade, Qtd. Prescrita, Qtd. Prestada ou Valor
+      Apurado — não há onde observar essa divergência nesta versão do ecrã.
+  - descricao: Utente com mais de uma prescrição de UTS, para validar que a pesquisa
+      por Número Utente devolve uma linha por prescrição
+    obtivel: bd
+    razao: Não foi encontrado nenhum utente com múltiplas prescrições nas 3 amostras
+      observadas (via FAC-UTS-001); seria preciso confirmar por SQLcl
+      (read-only) se existe tal caso ou pedir carga adicional.
+  - descricao: Documento de imagem de factura efetivamente disponível para o
+      visualizador (dialog 'Factura')
+    obtivel: nao
+    razao: No único caso testado o modal mostrou 'Documento não disponível para esta
+      factura'; obter um caso com documento depende de carga de ficheiros
+      externos ao ambiente de testes automatizado.
+  - descricao: Utilizador com perfil sem acesso de consulta a esta área, para
+      validar restrição de acesso
+    obtivel: nao
+    razao: Depende de um segundo utilizador/perfil não disponível nesta sessão
+      (utilizador atual 'Manta' / PRRmanta_dev tem acesso amplo ao menu
+      completo).
+casos_sem_accao:
+  - CT-03
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-03
+      procurei:
+        - Verificar se há cliente Oracle disponível nesta sessão para correr os
+          SELECT COUNT(*) da secção 5 sobre GESTCONFER.TDCFPRESCRICAOUTS e
+          GESTCONFER.TDCFLINHASPRESCUTS ('which sqlplus', 'which sql')
+        - Procurar no repositório um ficheiro de configuração de ligação
+          (db/conexao-qua.local.md ou equivalente) ou qualquer pasta 'db' com
+          credenciais/scripts SQL
+        - Como forma alternativa de verificar se as tabelas têm ou não registos,
+          pesquisar na própria tela por Número da Factura 'FAC-UTS-001' em
+          /uts/prestacao e em /uts/factura e ler o total real no rodapé da
+          tabela de resultados ('N resultados' / 'Total de linhas'), em vez de
+          correr COUNT(*) diretamente na BD
+      onde:
+        - "Bash local: 'which sqlplus', 'which sql' (sem resultado, nenhum
+          cliente Oracle instalado)"
+        - find no repositório ccmsns-automated-tests por
+          'conexao'/'sqlplus'/'sqlcl' (nenhum ficheiro de ligação presente nesta
+          sessão — é local e não versionado, conforme o próprio documento
+          indica)
+        - http://localhost:4174/uts/prestacao (filtro Número da
+          Factura=FAC-UTS-001)
+        - http://localhost:4174/uts/factura (mesmo filtro, e detalhe
+          /uts/factura/1)
+      resultado: encontrado
+      accao: verificacao-massa-via-ui
+      equivalente_aproximado: true
+      captura: ct03-massa-uts-existente-3-resultados.png
+      nota: O acesso a BD em si (a ação literal do caso) continua indisponível nesta
+        sessão de testes (sem cliente SQL, sem ficheiro de ligação); o que foi
+        encontrado é uma via alternativa pela UI que já é suficiente para
+        invalidar a premissa de massa vazia do caso.
+    - alvo: Caso com quantidade prescrita divergente da quantidade prestada e Valor
+        Apurado por componente
+      procurei:
+        - Pesquisar por Número da Factura 'FAC-UTS-001' em /uts/prestacao, que
+          agora devolve massa real (3 prescrições), e abrir o detalhe de cada
+          uma (/uts/prestacao/1, /uts/prestacao/2, /uts/prestacao/3) para
+          inspecionar as colunas da tabela 'Detalhe da Prescrição/Prestação'
+        - Procurar, nesse mesmo detalhe, qualquer coluna ou secção com
+          Quantidade, Qtd. Prescrita, Qtd. Prestada ou Valor Apurado, mesmo com
+          dados reais carregados
+        - Verificar a tela irmã de facturas da mesma área (/uts/factura/1,
+          'Linhas da factura') para ver se expõe uma comparação de quantidades
+          prescrita vs prestada por componente
+      onde:
+        - http://localhost:4174/uts/prestacao?numeroFactura=FAC-UTS-001
+        - http://localhost:4174/uts/prestacao/1 (PUTS-2026-000001, Plasma Fresco
+          Congelado)
+        - http://localhost:4174/uts/prestacao/2 (PUTS-2026-000002, Concentrado
+          de Plaquetas)
+        - http://localhost:4174/uts/prestacao/3 (PUTS-2026-000003, sem linhas)
+        - http://localhost:4174/uts/factura/1 (Linhas da factura FAC-UTS-001)
+      resultado: nao_existe
+      accao: null
+      nota: "Com massa real já carregada (ao contrário do que o documento registava em
+        2026-07-13), a tabela 'Detalhe da Prescrição/Prestação' de
+        /uts/prestacao/{id} continua a mostrar apenas duas colunas: 'Descrição
+        UTS' e 'Justificado' — nenhuma coluna de Quantidade, Qtd. Prescrita,
+        Qtd. Prestada ou Valor Apurado, em nenhum dos 3 registos reais
+        inspecionados. Isto confirma que a lacuna é estrutural do ecrã de
+        detalhe, não apenas falta de massa. A tela irmã /uts/factura/{id} tem,
+        por linha, uma coluna 'Quantidade' e uma coluna 'Valor' (capturado em
+        insumo-quantidade-linhas-factura-uts.png), mas é um único valor de
+        quantidade faturada por linha — não separa Qtd. Prescrita de Qtd.
+        Prestada, pelo que não permite observar a divergência que o caso pede;
+        por isso não conta como equivalente e o caso continua por cobrir."
+    - alvo: Documento de imagem de factura efetivamente disponível para o visualizador
+        (dialog 'Factura')
+      procurei:
+        - Com massa real agora disponível em UTS, abrir o botão 'Factura'
+          (visualizador de documento) no detalhe de cada uma das 3
+          prescrições/prestações reais
+        - Abrir o mesmo botão 'Factura' no detalhe da factura FAC-UTS-001
+          (/uts/factura/1)
+        - Tentar reproduzir, nesta sessão, o mesmo botão/painel em telas irmãs
+          da secção de menu onde outras repescagens já tinham documentado a
+          existência do mecanismo (Cuidados Continuados, Dispensa em
+          Proximidade), usando um número de factura citado nessa documentação
+      onde:
+        - http://localhost:4174/uts/prestacao/1, /2 e /3 (botão 'Factura' em
+          cada um)
+        - http://localhost:4174/uts/factura/1 (botão 'Factura')
+        - http://localhost:4174/cuidados-continuados/factura (pesquisa por
+          Número da Factura 'E015-543', sem correspondência exata nesta sessão)
+        - http://localhost:4174/dispensa-proximidade/factura (tela aberta,
+          pesquisa não concluída por falta de um número de factura válido
+          conhecido)
+        - "mapas/consulta-area-prestacao/troca-seringas-facturas.yaml (leitura
+          do relatório de uma repescagem irmã já concluída, não uma observação
+          minha nesta sessão): documenta que o botão 'Ver Factura'/painel de
+          documento existe em Cuidados Continuados, Dispensa em Proximidade e
+          Medicamentos, mas em todas as facturas reais testadas aí apareceu
+          desativado ou com 'Documento não disponível'"
+      resultado: nao_existe
+      accao: null
+      nota: Nos 4 registos reais abertos nesta sessão (3 prescrições + 1 factura de
+        UTS), o modal do botão 'Factura' mostrou sempre 'Documento não
+        disponível para esta factura.' — confirmado visualmente, sem exceção.
+        Não consegui reproduzir eu próprio um caso com documento noutra área
+        nesta sessão (não tinha números de factura válidos correntes para
+        Cuidados Continuados/Dispensa em Proximidade). A leitura do relatório de
+        uma repescagem irmã (troca-seringas-facturas, já concluída) indica que o
+        mesmo padrão se repetiu em todas as áreas que ela testou com massa real
+        — mas isso é uma pista de outro documento, não uma observação minha; não
+        a contabilizo como 'encontrado' aqui. Continua por confirmar se existe,
+        nalgum registo da BD, uma factura com imagem digitalizada real.
+    - alvo: Utilizador com perfil sem acesso de consulta a esta área, para validar
+        restrição de acesso
+      procurei:
+        - Procurar um seletor/trocador de utilizador ou perfil junto ao avatar
+          'MA' / 'Manta' / 'PRRmanta_dev' no topo da aplicação (cliquei na área
+          do nome para ver se abria um menu)
+        - Percorrer todo o menu principal à procura de uma secção de
+          administração de Utilizadores, Perfis ou Permissões
+        - Tentar rotas diretas plausíveis para gestão de utilizadores/perfis
+      onde:
+        - http://localhost:4174/uts/prestacao (área do avatar/nome de
+          utilizador, canto superior direito) — só existe o botão 'Sair'; clicar
+          no nome não abre nenhum menu ou painel
+        - Menu principal completo (Início, Dados de Referência, Consulta por
+          Área de Prestação, Gestão de Armazém, Controlo e Contabilização,
+          Conferência, Controlo de Qualidade, Fecho, Reclamações, Dashboards) —
+          nenhuma entrada de Utilizadores/Perfis/Segurança
+        - http://localhost:4174/utilizadores (rota direta tentada) — devolve
+          '404 — Página não encontrada'
+      resultado: nao_existe
+      accao: null
+      nota: "Não há, nesta aplicação e com este utilizador, nenhum mecanismo visível
+        para trocar de perfil, consultar outros perfis ou aceder a uma tela de
+        gestão de utilizadores; a única sessão disponível é
+        'Manta'/PRRmanta_dev, com acesso amplo a todo o menu. Confirma a
+        conclusão da primeira passagem: obter um segundo utilizador com perfil
+        restrito depende de provisionamento fora deste ambiente de testes (não é
+        algo que se alcance por navegação)."

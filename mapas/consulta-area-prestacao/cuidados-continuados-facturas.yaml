@@ -1,0 +1,510 @@
+documento: consulta-area-prestacao/cuidados-continuados-facturas.md
+rota: /cuidados-continuados/factura
+mapeado_em: 2026-09-03, exploração manual via browser (Playwright) em
+  http://localhost:4174/cuidados-continuados/factura, sessão autenticada como
+  utilizador de teste (Manta / PRRmanta_dev)
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: AC-01
+    tipo: filtro
+    nome: Filtro Número da Factura
+    como: Campo de texto livre 'Número da Factura', placeholder 'Insira o número da
+      factura'.
+    promessa: Filtra a lista pelo número exato da factura. Testado com 'FTTRN2026-1'
+      (devolveu 1 resultado exato) e com fragmento 'FTUCCI-19' (0 resultados,
+      apesar de existirem várias facturas FTUCCI-19xx) — a pesquisa é por
+      igualdade exata, não por fragmento.
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre; comparação exata confirmada (fragmento não devolve
+          resultados parciais)
+    casos_documento:
+      - CT-01
+      - CT-09
+  - id: AC-02
+    tipo: filtro
+    nome: Filtro Data da Facturação
+    como: Campo de texto com máscara DD/MM/YYYY mais botão 'Abrir/fechar calendário'
+      que abre um datepicker de dia único.
+    promessa: Filtra por uma data de facturação específica. É um seletor de data
+      única (dia/mês/ano); não existe seletor de intervalo nem de 'ciclo' (ex.
+      202511, 202512) como massa/ciclo mencionado no documento.
+    entradas:
+      - campo: Data da Facturação
+        obrigatorio: false
+        origem_valores: datepicker de dia único, formato DD/MM/YYYY
+    casos_documento:
+      - CT-04
+    equivalente_aproximado: true
+    ressalva: O documento fala em pesquisar 'por ciclo' (ex. 202511, 202512); a tela
+      só oferece uma data exata de facturação, não um filtro de ciclo/período.
+  - id: AC-03
+    tipo: filtro
+    nome: Filtro Tipologia Cuidados
+    como: Combobox 'Tipologia Cuidados' com lista fixa de 20 opções (ex. 'Unidade de
+      Longa Duração e Manutenção', 'Equipas de apoio domiciliário (Adultos)',
+      'Unidade de Cuidados Paliativos', etc.).
+    promessa: Filtra por tipo/tipologia da unidade prestadora. O parâmetro de URL
+      gerado ao pesquisar é 'idTipoPrestador', ou seja internamente corresponde
+      ao 'Tipo do Prestador' que o documento espera como filtro exclusivo da
+      área — mas com rótulo de UI 'Tipologia Cuidados' e não 'Tipo do
+      Prestador'.
+    entradas:
+      - campo: Tipologia Cuidados
+        obrigatorio: false
+        origem_valores: "lista fixa de 20 tipologias de unidade/equipa (ex.: Unidade
+          Ambulatório, Unidade de Convalescença, Unidade de Longa Duração e
+          Manutenção, Unidade residencial autónoma (Adultos), Unidade
+          sócio-ocupacional (Infância e Adolescência), etc.)"
+    casos_documento:
+      - CT-03
+    equivalente_aproximado: true
+    ressalva: É o filtro que o documento chama 'Tipo do Prestador' (parâmetro de API
+      idTipoPrestador), mas a etiqueta de UI é 'Tipologia Cuidados' e as opções
+      são unidades de tipologia de cuidados continuados, não uma lista simples
+      de tipos de prestador.
+  - id: AC-04
+    tipo: filtro
+    nome: Filtro NIF do Prestador
+    como: Campo de texto livre 'NIF do Prestador', placeholder 'Insira o NIF do
+      Prestador'.
+    promessa: Filtra as facturas pelo NIF do prestador. É o único filtro que permite
+      chegar indiretamente a um prestador específico, já que não existe filtro
+      de código de prestador. Testado com NIF 500257280 (307 resultados),
+      500927731 (1 resultado) e 504928716 implícito via número de factura.
+    entradas:
+      - campo: NIF do Prestador
+        obrigatorio: false
+        origem_valores: texto livre numérico
+    casos_documento:
+      - CT-03
+  - id: AC-05
+    tipo: filtro
+    nome: Filtro Nº Contrato
+    como: Campo de texto livre 'Nº Contrato', placeholder 'Insira o número de
+      contrato'.
+    promessa: "Filtra por número de contrato do prestador. Testado com valor
+      arbitrário '12345': gerou o parâmetro numContrato=12345 e devolveu lista
+      vazia sem erro técnico."
+    entradas:
+      - campo: Nº Contrato
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento: []
+  - id: AC-06
+    tipo: filtro
+    nome: Filtro Tipo Factura
+    como: "Combobox 'Tipo Factura' com lista fixa de 3 opções: 'Diárias / Diárias de
+      Internamento', 'Diárias de medicamentos', 'Remuneração Adicional'."
+    promessa: Filtra pelo mesmo valor que aparece na coluna 'Tipo Factura' da grelha
+      e no campo 'Tipologia' do detalhe — uma categoria de rubrica de
+      facturação, não uma distinção entre Factura e Nota de Crédito/Débito.
+    entradas:
+      - campo: Tipo Factura
+        obrigatorio: false
+        origem_valores: "lista fixa de 3 valores: Diárias / Diárias de Internamento;
+          Diárias de medicamentos; Remuneração Adicional"
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento (CT-06) espera que 'Tipo Factura' distinga Factura de Nota
+      de Crédito. Na tela real, este filtro/coluna representa uma categoria de
+      rubrica de facturação (Diárias, Diárias de medicamentos, Remuneração
+      Adicional); a distinção Factura/Nota de Crédito só existe como separador
+      'Notas de Crédito/Débito' dentro do detalhe de cada factura (ver AC-15).
+  - id: AC-07
+    tipo: filtro
+    nome: Filtro Estado
+    como: Combobox 'Estado' com lista fixa de 11 opções.
+    promessa: "Filtra pelo estado real da factura, alinhado com o catálogo
+      TRCFESTADO citado no documento: Aguarda Comunicação de Correcções, Aguarda
+      Regularização, Anulada, Comunicada Informação Não Conferida, Conferida Com
+      Erros, Conferida Sem Erros, Em Reconferência, Processamento Concluído,
+      Recepcionada, Recepcionada com Erros, Verificada. Não foram encontradas
+      opções órfãs como 'Submetida' ou 'Rejeitada'."
+    entradas:
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: lista fixa de 11 valores, aparentando cobrir os 11 estados reais
+          de TRCFESTADO (tipo doc 1) descritos no documento
+    casos_documento:
+      - CT-05
+  - id: AC-08
+    tipo: consulta
+    nome: Pesquisar Facturas
+    como: Botão 'Pesquisar', combina todos os filtros preenchidos e devolve lista
+      paginada (parâmetros de URL pagina/tamanho).
+    promessa: Executa a pesquisa e preenche a secção 'Resultados da Pesquisa'. Sem
+      nenhum filtro preenchido, o clique não dispara pedido nenhum (URL e estado
+      'Sem resultados. Utilize os filtros acima e clique em pesquisar.' não
+      mudam) — ou seja, é necessário preencher pelo menos um filtro.
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-09
+      - CT-10
+  - id: AC-09
+    tipo: consulta
+    nome: Limpar filtros
+    como: Botão 'Limpar' junto ao botão Pesquisar.
+    promessa: "Repõe todos os campos de filtro vazios e volta ao estado inicial 'Sem
+      resultados'. Confirmado: limpa Nº Contrato preenchido e remove os
+      parâmetros da URL."
+    casos_documento:
+      - CT-09
+  - id: AC-10
+    tipo: consulta
+    nome: Grelha de resultados da pesquisa
+    como: "Tabela 'Resultados da Pesquisa' com colunas: Cód. Prestador, Descrição
+      Prestador, NIF Prestador, Descrição EFR, N° Factura, Data Factura, Data
+      Facturação, NIF Adquirente, Tipo Factura, Total Factura, Estado; mais
+      coluna de ação (Ver detalhe) e um contador/checkbox de seleção ('0 itens
+      selecionados' / 'Limpar seleção')."
+    promessa: Mostra os dados de cada factura devolvida pela pesquisa. Não existe
+      coluna 'Tipologia' separada (o documento espera uma); o conceito mais
+      próximo visível é a coluna 'Tipo Factura'. O bloco de seleção de linhas
+      não tem checkboxes visíveis por linha nem nenhuma ação em lote associada
+      nos testes realizados.
+    casos_documento:
+      - CT-01
+      - CT-03
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: Não há coluna 'Tipologia' distinta; 'Tipo Factura' é a coluna mais
+      próxima e representa rubrica de facturação, não tipo de documento nem
+      tipologia de unidade.
+  - id: AC-11
+    tipo: consulta
+    nome: Ordenar colunas da grelha
+    como: Cabeçalhos clicáveis 'Ordenar por Cód. Prestador', 'Ordenar por N°
+      Factura', 'Ordenar por Data Factura', 'Ordenar por Data Facturação'.
+    promessa: Permite ordenar os resultados por essas 4 colunas. As restantes
+      colunas (Descrição Prestador, NIF Prestador, Descrição EFR, NIF
+      Adquirente, Tipo Factura, Total Factura, Estado) não têm cabeçalho
+      ordenável.
+    casos_documento:
+      - CT-10
+  - id: AC-12
+    tipo: consulta
+    nome: Alterar resultados por página
+    como: "Combobox 'Resultados por página' (valor por omissão: 10)."
+    promessa: Permite mudar quantos registos aparecem por página.
+    casos_documento:
+      - CT-10
+  - id: AC-13
+    tipo: navegacao
+    nome: Paginação de resultados
+    como: Controlos 'Go to first/previous/next/last page' e números de página, no
+      rodapé da grelha.
+    promessa: Pagina server-side pelos resultados (confirmado com pesquisa de 307
+      resultados / 31 páginas para NIF 500257280; o parâmetro 'pagina' da URL
+      muda a cada clique, ex. pagina=0 → pagina=1).
+    casos_documento:
+      - CT-10
+  - id: AC-14
+    tipo: navegacao
+    nome: Ver detalhe da factura
+    como: Botão/ícone 'Ver detalhe da factura {número}' na primeira coluna de cada
+      linha da grelha; navega para /cuidados-continuados/factura/{piid}.
+    promessa: "Abre o Detalhe da Factura com as secções Identificação (Nº Factura,
+      Data Factura, Data Facturação, Estado), Prestador (Cód. Prestador,
+      Descrição, NIF Prestador, Tipologia, Nº Acordo), Adquirente (NIF
+      Adquirente, Descrição Entidade), Valores (Valor Diária, Quantidade Total,
+      Total Diárias, Remuneração Adicional, Taxa Ocupação, Total Remunerações,
+      Total Factura, Total GestCare) e Conferência (Data Conferência). Testado
+      com a factura 222935 (FTTRN2026-1): todos os valores batem com o documento
+      (prestador U.N.P.C.25.05.0001, NIF 504928716, total 83.037,69, estado
+      Conferida Sem Erros)."
+    rota: /cuidados-continuados/factura/{piid}
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-07
+      - CT-08
+  - id: AC-15
+    tipo: consulta
+    nome: "Detalhe: separador Linhas da Factura"
+    como: Separador 'Linhas da Factura' (selecionado por omissão) dentro do Detalhe
+      da Factura.
+    promessa: "Lista as linhas da factura com colunas Dados Referência, Nº Dias,
+      Valor Unitário, Valor Total, Valor GestCare. Testado na factura 222935: 1
+      linha 'Internamento', 687 dias, 120,87 unitário, 83.037,69 total —
+      coerente com o cabeçalho da factura (83.037,69)."
+    casos_documento:
+      - CT-07
+  - id: AC-16
+    tipo: consulta
+    nome: "Detalhe: separador Notas de Crédito/Débito"
+    como: Separador 'Notas de Crédito/Débito' dentro do Detalhe da Factura.
+    promessa: "Lista notas de crédito/débito associadas à factura, com estado vazio
+      tratado ('Não existem notas de crédito ou débito para esta factura.')
+      quando não há registos. Testado na factura 222935: vazio. Não foi
+      encontrada nenhuma factura da amostra com nota de crédito/débito real, nem
+      forma de as pesquisar diretamente na grelha principal."
+    casos_documento:
+      - CT-06
+      - CT-07
+  - id: AC-17
+    tipo: consulta
+    nome: "Detalhe: separador Expedições"
+    como: Separador 'Expedições' dentro do Detalhe da Factura.
+    promessa: "Lista expedições associadas à factura, colunas Cód. Convenção, NIF,
+      Nome, Ind. Expedido, Nº Doc, Nº Processo, Data Expedição. Testado na
+      factura 222935: 1 registo com Nº Processo 1932397 e Data Expedição
+      10/02/2026."
+    casos_documento:
+      - CT-07
+  - id: AC-18
+    tipo: consulta
+    nome: Ver Factura (imagem digitalizada)
+    como: Botão 'Ver Factura' no topo do Detalhe da Factura; abre modal 'Factura'
+      com controlos de zoom (aumentar/diminuir/repor), rotação 90°
+      esquerda/direita e botão 'Guardar imagem'.
+    promessa: "Mostra a imagem digitalizada da factura. Testado na factura 222935: a
+      imagem não carregou (ícone de imagem quebrada) e ocorreu 1 erro de
+      consola; não apareceu nenhuma mensagem explícita do tipo 'sem
+      digitalização disponível' — apenas o placeholder de imagem partida do
+      browser."
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: O documento espera 'mensagem clara quando não existe digitalização'; o
+      que se observou foi uma imagem quebrada sem mensagem de negócio explícita
+      — não é possível confirmar se é falta de massa de imagem neste ambiente ou
+      ausência de tratamento de erro.
+  - id: AC-19
+    tipo: exportacao
+    nome: Guardar imagem da factura
+    como: Botão 'Guardar imagem' dentro do modal 'Ver Factura'.
+    promessa: Rótulo promete descarregar/guardar a imagem da factura exibida no
+      visualizador. Não acionado (ação irreversível de download); a imagem de
+      origem não chegou a carregar na amostra testada.
+    casos_documento: []
+  - id: AC-20
+    tipo: navegacao
+    nome: Prestações da Factura
+    como: Botão 'Prestações' no rodapé do Detalhe da Factura; navega para
+      /cuidados-continuados/factura/{piid}/prestacoes.
+    promessa: "Lista 'Prestações de Cuidados Continuados' da factura com colunas
+      Data Requerimento, Tipologia, Capacidade, Taxa Ocupação, Total Linhas,
+      Total Diárias, com estado vazio tratado ('Não existem prestações
+      associadas a esta factura.'). Testado em 4 facturas diferentes (222935,
+      205135/FTUCCI-2196, 214044/FTNF25-317, 202565/FTUCCI-1994): todas
+      devolveram 0 prestações — não foi possível chegar a uma prestação real
+      para explorar 'Linhas de Prestação' nem 'Documento da Prestação'."
+    rota: /cuidados-continuados/factura/{piid}/prestacoes
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: A tela existe e devolve corretamente o estado vazio, mas em nenhuma
+      das 4 facturas testadas havia prestações associadas, pelo que 'Linhas de
+      Prestação' e 'Documento da Prestação' (drill dentro de uma prestação) não
+      puderam ser exercidos nem confirmados nesta sessão.
+  - id: AC-21
+    tipo: navegacao
+    nome: Voltar / breadcrumb
+    como: Botão 'Voltar' no rodapé do Detalhe da Factura e da página de Prestações;
+      breadcrumb no topo (Consulta por Área de Prestação / Cuidados Continuados
+      / Facturas / Detalhe factura / Prestações) com links clicáveis.
+    promessa: "Permite regressar à pesquisa ou ao detalhe da factura sem perder o
+      contexto. Testado: 'Voltar' e o link 'Facturas' do breadcrumb repõem a
+      navegação sem erros."
+    casos_documento:
+      - CT-08
+  - id: cc-factura-pesquisa-codigo-prestador-via-numcontrato
+    tipo: filtro
+    nome: Pesquisa por código de prestador (com pontos) através do campo 'Nº
+      Contrato'
+    como: No formulário 'Pesquisa Facturas', inserir o código do prestador com
+      pontos (ex. U.L.I.L.16.12.0011) no campo 'Nº Contrato' e clicar em
+      'Pesquisar'. O pedido ao backend usa o parâmetro
+      numContrato=U.L.I.L.16.12.0011 e devolve as facturas desse prestador,
+      incluindo a coluna 'Cód. Prestador' com o valor exato inserido (ex.
+      FTLIV4-124, 16 324,68; FTLIV4-125, 7 036,50, ambas do prestador 500257280)
+      — confere com a massa de referência do documento.
+    promessa: Devolve todas as facturas cujo código de prestador (não o número de
+      contrato em si) corresponde exatamente, dígito a dígito e ponto a ponto,
+      ao valor inserido no campo 'Nº Contrato'.
+    rota: /cuidados-continuados/factura
+    entradas:
+      - campo: Nº Contrato
+        obrigatorio: false
+        origem_valores: texto livre; aceita o formato com pontos do código do prestador
+          (ex. U.L.I.L.16.12.0011), tratando os pontos como carateres literais
+    casos_documento:
+      - CT-02
+    ressalva: "O campo chama-se 'Nº Contrato' na interface, não 'Código do
+      Prestador' — é o mesmo campo que na prática funciona como pesquisa pelo
+      código do prestador com pontos. Só aceita correspondência exata: o
+      fragmento '16.12.0011' sem o prefixo 'U.L.I.L.' devolveu 'Nenhuma factura
+      encontrada', portanto a pesquisa parcial mencionada no cenário não é
+      suportada. O campo 'NIF do Prestador' rejeita o formato com pontos (exige
+      9 dígitos)."
+insumos_necessarios:
+  - descricao: Factura de Cuidados Continuados com pelo menos uma Prestação
+      associada, para exercer Prestações → Linhas de Prestação → Documento da
+      Prestação
+    obtivel: bd
+    razao: As 4 facturas reais testadas nesta sessão (incluindo 222935,
+      FTNF25-317/214044 e mais duas facturas do prestador U.L.I.L.16.12.0011)
+      devolveram sempre 'Não existem prestações associadas a esta factura'; a
+      tela de pesquisa não tem filtro que permita localizar diretamente uma
+      factura com prestações, só abrindo cada detalhe uma a uma.
+  - descricao: Factura de Cuidados Continuados com Nota de Crédito/Débito real
+      associada e/ou Total Factura negativo
+    obtivel: bd
+    razao: O filtro 'Tipo Factura' não distingue Factura de Nota de Crédito (é uma
+      categoria de rubrica); a coluna 'Total Factura' não é ordenável na grelha;
+      não há forma na tela de procurar diretamente por notas de crédito ou
+      totais negativos, só abrindo o separador 'Notas de Crédito/Débito' factura
+      a factura.
+  - descricao: Facturas do mesmo prestador com as 3 tipologias distintas (1, 2, 3)
+      para confirmar a tradução do código de tipologia no ecrã
+    obtivel: tela
+    razao: Já foi possível localizar exemplos via pesquisa por Número da Factura
+      (FTLIV4-124, FTLIV4-125, FTNF25-317), mas confirmar sistematicamente a
+      tradução dos 3 códigos exige comparar mais casos; todos acessíveis pela
+      própria tela de pesquisa (Número da Factura ou NIF do Prestador).
+  - descricao: Segundo utilizador/perfil sem acesso à área de Cuidados Continuados,
+      para confirmar restrição de acesso por perfil
+    obtivel: nao
+    razao: A sessão de teste usa um único utilizador (Manta / PRRmanta_dev) já
+      autenticado com acesso à área; não há forma de obter um segundo perfil de
+      teste dentro desta sessão.
+  - descricao: Documento digitalizado (imagem) de factura carregado corretamente no
+      visualizador 'Ver Factura'
+    obtivel: bd
+    razao: Na única factura testada (222935) a imagem não carregou (ícone quebrado,
+      sem mensagem de negócio); não é possível distinguir se falta massa de
+      imagem neste ambiente ou se há uma falha de integração sem tratamento de
+      erro visível.
+casos_sem_accao:
+  - CT-06
+  - CT-10
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-02 Pesquisa por código de prestador com pontos
+      procurei:
+        - Um campo dedicado 'Código do Prestador' no formulário de pesquisa (não
+          existe; apenas 'NIF do Prestador' e 'Nº Contrato' referem-se ao
+          prestador)
+        - Inserir o código com pontos 'U.L.I.L.16.12.0011' no campo 'NIF do
+          Prestador' — bloqueado pela validação 'NIF do Prestador deve ter 9
+          dígitos'
+        - Inserir o código completo com pontos 'U.L.I.L.16.12.0011' no campo 'Nº
+          Contrato' e pesquisar
+        - Inserir um fragmento sem prefixo '16.12.0011' no campo 'Nº Contrato' e
+          pesquisar, para testar pesquisa parcial
+      onde:
+        - http://localhost:4174/cuidados-continuados/factura — formulário
+          'Pesquisa Facturas'
+      resultado: encontrado
+      accao: cc-factura-pesquisa-codigo-prestador-via-numcontrato
+      captura: CT-02-pesquisa-codigo-prestador-via-numcontrato.png
+    - alvo: CT-06 Nota de crédito com total negativo
+      procurei:
+        - Opções do combobox 'Tipo Factura' no formulário de pesquisa, para ver
+          se distingue Factura de Nota de Crédito — mostrou apenas 'Diárias /
+          Diárias de Internamento', 'Diárias de medicamentos', 'Remuneração
+          Adicional' e 'Remuneração Adicional Extra' (categorias de rubrica, não
+          tipo de documento)
+        - Separador 'Notas de Crédito/Débito' no detalhe de cada uma das 5
+          facturas de referência do documento (222935, 221976, 214043, 214042,
+          214044) — todas devolveram 'Não existem notas de crédito ou débito
+          para esta factura'
+        - Filtro 'Estado' = 'Anulada' (idEstado=38) isolado, em toda a área — 0
+          resultados
+        - Varrimento de 'Total Factura' negativo em cerca de 400 registos reais
+          obtidos por 4 pesquisas amplas (100 do prestador U.L.I.L.16.12.0011
+          via Nº Contrato; 100 do NIF 501266488; 100+100 de duas páginas com
+          Data da Facturação=31/03/2025, cobrindo dezenas de prestadores
+          diferentes) — nenhum total negativo encontrado
+        - Se a coluna 'Total Factura' é ordenável para facilitar a localização
+          de negativos — os cabeçalhos ordenáveis são apenas Cód. Prestador, N°
+          Factura, Data Factura e Data Facturação; Total Factura não tem
+          'Ordenar por'
+      onde:
+        - http://localhost:4174/cuidados-continuados/factura — formulário e
+          resultados
+        - http://localhost:4174/cuidados-continuados/factura/222935
+        - http://localhost:4174/cuidados-continuados/factura/221976
+        - http://localhost:4174/cuidados-continuados/factura/214043
+        - http://localhost:4174/cuidados-continuados/factura/214042
+        - http://localhost:4174/cuidados-continuados/factura/214044
+      resultado: nao_existe
+      accao: null
+      nota: Não encontrei, por consulta ao ecrã, nenhuma factura/nota de crédito real
+        com total negativo, nem confirmação de que o filtro 'Tipo Factura'
+        separa Factura de Nota de Crédito (na prática esse combobox lista
+        categorias de rubrica de faturação, não tipo de documento). Descobri,
+        sim, que existe um separador 'Notas de Crédito/Débito' dentro do detalhe
+        de cada factura — é aí, e não na lista principal, que o produto modela
+        notas de crédito/débito (consistente com a secção 1 do documento) — mas
+        em nenhuma das 5 facturas de referência, nem nos ~400 registos
+        amostrados, encontrei um caso com conteúdo nesse separador ou com total
+        negativo. Não tive acesso a VPN SPMS/SQLcl nesta sessão para correr a
+        query Q4 do documento (a via que o próprio plano recomenda para
+        identificar esta massa), pelo que a existência real desta massa fica por
+        confirmar via BD, não via ecrã.
+    - alvo: CT-10 Paginação e desempenho com volume real
+      procurei:
+        - Botão ou link com o texto 'Exportar' em toda a tela de pesquisa e de
+          resultados
+        - Termos alternativos 'Download', 'CSV', 'Excel', '.xlsx', 'Imprimir',
+          'PDF' em toda a página (busca por regex) — único resultado foi um item
+          de menu não relacionado ('Exportação de Ofícios (em breve)', em
+          Reclamações)
+        - Ícones sem rótulo ou menu de contexto junto à barra 'X itens
+          selecionados' / botão 'Limpar seleção' acima da tabela de resultados
+        - Checkboxes de seleção de linha na tabela de resultados — inspeção do
+          DOM confirmou 0 checkboxes (a barra de seleção existe mas não tem
+          itens selecionáveis nesta tabela)
+        - "Confirmação de que a paginação suporta volume real: pesquisa ampla
+          por Data da Facturação=31/03/2025 devolveu 864 resultados com
+          paginação server-side funcional (tamanho=100, páginas 1 e 2
+          percorridas com sucesso)"
+      onde:
+        - http://localhost:4174/cuidados-continuados/factura — resultados da
+          pesquisa, barra de seleção e paginação
+      resultado: nao_existe
+      accao: null
+      nota: A paginação em si funciona corretamente com volume real (864 resultados
+        para um único dia de facturação, navegação entre páginas e alteração do
+        tamanho de página confirmadas), mas não encontrei nenhum mecanismo de
+        exportação nesta tela — nem botão com rótulo, nem ícone, nem ação em
+        lote a partir de itens selecionados (a barra de seleção não tem
+        checkboxes funcionais).
+    - alvo: Segundo utilizador/perfil sem acesso à área de Cuidados Continuados, para
+        confirmar restrição de acesso por perfil
+      procurei:
+        - Clicar na área do utilizador autenticado (avatar 'MA', nome 'Manta',
+          'PRRmanta_dev') para ver se abre um menu de troca de perfil sem logout
+          — não abriu nada
+        - Percorrer o menu lateral completo à procura de um item de
+          administração de utilizadores/perfis (ex. 'Gestão de Utilizadores',
+          'Perfis', 'Administração') — inexistente nas secções Dados de
+          Referência, Consulta por Área de Prestação, Gestão de Armazém,
+          Controlo e Contabilização, Conferência, Controlo de Qualidade, Fecho,
+          Reclamações, Dashboards
+        - O botão 'Sair' foi identificado mas não foi acionado, para não
+          encerrar a única sessão autenticada disponível sem credenciais
+          alternativas para voltar a entrar
+      onde:
+        - http://localhost:4174/ — barra superior (área do utilizador) e menu
+          lateral completo
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma a conclusão da primeira passagem: não há, dentro desta sessão,
+        nenhum mecanismo de troca de perfil nem lista de utilizadores de teste
+        acessível pela aplicação. Como esta massa é uma conta de utilizador (não
+        um registo de BD), também não é obtível por SQLcl — teria de ser
+        provisionada fora desta sessão (ex. pedido de um segundo utilizador de
+        teste sem acesso à área)."

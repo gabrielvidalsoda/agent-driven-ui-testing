@@ -1,0 +1,414 @@
+documento: dados-referencia/convencoes.md
+rota: /dados-referencia/convencoes
+mapeado_em: http://localhost:4174/dados-referencia/convencoes — percorrido
+  manualmente via browser (Playwright) em 2026-08-27; capturas em
+  corridas/dados-referencia__convencoes__mapa/
+mapeado_contra:
+  ui: origin/develop 2c7a89e, build de 2026-08-27
+  api: jar de origin/develop 99d79ef, construido a 2026-08-27
+accoes:
+  - id: A1
+    tipo: filtro
+    nome: Pesquisar convenções
+    como: Ecrã Dados de Referência > Convenções. Preencher um ou mais dos campos
+      Código Convenção, NIF, Nome Prestador, Área, ULS e clicar 'Pesquisar'. Os
+      parâmetros vão para a URL (?codigoConvencao=, nif=, nomePrestador=,
+      area=). Todos os campos são texto livre, sem autocomplete/sugestões
+      (testado em 'Área').
+    promessa: Devolver a lista de convenções que correspondem aos filtros
+      preenchidos, numa grelha com colunas NIF, Área, Cód. Convenção, Nome
+      Prestador, ULS, Data Início, Data Fim.
+    rota: /dados-referencia/convencoes
+    entradas:
+      - campo: Código Convenção
+        obrigatorio: false
+        origem_valores: texto livre; corresponde por substring ao código string da
+          convenção (ex. '201726A26'), NÃO ao PIIDCONVENCAO numérico usado na
+          URL de detalhe — pesquisar '70422' não devolve nada, mas pesquisar
+          '999' devolve 262 resultados por conter '999' em qualquer código
+      - campo: NIF
+        obrigatorio: false
+        origem_valores: texto livre; parece ser correspondência exata ao NIF da entidade
+          — devolve todas as convenções (uma linha por convenção, não por
+          convencionado) associadas a esse NIF
+      - campo: Nome Prestador
+        obrigatorio: false
+        origem_valores: texto livre; substring case-insensitive sobre o nome do
+          prestador — 'TROFA' devolveu 1752 resultados de vários convencionados
+          do grupo Trofa Saúde
+      - campo: Área
+        obrigatorio: false
+        origem_valores: texto livre, placeholder 'Ex. Medicamentos'; sem autocomplete.
+          Os valores reais de Área observados na grelha são 'MCDT', 'PNPSO',
+          'Farmácia Comunitária', 'Cuidados Continuados' — pesquisar 'Med' (a
+          começar como sugere o placeholder) devolve zero resultados
+      - campo: ULS
+        obrigatorio: false
+        origem_valores: texto livre, placeholder 'Ex. ULS de Lisboa'; não testado a
+          fundo, sem autocomplete visível
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: O documento assume pesquisa por 'Código Convenção' usando o
+      PIIDCONVENCAO numérico (70422, 202860) da secção 5; a tela não aceita esse
+      valor — só o código-string (ex. '201726A26') funciona. A pesquisa por NIF
+      do CT-02 (Clínica Das Rosas) devolveu 10 convenções sob o mesmo NIF,
+      incluindo um prestador com nome diferente ('Clínica Média E Dentária De
+      Sebal'), não 'dois convencionados' isolados como o CT-02 descreve — o ecrã
+      lista convenções, não convencionados únicos. Para o CT-04 (convenção
+      sintética '999'), a pesquisa por código devolveu 262 resultados ruidosos
+      (qualquer código contendo '999'); não isolei o registo exato só com os
+      filtros da tela.
+  - id: A2
+    tipo: filtro
+    nome: Limpar filtros de pesquisa
+    como: Botão 'Limpar' junto ao formulário de pesquisa de convenções.
+    promessa: Repor os campos Código Convenção, NIF, Nome Prestador, Área e ULS
+      vazios e limpar os resultados.
+    rota: /dados-referencia/convencoes
+    casos_documento: []
+  - id: A3
+    tipo: consulta
+    nome: Ordenar resultados da pesquisa
+    como: Clicar nos cabeçalhos 'Ordenar por NIF / Área / Cód. Convenção / Nome
+      Prestador / ULS / Data Início / Data Fim' da grelha de resultados.
+    promessa: Reordenar a lista de convenções pela coluna escolhida.
+    rota: /dados-referencia/convencoes
+    casos_documento: []
+  - id: A4
+    tipo: navegacao
+    nome: Ver detalhe da convenção
+    como: Clicar no botão de ação (ícone) na coluna 'Ações' de uma linha da grelha
+      de resultados.
+    promessa: Abrir a página de detalhe da convenção selecionada, navegando para
+      /dados-referencia/convencoes/{id}.
+    rota: /dados-referencia/convencoes/{id}
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-05
+  - id: A5
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Botão 'Exportar XLSX' acima da grelha de resultados, visível apenas quando
+      há resultados de pesquisa.
+    promessa: Gerar um ficheiro XLSX com o resultado da pesquisa atual (rótulo do botão).
+    rota: /dados-referencia/convencoes
+    casos_documento:
+      - CT-10
+    ressalva: Não cliquei no botão (evitar submeter/descarregar ficheiro nesta
+      passagem de mapeamento); a promessa é lida apenas do rótulo. A grelha
+      também expõe um mecanismo de seleção de linhas ('0 itens selecionados' /
+      'Limpar seleção') cuja relação com a exportação (exportar tudo vs. só
+      selecionados) não foi verificada.
+  - id: A6
+    tipo: consulta
+    nome: Detalhe da convenção — Dados da entidade e Dados convencionado
+    como: Após abrir o detalhe (A4), consultar os painéis 'Dados da entidade' (NIF
+      entidade, ULS, Descrição, Nome farmácia, morada, código postal, distrito,
+      concelho, freguesia, latitude/longitude) e 'Dados convencionado' (Cód.
+      Convencionado, Desc. Convencionado, morada, telefone, email) e o bloco
+      'Convenções' (Cód. Convenção, Desc. Convenção, Área).
+    promessa: Mostrar os dados cadastrais completos da entidade e do convencionado
+      associados à convenção selecionada.
+    rota: /dados-referencia/convencoes/{id}
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-05
+    ressalva: Não existe nenhum campo visível de 'adesão ao portal' (S/N) mencionado
+      no CT-03 para o convencionado Lusíadas Centro.
+  - id: A7
+    tipo: consulta
+    nome: Sub-tabela Associações / Representantes
+    como: No detalhe da convenção, secção 'Convenções', sub-tabela 'Associações /
+      Representantes' (colunas Nome Representante, Data Início, Data Fim).
+    promessa: Listar os representantes/associações da convenção.
+    rota: /dados-referencia/convencoes/{id}
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: Esta sub-tabela aparece igual (mesmo conjunto de colunas) em
+      convenções de área Farmácia, MCDT e PNPSO — não há sinal de
+      condicionamento por área. Tinha dados (ex. 'ANF', 01/01/2009) na convenção
+      12335, e estava vazia nas outras duas testadas.
+  - id: A8
+    tipo: consulta
+    nome: Sub-tabela Contactos
+    como: No detalhe da convenção, sub-tabela 'Contactos' (colunas Designação,
+      Responsabilidade, Nome Utilizador Portal, Telefone, Email).
+    promessa: Listar contactos associados à convenção, incluindo o utilizador do portal.
+    rota: /dados-referencia/convencoes/{id}
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: Vazia nas três convenções testadas (Farmácia, MCDT, PNPSO); é
+      provavelmente esta sub-tabela que corresponderia ao 'utilizador do portal'
+      descrito na introdução do documento, mas não observei dados nela.
+  - id: A9
+    tipo: consulta
+    nome: Sub-tabela Locais de Prescrição
+    como: No detalhe da convenção, sub-tabela 'Locais de Prescrição' (colunas Cód.
+      Local Prescrição, Nome Etiqueta, Nome Local Prescrição).
+    promessa: Listar os locais de prescrição associados à convenção.
+    rota: /dados-referencia/convencoes/{id}
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: Vazia nas três convenções testadas; também não mostrou sinal de
+      condicionamento por área.
+  - id: A10
+    tipo: navegacao
+    nome: Ir para Processos de conferência
+    como: No detalhe da convenção, botão 'Processos de conferência' no rodapé.
+    promessa: Navegar para /dados-referencia/convencoes/{id}/processos-conferencia,
+      com breadcrumb 'Convenções / Detalhe da convenção / Processos de
+      conferência'.
+    rota: /dados-referencia/convencoes/{id}/processos-conferencia
+    casos_documento:
+      - CT-07
+  - id: A11
+    tipo: consulta
+    nome: Tabela de Faturas em Processos de conferência
+    como: Na página 'Processos de conferência', tabela única com colunas Ações, Mês
+      Factura, N. Lotes, Facturado, Conferido, Diferenças, Estado.
+    promessa: Mostrar as faturas mensais do convencionado com valores
+      facturado/conferido/diferenças e estado.
+    rota: /dados-referencia/convencoes/{id}/processos-conferencia
+    casos_documento:
+      - CT-07
+    ressalva: Testado em dois convencionados (Farmácia Confiança de Fermil, Lusíadas
+      Norte MCDT); ambos mostraram 'Sem dados disponíveis' — não há filtros
+      nesta página, só a tabela e o botão Voltar. Não consegui validar a
+      aritmética Conferido/Diferenças por falta de registos populados nos
+      convencionados testados.
+  - id: A12
+    tipo: navegacao
+    nome: Ir para Conta corrente
+    como: No detalhe da convenção, botão 'Conta corrente' no rodapé.
+    promessa: Navegar para /dados-referencia/convencoes/{id}/conta-corrente, com
+      breadcrumb 'Convenções / Detalhe da convenção / Conta corrente'.
+    rota: /dados-referencia/convencoes/{id}/conta-corrente
+    casos_documento:
+      - CT-08
+  - id: A13
+    tipo: filtro
+    nome: Pesquisa de Conta corrente
+    como: Na página 'Conta corrente', painel 'Pesquisa' com campos Ano,
+      Factura/Processo (combobox), Estado, Saldo Global, Data conta corrente, e
+      botões Limpar/Pesquisar.
+    promessa: Restringir os movimentos da conta corrente por ano, por
+      fatura/processo específico, estado ou data.
+    rota: /dados-referencia/convencoes/{id}/conta-corrente
+    entradas:
+      - campo: Ano
+        obrigatorio: false
+        origem_valores: texto livre, placeholder 'Ex. 2024'
+      - campo: Factura / Processo
+        obrigatorio: false
+        origem_valores: combobox dependente de dados — nos dois convencionados testados
+          mostrou 'Não existem opções' (sem faturação associada)
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: campo somente leitura ('--'), não é claro se é filtro editável
+          ou apenas indicador
+      - campo: Saldo Global
+        obrigatorio: false
+        origem_valores: campo somente leitura, mostrou '0,00' em ambos os testes
+      - campo: Data conta corrente
+        obrigatorio: false
+        origem_valores: campo somente leitura ('--')
+    casos_documento:
+      - CT-08
+    ressalva: Estado, Saldo Global e Data conta corrente pareceram campos de
+      leitura/indicador, não inputs de filtro ativos — não consegui confirmar
+      interatividade sem dados populados.
+  - id: A14
+    tipo: consulta
+    nome: Movimentos da conta corrente
+    como: Na página 'Conta corrente', tabela 'Movimentos da conta corrente' com
+      colunas Descrição, N. Documento, Data, Débito, Crédito, Saldo.
+    promessa: Listar os movimentos FE/ND/NC/PG do convencionado com débito, crédito
+      e saldo encadeado.
+    rota: /dados-referencia/convencoes/{id}/conta-corrente
+    casos_documento:
+      - CT-08
+    ressalva: Vazia ('Sem dados disponíveis') nos dois convencionados testados
+      (Farmácia Confiança de Fermil, Lusíadas Norte); não pude validar a
+      aritmética saldo=saldo_anterior+crédito-débito por falta de massa com
+      movimentos.
+  - id: A15
+    tipo: navegacao
+    nome: Voltar (breadcrumb e botão)
+    como: Botão 'Voltar' presente no detalhe, em Processos de conferência e em Conta
+      corrente; também o breadcrumb no topo da página ('Convenções / Detalhe da
+      convenção / ...') com links clicáveis para os níveis anteriores.
+    promessa: Regressar ao nível anterior (lista de resultados ou detalhe da
+      convenção), mantendo o breadcrumb coerente com o nível atual.
+    rota: /dados-referencia/convencoes/{id}
+    casos_documento:
+      - CT-07
+      - CT-08
+  - id: A16
+    tipo: edicao
+    nome: Alterar convenção
+    como: Botão 'Alterar' no rodapé do detalhe da convenção, ao lado de 'Processos
+      de conferência' e 'Conta corrente'.
+    promessa: Rótulo sugere edição da convenção; testado em todas as convenções
+      abertas (PNPSO, MCDT, Farmácia), o botão aparece sempre desabilitado
+      (disabled) para o utilizador atual (perfil 'Manta/PRRmanta_dev').
+    rota: /dados-referencia/convencoes/{id}
+    casos_documento:
+      - CT-10
+    ressalva: "Não cliquei (está desabilitado, não seria possível de qualquer
+      forma). Confirma o comportamento esperado pelo CT-10: perfil de consulta
+      não consegue editar."
+insumos_necessarios:
+  - descricao: Convenção com código-string conhecido (ex. '201726A26') para
+      pesquisar pelo campo Código Convenção
+    obtivel: tela
+    razao: encontrável por pesquisa de NIF/nome e depois lida a partir da grelha de
+      resultados
+  - descricao: Convencionado com NIF partilhado por múltiplos registos/convenções
+      (ex. Clínica Das Rosas, NIF 510435785)
+    obtivel: tela
+    razao: confirmado por pesquisa de NIF na tela
+  - descricao: Convencionado cujo código coincide com o próprio NIF (ex. TROFA SAÚDE
+      GAIA, 508938317)
+    obtivel: tela
+    razao: confirmado por pesquisa de nome 'TROFA' na tela
+  - descricao: Convenção de área MCDT com sub-tabela 'Exames MCDT' povoada (preço,
+      comparticipação)
+    obtivel: nao
+    razao: essa sub-tabela não existe em nenhuma convenção observada na tela atual
+      (testadas MCDT, PNPSO, Farmácia); não há forma de a obter enquanto a
+      funcionalidade não estiver implementada
+  - descricao: Convencionado com faturas fechadas/conferidas para popular 'Processos
+      de conferência' (Facturado/Conferido/Diferenças)
+    obtivel: bd
+    razao: a tela não sinaliza na grelha de resultados quais convencionados têm
+      faturação; é preciso identificar por query em TRCONVENCOES/faturação antes
+      de navegar
+  - descricao: Convencionado com movimentos reais em 'Conta corrente' (FE/ND/NC/PG,
+      saldo≠0)
+    obtivel: bd
+    razao: nos registos testados a partir da tela o Saldo Global apareceu sempre
+      '0,00' e a Factura/Processo sem opções; é preciso identificar por query um
+      convencionado com movimentos antes de navegar
+  - descricao: Registo sintético de teste (convenção '999', Farmácia TestesAçores)
+      isolado sem ruído de substring
+    obtivel: bd
+    razao: o filtro Código Convenção faz correspondência por substring e devolveu
+      262 resultados para '999'; sem o NIF ou nome exato da Farmácia
+      TestesAçores (não testados), não dá para isolar o registo só pela tela
+  - descricao: Utilizador com perfil de edição de convenções, para testar se o botão
+      'Alterar' fica ativo
+    obtivel: nao
+    razao: não há ecrã de gestão de perfis/permissões neste ambiente; o utilizador
+      de teste disponível ('Manta/PRRmanta_dev') tem perfil de consulta fixo
+casos_sem_accao:
+  - CT-06
+repescagem:
+  feita_em: 2026-08-27
+  alvos:
+    - alvo: "[insumo] Convenção de área MCDT com sub-tabela 'Exames MCDT' povoada
+        (preço, comparticipação)"
+      procurei:
+        - "Abri por rota direta o detalhe das convenções MCDT do Lusíadas Norte
+          com os IDs internos que correspondem ao PIIDCONVENCAO citado no
+          documento: 70422 (\"201726A26\", Área F), 202860 (\"01726G01L\", Área
+          G), 202810 (\"01726C01A\", Área C), 202814, 202817, 135617, 135622,
+          135625 — nenhuma mostrou a sub-tabela 'Exames MCDT'."
+        - Pesquisei na tela por Nome Prestador 'Lusíadas Norte' (222 resultados,
+          todos área MCDT) e chamei diretamente o endpoint BFF que alimenta a
+          sub-tabela (GET /ccmsns/api/convencoes/{id}/exames-mcdt) para as 222
+          convenções desse prestador — todas devolveram 0 registos.
+        - "Alarguei a amostragem a toda a área MCDT da base (93225 convenções,
+          confirmado via meta da API de pesquisa): amostrei 2400 IDs espalhados
+          por todas as páginas (a cada 40ª página) e chamei o mesmo endpoint
+          para cada um — 0 registos em todos os casos."
+        - Inspecionei o código-fonte do ecrã (SeccaoConvencoes.tsx) e confirmei
+          que a sub-tabela 'Exames MCDT' existe no componente, é rotulada
+          exatamente assim e é renderizada condicionalmente por presença de
+          dados (temExamesMcdt), via useConvencaoExamesMcdt -> GET
+          /convencoes/{id}/exames-mcdt; não há nenhuma flag de área que a
+          esconda incondicionalmente.
+      onde:
+        - /dados-referencia/convencoes (pesquisa por Nome Prestador 'Lusíadas
+          Norte')
+        - /dados-referencia/convencoes/{id} para os IDs 70422, 202810, 202814,
+          202817, 135617, 135622, 135625, 202860
+        - Chamadas diretas a GET /ccmsns/api/convencoes/{id}/exames-mcdt para as
+          222 convenções do Lusíadas Norte e para uma amostra de 2400 convenções
+          MCDT em toda a base
+        - "Código-fonte:
+          ccmsns-ui/src/pages/dadosReferencia/convencoes/SeccaoConvencoes.tsx e
+          ccmsns-ui/src/services/dadosReferencia/convencoes.service.ts"
+      resultado: nao_existe
+      accao: null
+      nota: A funcionalidade existe no código (sub-tabela 'Exames MCDT' com as colunas
+        certas, renderização condicional por dados), mas o endpoint que a
+        alimenta devolveu 0 registos em toda a amostra verificada — incluindo
+        exatamente as convenções que o documento aponta como devendo ter dados
+        em TRCONVMCDTEXAMES (70422, 202860). Não é possível, sem acesso à BD
+        (fora do alcance desta ferramenta), distinguir se TRCONVMCDTEXAMES não
+        chega ao BFF para nenhuma convenção neste ambiente, ou se de facto
+        nenhuma convenção em QUA tem essa sub-tabela povoada neste momento. É
+        uma suspeita levantada pelo código, não uma observação visual — por isso
+        o resultado mantém-se 'nao_existe' e não é promovido a 'encontrado'.
+    - alvo: "[insumo] Utilizador com perfil de edição de convenções, para testar se o
+        botão 'Alterar' fica ativo"
+      procurei:
+        - "Tentei navegar para os alvos que a própria aplicação anuncia para
+          gestão de sessão/perfil: /login (destino do botão 'Sair') e
+          /configuracoes (destino do botão de definições do cabeçalho) — ambos
+          devolvem '404 — Página não encontrada', ou seja, não existem como
+          ecrãs."
+        - Percorri a árvore inteira do menu principal (todas as secções e
+          submenus disponíveis na navegação) à procura de qualquer ecrã de
+          'Perfis', 'Utilizadores', 'Permissões' ou 'Acessos' — não existe
+          nenhum.
+        - Abri o detalhe de várias convenções de áreas diferentes (C, F, G) e
+          confirmei em cada uma que o botão 'Alterar' aparece sempre desativado,
+          independentemente da convenção.
+        - "Inspecionei o código-fonte: MainLayout.tsx mostra que o nome 'Manta'
+          / 'PRRmanta_dev' exibido no cabeçalho é uma string fixa (avatar={{
+          user: 'Manta' }}), não vem de sessão, token ou API de autenticação;
+          ConvencaoDetalhePage.tsx mostra que o botão 'Alterar' está marcado
+          disabled de forma incondicional (<Button variant=\"primary\"
+          disabled>Alterar</Button>), sem qualquer verificação de perfil ou
+          permissão, com comentário explícito de que a edição é 'entrega futura,
+          fora do âmbito atual'."
+        - Procurei no código-fonte por 'auth', 'login', 'keycloak',
+          'perfil'/'profile'/'role'/'permiss' em todo o diretório src da app —
+          não há ficheiros de autenticação, login, Keycloak nem uso de
+          localStorage/sessionStorage relacionados com sessão de utilizador.
+      onde:
+        - Cabeçalho da aplicação (botão 'Sair', avatar 'Manta / PRRmanta_dev')
+          em qualquer ecrã
+        - /login e /configuracoes (rotas diretas)
+        - Menu principal completo (todas as secções e submenus)
+        - /dados-referencia/convencoes/{id} para várias convenções, barra de
+          ações e botão 'Alterar'
+        - "Código-fonte: ccmsns-ui/src/layout/MainLayout.tsx,
+          ccmsns-ui/src/pages/dadosReferencia/convencoes/ConvencaoDetalhePage.t\
+          sx, e pesquisa por 'auth|login|keycloak|perfil' em ccmsns-ui/src"
+      resultado: nao_existe
+      accao: null
+      nota: "Não existe ecrã de gestão de perfis/permissões nem qualquer mecanismo de
+        autenticação na aplicação (confirmado no código e por navegação direta a
+        /login e /configuracoes, ambos 404). O botão 'Alterar' está desativado
+        de forma incondicional no código-fonte, sem depender de perfil de
+        utilizador algum — pelo que nenhum utilizador, mesmo com um hipotético
+        'perfil de edição', o ativaria no estado atual da aplicação. Isto vai
+        além da conclusão da primeira passagem (que apontava apenas a falta de
+        um utilizador de teste com esse perfil): a funcionalidade de edição está
+        sinalizada nos próprios comentários do código como entrega futura fora
+        de âmbito, e não há nenhum sistema de perfis implementado a este nível
+        para a testar."

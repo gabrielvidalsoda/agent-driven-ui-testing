@@ -1,0 +1,288 @@
+documento: gestao-armazem/localizar-corrigir.md
+rota: /arquivo
+mapeado_em: 2026-09-02
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: A01
+    tipo: consulta
+    nome: Localizar por tipo e código
+    como: "Abrir o combobox Tipo (opções fixas: Factura, Pasta, Caixa), escolher
+      uma, digitar ou pistolar o Código no campo ao lado e clicar em
+      'Localizar'."
+    promessa: "Devolve o registo do tipo escolhido pelo código indicado, mostrando
+      'De (atual)' e 'Para (destino)'. Quando o código não existe (ou pertence a
+      outro tipo), mostra um alerta claro 'Fatura/Pasta/Caixa não encontrado(a)
+      com id: <código>'. Sem tipo ou sem código, mostra validação de campo
+      ('Selecione o tipo (factura, pasta ou caixa).' / 'Indique o código.') e
+      não dispara pesquisa nem tenta adivinhar o tipo."
+    entradas:
+      - campo: Tipo
+        obrigatorio: true
+        origem_valores: "combobox fixo com 3 opções: Factura, Pasta, Caixa"
+      - campo: Código
+        obrigatorio: true
+        origem_valores: texto livre, digitado ou por leitor de código de barras
+          (placeholder 'Pistolar ou digitar o código…')
+    casos_documento:
+      - CT-01
+      - CT-11
+      - CT-12
+    ressalva: "A rotulagem do tipo é inconsistente: o combobox usa 'Factura', mas a
+      mensagem de erro usa 'Fatura'. Testado com código de caixa em Tipo
+      Factura, número de fatura em Tipo Caixa, código de pasta inexistente e
+      código totalmente inventado — em todos os casos a mensagem de 'não
+      encontrado(a)' foi consistente e não houve tentativa de adivinhar o tipo."
+  - id: A02
+    tipo: edicao
+    nome: Corrigir fatura (nº de lotes e observações)
+    como: Com Tipo=Factura e uma fatura localizada, alterar 'Nº de lotes' e/ou
+      'Observações' no bloco 'Para (destino)'. Não cheguei a clicar em 'Guardar
+      correção'.
+    promessa: Mostra em 'De (atual)' a Pasta, a Caixa, a Localização, o Nº de lotes
+      e as Observações da fatura; em 'Para (destino)' só os campos Nº de lotes e
+      Observações são editáveis. 'Guardar correção' aparece com o atributo
+      disabled até haver alteração num dos dois campos.
+    entradas:
+      - campo: Nº de lotes
+        obrigatorio: false
+        origem_valores: numérico, texto livre
+      - campo: Observações
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-03
+      - CT-04
+      - CT-12
+    equivalente_aproximado: true
+    ressalva: Ao alterar o Nº de lotes desta fatura não apareceu nenhum aviso
+      textual de recálculo em cascata (nem inline nem modal) — ao contrário do
+      que acontece ao editar o nº de lotes de uma pasta (ver A03), onde há um
+      alerta explícito. O CT-03 espera um aviso equivalente para a fatura que
+      não foi observado aqui. Ação não submetida, por isso o comportamento
+      pós-Guardar (recálculo real, persistência) não foi confirmado.
+  - id: A03
+    tipo: edicao
+    nome: Corrigir pasta (caixa de destino, nº de lotes, observações)
+    como: Com Tipo=Pasta e uma pasta localizada, alterar 'Caixa de destino', 'Nº de
+      lotes da pasta' e/ou 'Observações' no bloco 'Para (destino)'. Não cheguei
+      a clicar em 'Guardar correção'.
+    promessa: "Mostra em 'De (atual)' a Caixa atual, a Localização (herdada da
+      caixa), o Nº de lotes da pasta e as Observações. Em 'Para (destino)'
+      permite mover a pasta indicando o código de outra caixa, corrigir o nº de
+      lotes e as observações. Ao mudar o nº de lotes surge um alerta inline: 'O
+      total de lotes da factura será recalculado (<fatura>: <de> → <para>).
+      Confirma ao guardar.'"
+    entradas:
+      - campo: Caixa de destino
+        obrigatorio: false
+        origem_valores: texto livre com o código da caixa; não observei
+          autocomplete/validação em tempo real do código digitado
+      - campo: Nº de lotes da pasta
+        obrigatorio: false
+        origem_valores: numérico, texto livre
+      - campo: Observações
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-05
+      - CT-06
+      - CT-12
+    equivalente_aproximado: true
+    ressalva: O aviso de recálculo é um texto inline com ícone de alerta junto ao
+      próprio campo, não um modal separado com botões Confirmar/Cancelar como o
+      CT-06 descreve; não foi possível confirmar se 'Guardar correção' abre
+      alguma confirmação adicional sem gravar a correção. Não testei um
+      caso-limite de pasta com 0 lotes (não tinha o código).
+  - id: A04
+    tipo: edicao
+    nome: Corrigir caixa (localização/estado e posição)
+    como: Com Tipo=Caixa e uma caixa localizada, abrir o combobox 'Localização
+      (estado)' em 'Para (destino)' e escolher um destino; se o destino
+      escolhido for 'Arquivo temporário', preencher o campo Posição manualmente
+      ou usar 'Buscar Posição Livre'. Não cheguei a clicar em 'Guardar
+      correção'.
+    promessa: Mostra em 'De (atual)' a Localização atual e o Nº de pastas
+      (automático, não editável — único campo mostrado além da localização). O
+      combobox de destino só lista os estados alcançáveis a partir do estado
+      atual (máquina de estados), e ao escolher 'Arquivo temporário' surgem os
+      campos Posição e o botão Buscar Posição Livre.
+    entradas:
+      - campo: Localização (estado)
+        obrigatorio: true
+        origem_valores: "combobox dependente do estado atual da caixa — mapeamento
+          observado: Armazém de entrada → {Recepcionada, Aguardando preparação};
+          Em preparação → {Aguardando preparação, Em digitalização}; Em
+          digitalização → {Aguardando preparação, Arquivo temporário}; Arquivo
+          temporário → {Armazém de saída, Expedido (Papiro), Em digitalização}"
+      - campo: Posição (arquivo temporário)
+        obrigatorio: true
+        origem_valores: texto livre ou preenchido pelo botão Buscar Posição Livre; só
+          aparece quando o destino escolhido é 'Arquivo temporário'
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-07
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: "'Guardar correção' nem sempre aparece desativado antes de qualquer
+      alteração: para as caixas em Arquivo temporário (C08130, C08182) o botão
+      surgiu sem o atributo disabled logo após a pesquisa; para caixas noutros
+      estados (102516 'Em preparação', C24035 'Armazém de entrada', 102512 'Em
+      digitalização') surgiu com disabled. É uma divergência de comportamento
+      entre estados que o CT-10 não previa e que não cheguei a confirmar como
+      bug real, só a documentar. Não encontrei nenhuma caixa em estado terminal
+      (ex.: Expedida/Armazém de saída) na massa de referência do documento para
+      confirmar o bloqueio descrito no CT-08."
+  - id: A05
+    tipo: consulta
+    nome: Buscar Posição Livre
+    como: Dentro da correção de caixa (A04), com o destino 'Arquivo temporário'
+      selecionado, clicar em 'Buscar Posição Livre'.
+    promessa: "Preenche automaticamente o campo Posição com uma posição livre da
+      zona de arquivo (observado: devolveu '0001')."
+    casos_documento:
+      - CT-02
+      - CT-09
+insumos_necessarios:
+  - descricao: Caixas em estados intermédios da máquina de estados (Armazém de
+      entrada, Em preparação, Em digitalização, Arquivo temporário)
+    obtivel: tela
+    razao: Encontradas diretamente pesquisando os códigos de referência do próprio
+      documento (C24035, 102516, 102512, C08130/C08182) no ecrã, sem SQL.
+  - descricao: Caixa em estado terminal (Expedido/Armazém de saída) para validar o
+      bloqueio de movimento do CT-08
+    obtivel: bd
+    razao: Nenhum dos códigos de referência do documento estava nesse estado; seria
+      preciso localizar por SQL em GESTARMAZEM.TDCAIXA ou levar uma caixa de
+      teste pelo fluxo completo via Picking para Expedição.
+  - descricao: Cadeia de teste fatura > pasta > caixa criada pela aplicação (Registo
+      de Entrada + Associação à Caixa), para corrigir sem tocar em históricos
+    obtivel: tela
+    razao: Os ecrãs de Registo de Entrada e Associação à Caixa criam essa cadeia;
+      usei uma fatura histórica (E023-8) apenas para inventariar o comportamento
+      do ecrã, sem gravar nada.
+  - descricao: Pasta com 0 lotes (caso-limite citado no documento)
+    obtivel: bd
+    razao: O documento menciona que existem em QUA, mas sem indicar o código; exige
+      SQL para identificar antes de pesquisar no ecrã.
+  - descricao: Segundo utilizador em sessão simultânea para exercer o cenário de
+      concorrência (CT-13)
+    obtivel: nao
+    razao: Depende de um segundo operador/sessão em paralelo, fora do alcance de uma
+      exploração com um único browser.
+  - descricao: Trilho de auditoria da correção (quem corrigiu, quando, valor anterior)
+    obtivel: nao
+    razao: Não existe nenhum campo, secção ou ação no ecrã que mostre histórico de
+      correções; se existir, só seria visível por SQL fora do ecrã — nenhuma
+      ação da tela dá acesso a isto.
+casos_sem_accao:
+  - CT-13
+repescagem:
+  feita_em: 2026-09-02
+  alvos:
+    - alvo: "CT-13: Concorrência na correção do mesmo objeto (segundo utilizador em
+        sessão simultânea)"
+      procurei:
+        - Ecrã de login ou seletor de utilizador que permitisse abrir uma
+          segunda identidade/sessão
+        - Ícone ou menu de perfil com opção de 'trocar utilizador' ou 'nova
+          sessão'
+        - Mecanismos multi-operador nas outras telas da secção Gestão de Armazém
+          (identificação por crachá em estações partilhadas, seletores de perfil
+          de demonstração) que pudessem servir de segunda sessão simultânea
+          sobre o mesmo objeto
+        - Qualquer indicação de bloqueio otimista/pessimista (lock, aviso de 'em
+          edição por outro utilizador') no painel de correção de
+          Localizar/Corrigir que revelasse a existência de gestão de sessões
+          concorrentes
+      onde:
+        - http://localhost:4174/arquivo — cabeçalho com o perfil 'Manta /
+          PRRmanta_dev'; sem opção de trocar de utilizador nem de abrir segunda
+          sessão
+        - http://localhost:4174/ — página inicial; sem ecrã de login nem lista
+          de utilizadores para autenticar uma segunda identidade
+        - "http://localhost:4174/armazem/preparacao — 'Estação partilhada: cada
+          operador identifica-se com o crachá para iniciar ou encerrar a
+          preparação de uma caixa'"
+        - http://localhost:4174/armazem/transferencia-arquivo-temporario —
+          seletor 'Perfil (demo)' com a opção 'Operador'
+      resultado: nao_existe
+      accao: null
+      nota: "A aplicação corre com uma única sessão de demonstração autenticada
+        automaticamente (utilizador 'Manta / PRRmanta_dev'); não há ecrã de
+        login nem seletor de utilizador/sessão em lado nenhum da app. A tela de
+        Preparação tem uma 'estação partilhada' com identificação por crachá,
+        mas é uso sequencial de um único terminal por vários operadores (um de
+        cada vez), não duas sessões simultâneas a editar o mesmo objeto. A tela
+        de Transferência para Arquivo Temporário tem um seletor 'Perfil (demo)'
+        que troca o papel visível dentro da MESMA sessão/browser, não cria uma
+        segunda sessão independente — não é a mesma coisa. O painel de correção
+        em Localizar/Corrigir (testado com a caixa C08130 e a fatura E023-8) não
+        mostra qualquer aviso de edição concorrente, lock ou versão, o que
+        sugere (sem confirmar, pois não há como testar sem submeter) que a app
+        pode não detetar conflitos. Confirma-se a conclusão da primeira
+        passagem: obter um segundo operador real exige infraestrutura de teste
+        fora do alcance de uma exploração com um único browser
+        (credenciais/sessão própria de outro utilizador), e mesmo que essa
+        segunda sessão existisse, exercer CT-13 exigiria guardar alterações em
+        ambas — o que viola a regra de não submeter nada nesta exploração."
+    - alvo: Trilho de auditoria da correção (quem corrigiu, quando, valor anterior)
+      procurei:
+        - Secção, aba ou botão 'Histórico'/'Auditoria'/'Log' dentro do painel de
+          correção (De atual / Para destino) de Localizar/Corrigir, para os três
+          tipos (Caixa, Factura, Pasta)
+        - Colunas de utilizador/operador nas tabelas de resultados das outras
+          telas da secção, que pudessem revelar quem fez a última alteração a
+          uma fatura/pasta/caixa
+        - Qualquer histórico de alterações associado a uma fatura, pasta ou
+          caixa nas telas de Associação à Caixa, Faturas com Incidência, Registo
+          de Entrada, Registo de Entrada ANF, Picking para Expedição,
+          Preparação, Transferência e Libertar Arquivo Temporário
+        - "Campos de data (ex.: 'Atualizado', 'Data Inserção', 'Hora') para
+          confirmar se identificam também o autor e o valor anterior, ou só a
+          data"
+      onde:
+        - "http://localhost:4174/arquivo — painel 'Corrigir caixa C08130' (De
+          atual: Localização/Nº de pastas; Para destino: Localização) e painel
+          'Corrigir factura E023-8' (De atual: Pasta/Caixa/Localização/Nº de
+          lotes/Observações; Para destino: Nº de lotes/Observações) — sem
+          qualquer campo, aba ou botão de histórico"
+        - http://localhost:4174/armazem/associacao-caixa/listagem — tabela de
+          resultados (colunas IdFactura, Prestador, Factura, Data Receção,
+          Caixa, Pasta, Nº Lotes, Lugar da Caixa, Estado da Caixa, Observações)
+          — sem coluna de utilizador nem de valor anterior
+        - http://localhost:4174/gestao-armazem/faturas-incidencia — tabela de
+          resultados (colunas Data Inserção, Área, Local, Código, Convenção,
+          Prestador, Nº Factura, Quant. Lotes, Data Factura, Obs) — 'Data
+          Inserção' é a data de entrada da fatura, não de correção; sem coluna
+          de utilizador
+        - http://localhost:4174/armazem/libertar-arquivo-temporario — secção
+          'Histórico de libertações' (0 registos no ambiente); é o mais próximo
+          de um log na secção, mas regista libertações de arquivo, não correções
+          de fatura/pasta/caixa, e por estar vazio não foi possível confirmar se
+          teria coluna de utilizador
+        - http://localhost:4174/armazem/preparacao — sem tabela de histórico
+          visível (0 caixas em preparação)
+        - http://localhost:4174/armazem/transferencia-arquivo-temporario —
+          tabela 'Caixas alocadas' com coluna 'Hora', mas sem coluna de
+          utilizador
+        - http://localhost:4174/armazem/guia-anf e
+          http://localhost:4174/armazem/registo-entrada — tabelas de ciclos com
+          coluna 'Atualizado' (só data), sem coluna de utilizador
+        - http://localhost:4174/picking-expedicao — tabela de ordens de picking
+          (colunas Ordem, Ciclo, Área, Estado, Nº Documentos, Data) — sem
+          utilizador nem histórico de alterações
+      resultado: nao_existe
+      accao: null
+      nota: "Em nenhuma das telas da secção Gestão de Armazém existe um campo, coluna
+        ou secção que mostre quem alterou um registo, nem o valor anterior lado
+        a lado com o novo. As tabelas mostram quando (datas como 'Atualizado',
+        'Data Inserção', 'Hora', 'Data Receção') mas nunca quem. O único
+        'histórico' nomeado na secção é o de Libertar Arquivo Temporário, mas é
+        sobre outra ação (libertação física de caixas do arquivo), não sobre
+        correções feitas em Localizar/Corrigir — mesmo que existisse população
+        de dados ali, seria um equivalente aproximado, não o mesmo caso.
+        Confirma-se a conclusão da primeira passagem: sem SQL fora do ecrã não
+        há forma de recuperar quem corrigiu, quando, e o valor anterior."

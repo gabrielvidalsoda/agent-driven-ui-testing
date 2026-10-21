@@ -1,0 +1,10 @@
+node_modules/
+relatorios/
+corridas/
+corridas-b/
+corridas-scopepilot/
+*.log
+.env
+perfis/*.env
+!perfis/*.exemplo
+

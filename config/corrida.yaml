@@ -1,0 +1,47 @@
+base_url: http://localhost:4174
+raiz_cenarios: ../UI_docs/_cenarios_teste
+pasta_corridas: ./corridas
+modelo: sonnet
+timeout_ms: 3600000
+imagens: allow
+
+# Regua de severidade da corrida. 1 ve tudo e sugere melhorias, 2 ve o que esta partido, 3 ve so
+# o que impede alguem de trabalhar. Sobreponivel por documento no alvos.yaml e por --nivel.
+nivel: 3
+
+# Onde vivem os mapas das telas.
+pasta_mapas: ./mapas
+
+# Se o mapa e obrigatorio. Em true (a omissao) um documento sem mapa nao corre: o ambito do
+# teste e o que a tela entrega, e isso apura-se com `npm run mapear` antes de se gastar em
+# testes. Em false o ambito passa a ser o documento de cenarios mais o requisito tecnico do
+# insumos.yaml, com a tela percorrida pelo proprio agente -- e o modo para projetos onde a
+# documentacao tecnica das telas ja existe e faz o trabalho que o mapa fazia.
+#
+# Sobreponivel por documento no alvos.yaml (`usar_mapa: true` volta a exigir o mapa numa tela
+# em especial) e na linha de comando com --sem-mapa / --com-mapa.
+#
+# Neste projeto fica em false por decisao do user (2026-09-03): os requisitos tecnicos das
+# telas vivem no insumos.yaml e fazem o trabalho que o mapa fazia. Os mapas ja levantados nao
+# foram apagados -- voltar a true e uma linha.
+usar_mapa: false
+
+# --bare exige ANTHROPIC_API_KEY (modo da VM). Sem a chave, deixar em falso.
+# Omitido = decide-se pela presenca da variavel de ambiente.
+bare: false
+
+# Caminho do menu do front, para avisar quando o sessoes.yaml ficar atras do produto.
+menu_do_front: ../UI-novo/UI-ui/src/layout/MainLayout.tsx
+tentativas: 2
+
+# Sonda do ambiente, verificada antes de cada documento. Tem de ser um endpoint da API que va
+# a base de dados: uma rota de tela responde 200 mesmo com tudo em baixo, porque o servidor de
+# preview devolve o index.html da SPA para qualquer caminho.
+sonda_ambiente: http://localhost:8083/UI/api/armazem/preparacoes?ativas=true
+timeout_ambiente_ms: 20000
+
+# Contra o que foi mapeado. Fica gravado em mapeado_contra de cada mapa: um mapa sem a versao
+# do que estava a correr nao se sabe se envelheceu.
+versoes:
+  ui: "origin/develop 8e570ce, build de 2026-09-02"
+  api: "jar de origin/develop 0c4e07d, construido a 2026-09-02"

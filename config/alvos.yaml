@@ -1,0 +1,359 @@
+documentos:
+  alarmistica/monitorizacao-alertas.md:
+    rota: POR_PREENCHER
+    sessao: alarmistica
+    escrita: false
+    candidatas: []
+  conferencia/aprovacoes-pendentes.md:
+    rota: POR_PREENCHER
+    sessao: conferencia
+    escrita: true
+    candidatas:
+      - motor-regras/aprovacoes
+  conferencia/cockpit.md:
+    rota: conferencia/cockpit
+    sessao: conferencia
+    escrita: true
+  conferencia/gestao-calendario.md:
+    rota: POR_PREENCHER
+    sessao: conferencia
+    escrita: true
+    candidatas:
+      - gestao-armazem/faturas-incidencia
+      - gestao-armazem/faturas-incidencia/atribuir
+  conferencia/log-conferencia.md:
+    rota: POR_PREENCHER
+    sessao: conferencia
+    escrita: true
+    candidatas:
+      - conferencia/cockpit
+      - conferencia/cockpit/disparar
+  conferencia/regras.md:
+    rota: POR_PREENCHER
+    sessao: conferencia
+    escrita: true
+    candidatas:
+      - motor-regras
+      - motor-regras/regras
+      - motor-regras/workflows
+      - motor-regras/execucoes
+      - motor-regras/aprovacoes
+      - motor-regras/regras/nova
+  conferencia/supervisao.md:
+    rota: POR_PREENCHER
+    sessao: conferencia
+    escrita: true
+    candidatas: []
+  conferencia/workflows.md:
+    rota: POR_PREENCHER
+    sessao: conferencia
+    escrita: true
+    candidatas:
+      - motor-regras/workflows
+      - motor-regras/workflows/novo
+  conferencia/worklist.md:
+    rota: POR_PREENCHER
+    sessao: conferencia
+    escrita: true
+    candidatas: []
+  consulta-area-prestacao/cuidados-continuados-facturas.md:
+    rota: cuidados-continuados/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/cuidados-respiratorios-facturas.md:
+    rota: cuidados-respiratorios/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/cuidados-respiratorios-lotes.md:
+    rota: cuidados-respiratorios/lote
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/cuidados-respiratorios-prestacoes.md:
+    rota: cuidados-respiratorios/prestacao
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/dispensa-proximidade-facturas.md:
+    rota: dispensa-proximidade/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/dispensa-proximidade-prestacoes.md:
+    rota: dispensa-proximidade/prestacao
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/hemodialise-facturas.md:
+    rota: hemodialise/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/hemodialise-prestacoes.md:
+    rota: hemodialise/prestacao
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/mcdt-facturas.md:
+    rota: mcdts/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/mcdt-lotes.md:
+    rota: mcdts/lote
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/mcdt-prestacao-ipatimup.md:
+    rota: mcdts/prestacoes-ipatimup
+    sessao: consulta-area-prestacao
+    escrita: true
+  consulta-area-prestacao/mcdt-prestacoes.md:
+    rota: mcdts/prescricao
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/medicamentos-facturas.md:
+    rota: medicamentos/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/medicamentos-lotes.md:
+    rota: medicamentos/lote
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/medicamentos-prestacoes.md:
+    rota: medicamentos/prestacoes
+    sessao: consulta-area-prestacao
+    escrita: true
+  consulta-area-prestacao/saude-oral-facturas.md:
+    rota: saude-oral/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/saude-oral-prestacoes.md:
+    rota: saude-oral/prestacoes
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/tratamentos-termais-facturas.md:
+    rota: tratamentos-termais/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/tratamentos-termais-lotes.md:
+    rota: tratamentos-termais/lote
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/tratamentos-termais-prestacoes.md:
+    rota: tratamentos-termais/prestacao
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/troca-seringas-facturas.md:
+    rota: troca-seringas/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/uts-facturas.md:
+    rota: uts/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/uts-prestacoes.md:
+    rota: uts/prestacao
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/vacinas-facturas.md:
+    rota: vacinas/factura
+    sessao: consulta-area-prestacao
+    escrita: false
+  consulta-area-prestacao/vacinas-prestacoes.md:
+    rota: vacinas/prestacao
+    sessao: consulta-area-prestacao
+    escrita: false
+  controlo-contabilizacao/notas-debito-credito.md:
+    rota: POR_PREENCHER
+    sessao: controlo-contabilizacao
+    escrita: true
+    candidatas: []
+  controlo-contabilizacao/pesquisa-mensagens-fe.md:
+    rota: POR_PREENCHER
+    sessao: controlo-contabilizacao
+    escrita: false
+    candidatas: []
+  controlo-contabilizacao/recolha-fatura.md:
+    rota: POR_PREENCHER
+    sessao: controlo-contabilizacao
+    escrita: true
+    candidatas: []
+  controlo-qualidade/artefactos.md:
+    rota: controlo-qualidade/artefactos
+    sessao: controlo-qualidade
+    escrita: true
+  controlo-qualidade/configuracao-pipelines.md:
+    rota: POR_PREENCHER
+    sessao: controlo-qualidade
+    escrita: true
+    candidatas: []
+  controlo-qualidade/dashboard.md:
+    rota: POR_PREENCHER
+    sessao: controlo-qualidade
+    escrita: false
+    candidatas: []
+  controlo-qualidade/execucoes.md:
+    rota: POR_PREENCHER
+    sessao: controlo-qualidade
+    escrita: false
+    candidatas:
+      - motor-regras/execucoes
+  controlo-qualidade-novo/biblioteca-artefactos.md:
+    rota: POR_PREENCHER
+    sessao: controlo-qualidade-novo
+    escrita: true
+    candidatas:
+      - controlo-qualidade/artefactos
+      - controlo-qualidade/artefactos/novo
+  controlo-qualidade-novo/correcoes.md:
+    rota: POR_PREENCHER
+    sessao: controlo-qualidade-novo
+    escrita: true
+    candidatas: []
+  controlo-qualidade-novo/dashboard-ciclo.md:
+    rota: POR_PREENCHER
+    sessao: controlo-qualidade-novo
+    escrita: false
+    candidatas: []
+  controlo-qualidade-novo/workflow-artefactos.md:
+    rota: POR_PREENCHER
+    sessao: controlo-qualidade-novo
+    escrita: true
+    candidatas:
+      - controlo-qualidade/artefactos
+      - controlo-qualidade/artefactos/novo
+  controlo-qualidade-novo/worklist-cq-si.md:
+    rota: POR_PREENCHER
+    sessao: controlo-qualidade-novo
+    escrita: false
+    candidatas: []
+  dados-referencia/convencoes.md:
+    rota: dados-referencia/convencoes
+    sessao: dados-referencia
+    escrita: true
+  dados-referencia/embalagens-e-medicamentos.md:
+    rota: dados-referencia/embalagens-medicamentos
+    sessao: dados-referencia
+    escrita: false
+  dados-referencia/exames-mcdt.md:
+    rota: mcdts/exames
+    sessao: dados-referencia
+    escrita: false
+  dashboards/artefactos.md:
+    rota: POR_PREENCHER
+    sessao: dashboards
+    escrita: true
+    candidatas:
+      - controlo-qualidade/artefactos
+      - controlo-qualidade/artefactos/novo
+  dashboards/configuracao-dashboards-dinamicos.md:
+    rota: POR_PREENCHER
+    sessao: dashboards
+    escrita: true
+    candidatas:
+      - controlo-qualidade/dashboards
+      - controlo-qualidade/dashboards/novo
+      - controlo-qualidade/dashboards-vista
+  dashboards/dashboard-financeiro.md:
+    rota: POR_PREENCHER
+    sessao: dashboards
+    escrita: false
+    candidatas: []
+  dashboards/produtividade-conferencia-manual.md:
+    rota: POR_PREENCHER
+    sessao: dashboards
+    escrita: false
+    candidatas:
+      - conferencia/cockpit
+      - conferencia/cockpit/disparar
+  dashboards/produtividade-preparacao.md:
+    rota: POR_PREENCHER
+    sessao: dashboards
+    escrita: false
+    candidatas:
+      - armazem/preparacao
+  dashboards/visualizar-dashboards-dinamicos.md:
+    rota: POR_PREENCHER
+    sessao: dashboards
+    escrita: true
+    candidatas:
+      - controlo-qualidade/dashboards
+      - controlo-qualidade/dashboards/novo
+      - controlo-qualidade/dashboards-vista
+  fecho/dashboard-fecho.md:
+    rota: POR_PREENCHER
+    sessao: fecho
+    escrita: true
+    candidatas: []
+  gestao-armazem/associacao-caixa.md:
+    rota: armazem/associacao-caixa
+    sessao: gestao-armazem
+    escrita: true
+  gestao-armazem/faturas-incidencia.md:
+    rota: gestao-armazem/faturas-incidencia
+    sessao: gestao-armazem
+    escrita: true
+  gestao-armazem/libertar-arquivo-temporario.md:
+    rota: armazem/libertar-arquivo-temporario
+    sessao: gestao-armazem
+    escrita: true
+  gestao-armazem/localizar-corrigir.md:
+    rota: arquivo
+    sessao: gestao-armazem
+    escrita: true
+  gestao-armazem/picking-expedicao.md:
+    rota: picking-expedicao
+    sessao: gestao-armazem
+    escrita: true
+  gestao-armazem/preparacao.md:
+    rota: armazem/preparacao
+    sessao: gestao-armazem
+    escrita: true
+  gestao-armazem/registo-entrada-anf.md:
+    rota: armazem/guia-anf
+    sessao: gestao-armazem
+    escrita: true
+  gestao-armazem/registo-entrada.md:
+    rota: armazem/registo-entrada
+    sessao: gestao-armazem
+    escrita: true
+  gestao-armazem/transferencia-arquivo-temporario.md:
+    rota: armazem/transferencia-arquivo-temporario
+    sessao: gestao-armazem
+    escrita: false
+  reclamacoes/cockpit-reclamacoes.md:
+    rota: POR_PREENCHER
+    sessao: reclamacoes
+    escrita: true
+    candidatas:
+      - conferencia/cockpit
+      - conferencia/cockpit/disparar
+  reclamacoes/consulta-reclamacoes.md:
+    rota: POR_PREENCHER
+    sessao: reclamacoes
+    escrita: true
+    candidatas: []
+  reclamacoes/controlo-qualidade.md:
+    rota: controlo-qualidade
+    sessao: reclamacoes
+    escrita: true
+  reclamacoes/dashboard.md:
+    rota: POR_PREENCHER
+    sessao: reclamacoes
+    escrita: true
+    candidatas: []
+  reclamacoes/fecho-reclamacoes.md:
+    rota: POR_PREENCHER
+    sessao: reclamacoes
+    escrita: true
+    candidatas: []
+  reclamacoes/inclusao-manual.md:
+    rota: POR_PREENCHER
+    sessao: reclamacoes
+    escrita: true
+    candidatas: []
+  reclamacoes/rececao-anf.md:
+    rota: POR_PREENCHER
+    sessao: reclamacoes
+    escrita: true
+    candidatas:
+      - armazem/guia-anf
+      - armazem/guia-anf/pistolagem
+  reclamacoes/rececao-portal.md:
+    rota: POR_PREENCHER
+    sessao: reclamacoes
+    escrita: true
+    candidatas: []

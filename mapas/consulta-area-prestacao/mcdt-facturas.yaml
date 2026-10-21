@@ -1,0 +1,390 @@
+documento: consulta-area-prestacao/mcdt-facturas.md
+rota: /mcdts/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Filtrar por Número da Factura
+    como: Preencher o campo texto 'Número da Factura' na Pesquisa Facturas e clicar
+      em Pesquisar
+    promessa: devolve a(s) factura(s) cujo número corresponde ao texto pesquisado,
+      incluindo o caso de nenhum resultado
+    rota: /mcdts/factura
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+    casos_documento:
+      - CT-01
+      - CT-08
+      - CT-09
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Filtrar por Data da Factura
+    como: Preencher o campo 'Data da Factura' (DD/MM/YYYY) ou escolher a data no
+      calendário (botão 'Abrir/fechar calendário') e pesquisar
+    promessa: restringe os resultados às facturas com a data indicada
+    rota: /mcdts/factura
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+    casos_documento: []
+  - id: filtro-numero-processo
+    tipo: filtro
+    nome: Filtrar por Número do Processo
+    como: Preencher o campo texto 'Número do Processo' e pesquisar
+    promessa: restringe os resultados ao ID de processo indicado
+    rota: /mcdts/factura
+    entradas:
+      - campo: Número do Processo
+        obrigatorio: false
+    casos_documento: []
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: Filtrar por NIF Prestador
+    como: Preencher o campo texto 'NIF Prestador' e pesquisar
+    promessa: devolve todas as facturas do prestador com esse NIF, ordenadas por
+      data decrescente
+    rota: /mcdts/factura
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+    casos_documento:
+      - CT-02
+  - id: filtro-codigo-prestador
+    tipo: filtro
+    nome: Filtrar por Código do Prestador
+    como: Preencher o campo texto 'Código do Prestador' e pesquisar
+    promessa: restringe os resultados ao código de convenção do prestador indicado
+    rota: /mcdts/factura
+    entradas:
+      - campo: Código do Prestador
+        obrigatorio: false
+    casos_documento: []
+  - id: filtro-estado
+    tipo: filtro
+    nome: Filtrar por Estado
+    como: Abrir o combobox 'Estado' e escolher uma das opções
+    promessa: restringe os resultados ao estado de conferência escolhido; as opções
+      (Recepcionada, Verificada, Conferida Sem Erros, Conferida Com Erros,
+      Aguarda Regularização, Recepcionada com Erros, Aguarda Comunicação de
+      Correcções, Processamento Concluído, Comunicada Informação Não Conferida,
+      Em Reconferência, Anulada) cobrem 1:1 os 11 códigos de TRCFESTADO tipo doc
+      1 (RECP, V, CSE, CCE, AR, ER, ACC, PC, CINC, RE, AN), confirmado também
+      pelo parâmetro idEstado=15 na URL ao escolher 'Conferida Com Erros'
+    rota: /mcdts/factura
+    entradas:
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: combobox fechado, 11 opções fixas
+    casos_documento:
+      - CT-03
+      - CT-04
+    equivalente_aproximado: true
+    ressalva: CT-04 (catálogo alinhado, sem órfãos) está totalmente confirmado.
+      CT-03 pede Estado+Ciclo, mas a tela não tem nenhum campo de Ciclo;
+      filtrando só por Estado=Conferida Com Erros obtêm-se 22.932 facturas de
+      todos os ciclos, não apenas do ciclo 202601 do cenário.
+  - id: pesquisar
+    tipo: consulta
+    nome: Executar pesquisa
+    como: Clicar em 'Pesquisar' depois de preencher um ou mais filtros
+    promessa: a grelha 'Resultados da Pesquisa' reflete os critérios preenchidos,
+      com paginação e contagem de resultados vindas do servidor
+    rota: /mcdts/factura
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-09
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: Pesquisar sem nenhum filtro preenchido devolve 0 resultados ('Nenhum
+      resultado encontrado...'), não a listagem completa das 92.736 facturas;
+      CT-10 pede um critério amplo tipo 'ciclo sem NIF', que não existe — foi
+      necessário usar o filtro Estado sozinho (22.932 resultados, 2.294 páginas)
+      como aproximação para exercitar paginação/volume/exportação.
+  - id: limpar-filtros
+    tipo: filtro
+    nome: Limpar filtros
+    como: Clicar no botão 'Limpar' junto a Pesquisar
+    promessa: repõe todos os campos do formulário de pesquisa
+    rota: /mcdts/factura
+    casos_documento: []
+  - id: ordenar-colunas
+    tipo: consulta
+    nome: Ordenar colunas da grelha de resultados
+    como: Clicar num cabeçalho de coluna com rótulo 'Ordenar por X' (todas as
+      colunas exceto 'Factura Papel')
+    promessa: "reordena os resultados pela coluna escolhida (confirmado: clicar em
+      'Ordenar por Data Factura' adiciona sort=dataFactura,asc à URL e reordena
+      a grelha)"
+    rota: /mcdts/factura
+    casos_documento: []
+  - id: selecionar-tamanho-pagina
+    tipo: consulta
+    nome: Selecionar 'Resultados por página'
+    como: Abrir o combobox 'Resultados por página' e escolher 10, 15, 20 ou 50
+    promessa: ajusta quantos registos aparecem por página da grelha
+    rota: /mcdts/factura
+    casos_documento: []
+  - id: paginar-resultados
+    tipo: navegacao
+    nome: Paginar resultados
+    como: Clicar num número de página ou nos botões
+      primeira/anterior/seguinte/última página
+    promessa: "navega entre páginas de resultados sem recarregar tudo; paginação
+      server-side (confirmado: filtro Estado=CCE com 22.932 resultados em 2.294
+      páginas; a última página mostrou exatamente os 2 registos remanescentes,
+      sem duplicar nem omitir face à contagem total)"
+    rota: /mcdts/factura
+    casos_documento:
+      - CT-10
+  - id: exportar-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Clicar em 'Exportar XLSX' (visível junto ao título 'Resultados da
+      Pesquisa' depois de uma pesquisa com resultados)
+    promessa: "descarrega um ficheiro 'facturas-mcdt.xlsx' com os resultados da
+      pesquisa aplicada (confirmado: POST para
+      /ccmsns/api/mcdt/facturas/exportar?idEstado=15 e download efetivo do
+      ficheiro)"
+    rota: /mcdts/factura
+    casos_documento:
+      - CT-10
+  - id: ver-detalhe-factura
+    tipo: navegacao
+    nome: Ver detalhe da factura
+    como: Clicar no botão-ícone 'Ver detalhe' na primeira coluna de uma linha de
+      resultados
+    promessa: abre o ecrã de Detalhe da Factura MCDT (/mcdts/factura/{PIID}) com
+      cabeçalho (prestador, área, número/data/estado, entidade adquirente,
+      localização dos arquivos), Totais comunicados e Totais apurados, e as tabs
+      Informações/Lotes
+    rota: /mcdts/factura/{id}
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-05
+      - CT-06
+      - CT-07
+      - CT-08
+  - id: tab-informacoes
+    tipo: consulta
+    nome: Tab Informações do detalhe
+    como: No detalhe da factura, selecionar a tab 'Informações' (é a tab selecionada
+      por omissão)
+    promessa: mostra as secções Informação comunicada, Informação conferida,
+      Diferenças, Erros, Notas Crédito/Débito e Expedição, cada uma com a sua
+      grelha paginada
+    rota: /mcdts/factura/{id}
+    casos_documento:
+      - CT-05
+      - CT-07
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "CT-07 (CSE vs CCE) confirma-se integralmente: na factura CSE 1056801,
+      Comunicado=Apurado (705,43=705,43) e Diferenças/Erros mostram 'Sem
+      resultados'/'Não existem erros'. Já para CT-05, na factura CCE 1036726 a
+      secção Diferenças tem conteúdo (20,10 em Exames Sem Papel) mas Erros está
+      vazia ('Não existem erros para esta factura'); o documento esperava as
+      duas secções com conteúdo coerente com o estado CCE."
+  - id: tab-lotes
+    tipo: consulta
+    nome: Tab Lotes do detalhe
+    como: No detalhe da factura, selecionar a tab 'Lotes'
+    promessa: lista os lotes da factura com Nº Requisições e totais
+      comunicado/apurado por lote, mais um resumo global comunicado/apurado por
+      baixo da tabela
+    rota: /mcdts/factura/{id}
+    casos_documento:
+      - CT-06
+  - id: ver-lotes-desta-factura
+    tipo: navegacao
+    nome: Ver lotes desta factura (a partir de uma linha de Informação)
+    como: Na tab Informações, clicar no botão 'Ver lotes desta factura' de uma linha
+      de Tipo Beneficiário (Informação comunicada/conferida/Diferenças)
+    promessa: muda para a tab Lotes do mesmo detalhe de factura
+    rota: /mcdts/factura/{id}
+    casos_documento: []
+  - id: ver-detalhe-lote
+    tipo: navegacao
+    nome: Ver detalhe do lote
+    como: Na tab Lotes, clicar no botão-ícone 'Ver detalhe do lote' de uma linha
+    promessa: navega para o ecrã Lotes MCDT (/mcdts/lote/{PIID}), fora do escopo
+      desta tela, com o mesmo cabeçalho de factura/prestador, tabs 'Detalhe do
+      Lote'/'Prestações' e um botão 'Factura' para voltar
+    rota: /mcdts/lote/{id}
+    casos_documento: []
+  - id: ver-factura-imagem
+    tipo: consulta
+    nome: Ver Factura (imagem digitalizada)
+    como: Clicar no botão 'Ver Factura' no cabeçalho do detalhe da factura
+    promessa: abre um visualizador em modal com tabs 'Factura'/'Resumo', controlos
+      de zoom, rotação (90° esq./dir.) e 'Guardar imagem'
+    rota: /mcdts/factura/{id}
+    casos_documento: []
+    ressalva: Nesta sessão o pedido a /ccmsns/api/documentos/{guid} devolveu 502 Bad
+      Gateway e a imagem não chegou a carregar (ícone de imagem quebrada, sem
+      mensagem de erro visível ao utilizador). O botão aparece desabilitado
+      quando a factura não tem GUID de documento associado (ex. registo de teste
+      PIID 1065518).
+  - id: erros-e-diferencas
+    tipo: navegacao
+    nome: Ver Erros e diferenças (ecrã dedicado)
+    como: No detalhe da factura, clicar no botão 'Erros e diferenças' no rodapé
+    promessa: abre /mcdts/factura/{id}/erros-diferencas com as secções Diferenças e
+      Erros isoladas numa página própria, com o mesmo conteúdo que já aparece na
+      tab Informações
+    rota: /mcdts/factura/{id}/erros-diferencas
+    casos_documento:
+      - CT-05
+  - id: ver-expedicao
+    tipo: navegacao
+    nome: Ver expedição de uma factura
+    como: Na secção Expedição da tab Informações, clicar no botão 'Ver expedição
+      {número}' de uma linha (só existe quando há expedições associadas)
+    promessa: rótulo do botão sugere abrir o detalhe da expedição associada à
+      factura; não foi acionado nesta passagem por não ser claro se é reversível
+    rota: /mcdts/factura/{id}
+    casos_documento: []
+insumos_necessarios:
+  - descricao: Factura MCDT em estado Conferida Com Erros com registos em Diferenças
+      (e idealmente também em Erros)
+    obtivel: tela
+    razao: localizável pelo filtro Estado=Conferida Com Erros ou diretamente pelo
+      número; ex. PIID 1036726 tem Diferenças preenchidas mas Erros vazio nesta
+      massa
+  - descricao: Factura MCDT em estado Conferida Sem Erros com Comunicado = Apurado e
+      Diferenças/Erros vazios
+    obtivel: tela
+    razao: confirmado com PIID 1056801 (FTLFLPNF2025-166), localizável por NIF
+      Prestador ou número
+  - descricao: Registo de factura com estado sintético fora do catálogo real (ex.
+      99999 'TST') para testar robustez de exibição de estado
+    obtivel: tela
+    razao: existe pelo menos um caso documentado e localizável pelo número
+      (FAT-TESTE-IPATIMUP-001, PIID 1065518); descobrir outros exigiria consulta
+      prévia à BD
+  - descricao: Recorte de facturas de um ciclo de conferência específico, isolado de
+      outros filtros
+    obtivel: nao
+    razao: não existe nenhum campo 'Ciclo' no formulário de pesquisa desta tela; não
+      há forma de o obter aqui
+  - descricao: Endpoint de documentos digitalizados operacional, para validar o
+      botão 'Ver Factura' com uma imagem real
+    obtivel: nao
+    razao: nesta sessão /ccmsns/api/documentos/{guid} devolveu 502 Bad Gateway; não
+      há forma de contornar isto a partir da tela
+  - descricao: Lote MCDT associado a uma factura, para cruzar com o ecrã Lotes MCDT
+    obtivel: tela
+    razao: acessível via 'Ver detalhe do lote' a partir da tab Lotes de qualquer
+      factura com lotes
+  - descricao: Acesso à BD QUA (read-only) para confirmar os valores Apurado que
+      divergem dos Comunicado observados na maioria das facturas CCE mostradas
+    obtivel: bd
+    razao: a tela só mostra os valores finais; confirmar a origem da divergência
+      exige consulta a TDCFFACTURAMCDT/TDCFLOTEMCDT
+  - descricao: Caixa/pasta física de arquivo correspondente aos campos
+      Caixa/Pasta/Lugar/Estado da Caixa mostrados no detalhe
+    obtivel: tela
+    razao: os valores existem e aparecem preenchidos (ex. Caixa C24056), mas a
+      criação/gestão desses registos pertence ao módulo Gestão de Armazém, fora
+      desta tela
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: Recorte de facturas de um ciclo de conferência específico, isolado de
+        outros filtros
+      procurei:
+        - "Campo 'Ciclo' (ou equivalente: Mês de Conferência, Período de
+          Conferência, Ano/Mês) no formulário de pesquisa de /mcdts/factura"
+        - O mesmo campo, com outro rótulo, nos formulários de pesquisa de todas
+          as telas irmãs listadas na secção 'Consulta por Área de Prestação'
+        - Um select/combobox de ciclo escondido atrás de 'mais filtros' ou
+          secção colapsável nesses formulários
+        - Ferramenta de acesso à BD QUA (sqlplus/sql client) e ficheiro de
+          conexão db/conexao-qua.local.md referido no plano, para validar se a
+          query Q3 do plano (filtro por FIIDESTADO + XIMESCONF em
+          GESTCONFER.TDCFFACTURAMCDT) é executável nesta sessão
+      onde:
+        - http://localhost:4174/mcdts/factura (Pesquisa Facturas)
+        - http://localhost:4174/mcdts/lote (Pesquisa Lotes)
+        - http://localhost:4174/mcdts/prescricao (Pesquisa Prestações)
+        - http://localhost:4174/mcdts/prestacoes-ipatimup
+        - http://localhost:4174/medicamentos/factura
+        - http://localhost:4174/medicamentos/lote
+        - http://localhost:4174/medicamentos/prestacoes
+        - http://localhost:4174/cuidados-continuados/factura
+        - http://localhost:4174/cuidados-respiratorios/factura
+        - http://localhost:4174/cuidados-respiratorios/lote
+        - http://localhost:4174/cuidados-respiratorios/prestacao
+        - http://localhost:4174/dispensa-proximidade/factura
+        - http://localhost:4174/dispensa-proximidade/prestacao
+        - http://localhost:4174/hemodialise/factura
+        - http://localhost:4174/hemodialise/prestacao
+        - http://localhost:4174/tratamentos-termais/factura
+        - http://localhost:4174/tratamentos-termais/lote
+        - http://localhost:4174/tratamentos-termais/prestacao
+        - http://localhost:4174/saude-oral/factura
+        - http://localhost:4174/saude-oral/prestacoes
+        - http://localhost:4174/troca-seringas/factura
+        - http://localhost:4174/uts/factura
+        - http://localhost:4174/uts/prestacao
+        - http://localhost:4174/vacinas/factura
+        - http://localhost:4174/vacinas/prestacao
+        - Sistema de ficheiros do repositório e PATH da sessão (procura por
+          conexao-qua.local.md e por sqlplus/sql client)
+      resultado: nao_existe
+      accao: null
+      nota: "Confirmei rótulos de todos os campos de pesquisa (via DOM, não só
+        snapshot) nas 24 telas listadas da secção 'Consulta por Área de
+        Prestação'. Nenhuma tem campo 'Ciclo'. A única aproximação encontrada é
+        'Mês de Conferência' (textbox livre) em /troca-seringas/factura — mas é
+        uma área de prestação completamente diferente (Programa Troca de
+        Seringas), não alimenta nem filtra facturas MCDT, pelo que não serve
+        para obter o recorte pedido; por isso não conta como 'encontrado'.
+        Quanto à via BD que o próprio plano sugere (query Q3, filtro XIMESCONF
+        em TDCFFACTURAMCDT): procurei o ficheiro de conexão
+        db/conexao-qua.local.md e um cliente sqlplus/sql no ambiente desta
+        sessão e não encontrei nenhum dos dois, logo não pude executar nem
+        confirmar essa query — não posso promovê-la a 'encontrado obtível por
+        bd' com base apenas em lê-la no documento do plano, isso seria hipótese,
+        não confirmação. Fica como não obtida NESTA sessão; alguém com acesso
+        real à BD QUA deve confirmar a query Q3."
+    - alvo: Endpoint de documentos digitalizados operacional, para validar o botão
+        'Ver Factura' com uma imagem real
+      procurei:
+        - Pesquisar uma factura MCDT real (FTLFLPNF2025-105, PIID 1036726, do
+          plano CT-01/CT-06) e abrir o seu detalhe
+        - Clicar no botão 'Ver Factura' e observar o pedido de rede gerado e a
+          imagem renderizada no visualizador
+        - Alternar para a aba 'Resumo' do visualizador de documento, que dispara
+          um segundo GUID/documento
+        - Repetir a navegação e o clique numa segunda passagem (nova navegação
+          completa à página, não apenas reabrir o modal) para distinguir uma
+          falha pontual de rede de uma indisponibilidade persistente do gateway
+      onde:
+        - http://localhost:4174/mcdts/factura/1036726 (detalhe da factura MCDT
+          FTLFLPNF2025-105)
+        - "Rede: GET
+          /ccmsns/api/documentos/{5B351D92-ECA5-4F99-BADD-ABA6A63DDECF}_101125_G
+          (GUID Documento Factura)"
+        - "Rede: GET
+          /ccmsns/api/documentos/{7FC77FEC-8075-4994-BF53-3C2489DE0D58}_261125_E
+          (GUID Documento Resumo)"
+      resultado: nao_existe
+      accao: null
+      nota: "O botão 'Ver Factura' existe, renderiza e abre corretamente o modal com
+        abas 'Factura'/'Resumo' — não é isto que falta. O que falta é o endpoint
+        por trás dele: tanto o GUID da Factura como o do Resumo devolveram 502
+        Bad Gateway nesta sessão, em duas tentativas separadas (incluindo uma
+        nova navegação completa à página, não apenas reabertura de modal em
+        cache), e a imagem no visualizador aparece como ícone quebrado nos dois
+        casos. Confirma a conclusão da primeira passagem: o problema é do
+        próprio serviço/gateway de documentos, não da tela nem de um caminho
+        alternativo por rota ou por outra tela — não há botão, menu ou tela irmã
+        que contorne isto, é uma falha de infraestrutura fora do alcance da UI."

@@ -1,0 +1,458 @@
+documento: consulta-area-prestacao/dispensa-proximidade-facturas.md
+rota: /dispensa-proximidade/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Pesquisar por Número da Factura
+    como: Escrever o número da factura na caixa 'Número da Factura' (placeholder
+      'Insira o número da factura') e clicar em Pesquisar.
+    promessa: Campo de texto livre 'Número da Factura' na secção Pesquisa Factura.
+    rota: /dispensa-proximidade/factura?numFactura={valor}
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre; correspondência exata — testado prefixo 'E01' não
+          devolveu nenhuma das faturas E015-xxx/E013-xxx existentes
+    casos_documento:
+      - CT-02
+      - CT-10
+      - CT-11
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Pesquisar por Data da Factura
+    como: Escrever DD/MM/YYYY na caixa 'Data da Factura' ou escolher um dia no
+      calendário (ícone à direita) e clicar em Pesquisar.
+    promessa: Campo 'Data da Factura' com seletor de calendário de dia único
+      (placeholder DD/MM/YYYY).
+    rota: /dispensa-proximidade/factura?dataFactura={AAAA-MM-DD}
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: data única via calendário; testado 30/11/2025, devolveu
+          exatamente as 2 faturas dessa data
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: O documento pede pesquisa por intervalo de datas amplo para cobrir
+      vários ciclos (202509 a 202604) numa só consulta. A tela só tem um campo
+      de data única, sem 'até'; CT-05 só é exercitável ciclo a ciclo (uma
+      pesquisa por dia), não como intervalo.
+  - id: filtro-numero-processo
+    tipo: filtro
+    nome: Pesquisar por Número do processo
+    como: Escrever o número do processo na caixa 'Número do processo' e clicar em
+      Pesquisar.
+    promessa: Campo de texto 'Número do processo'.
+    rota: /dispensa-proximidade/factura?numProcesso={valor}
+    entradas:
+      - campo: Número do processo
+        obrigatorio: false
+        origem_valores: texto livre; testado com '1898964' (processo da fatura 27146),
+          devolveu exatamente 1 resultado
+    casos_documento: []
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: Pesquisar por NIF Prestador
+    como: Escrever o NIF na caixa 'NIF Prestador' e clicar em Pesquisar.
+    promessa: Campo de texto 'NIF Prestador'.
+    rota: /dispensa-proximidade/factura?nifPrestador={valor}
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre; testado com 126072086 (3 resultados) e 501123083 (3
+          resultados)
+    casos_documento:
+      - CT-03
+  - id: filtro-cod-prestador
+    tipo: filtro
+    nome: Pesquisar por Código do prestador
+    como: Escrever o código na caixa 'Cod. Prestador' e clicar em Pesquisar.
+    promessa: Campo de texto 'Cod. Prestador'.
+    rota: /dispensa-proximidade/factura?codPrestador={valor}
+    entradas:
+      - campo: Cod. Prestador
+        obrigatorio: false
+        origem_valores: texto livre; testado com 19739, devolveu 3 resultados
+    casos_documento: []
+    ressalva: O documento chama a este filtro 'Código da Farmácia'; na tela o rótulo
+      é 'Cod. Prestador'.
+  - id: filtro-estado
+    tipo: filtro
+    nome: Pesquisar por Estado
+    como: Abrir o combobox 'Estado', escolher uma opção da lista e clicar em
+      Pesquisar.
+    promessa: "Combobox 'Estado' com 11 opções: Aguarda Comunicação de Correcções,
+      Aguarda Regularização, Anulada, Comunicada Informação Não Conferida,
+      Conferida Com Erros, Conferida Sem Erros, Em Reconferência, Processamento
+      Concluído, Recepcionada, Recepcionada com Erros, Verificada."
+    rota: /dispensa-proximidade/factura?estadoId={id}
+    entradas:
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: combobox de opção única, catálogo com 11 estados (compatível com
+          o catálogo TRCFESTADO referido no documento)
+    casos_documento:
+      - CT-04
+  - id: limpar-filtros
+    tipo: filtro
+    nome: Limpar filtros de pesquisa
+    como: Clicar no botão 'Limpar' junto a Pesquisar.
+    promessa: Botão 'Limpar' na secção Pesquisa Factura; testado, repõe o formulário
+      e a URL sem parâmetros.
+    casos_documento: []
+  - id: consulta-universo-sem-filtro
+    tipo: consulta
+    nome: Tentar listar todas as faturas sem indicar filtro
+    como: Clicar em Pesquisar sem preencher nenhum campo.
+    promessa: Nenhuma promessa explícita de listagem total; antes de pesquisar a
+      tela só mostra 'Sem resultados / Utilize os filtros acima e clique em
+      pesquisar'.
+    casos_documento:
+      - CT-01
+    equivalente_aproximado: true
+    ressalva: "Pesquisar sem preencher nada dispara o alerta 'É necessário preencher
+      pelo menos um dos campos de pesquisa' e não lista nada. Não há opção
+      'todos os estados' nem intervalo de datas; a cobertura total do universo
+      (CT-01) só é atingível combinando várias pesquisas filtradas (ex.: uma por
+      cada um dos 11 estados, ou por cada NIF/código de prestador já
+      conhecido)."
+  - id: consulta-grelha-resultados
+    tipo: consulta
+    nome: Ver grelha de resultados da pesquisa
+    como: Depois de pesquisar com pelo menos um filtro preenchido, a grelha aparece
+      abaixo do formulário, com contagem de resultados e mensagem dedicada
+      quando vazia.
+    promessa: "Colunas: (botão de detalhe), Código, NIF, Descrição, Factura,
+      Mês/Ano, Adquirente, Estado, Total PVP (Comunicado), Comp. (Apurado). Sem
+      resultados mostra 'Nenhuma factura encontrada com os filtros aplicados.'"
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-10
+      - CT-11
+    ressalva: O documento descreve colunas Cód. Farmácia, NIF Prestador, Descrição,
+      Nº Processo, Nº Factura, Data Factura, Ent. Adquirente, Estado e os grupos
+      completos Comunicado{Lotes,Receitas,Total PVP,Comp.,Fee} e Apurado{idem}.
+      A grelha real não tem coluna Nº Processo, mostra 'Mês/Ano' em vez de Data
+      Factura completa, e só expõe 2 colunas de métricas (Total PVP Comunicado e
+      Comp. Apurado) em vez dos 5 campos x 2 grupos.
+  - id: ordenar-colunas-grelha
+    tipo: consulta
+    nome: Ordenar a grelha por coluna
+    como: "Clicar no cabeçalho de uma coluna ordenável (ex.: 'Ordenar por Estado')."
+    promessa: Cabeçalhos clicáveis com rótulo 'Ordenar por <coluna>' em Código, NIF,
+      Descrição, Factura, Mês/Ano, Adquirente, Estado, Total PVP (Comunicado),
+      Comp. (Apurado).
+    casos_documento: []
+  - id: paginar-resultados
+    tipo: consulta
+    nome: Paginar e ajustar resultados por página
+    como: Escolher 10/20/25/50/100 no combobox 'Resultados por página' e/ou usar a
+      navegação (primeira/anterior/página/seguinte/última) sob a grelha.
+    promessa: Combobox 'Resultados por página' com opções 10, 20, 25, 50, 100;
+      navegação de páginas.
+    casos_documento: []
+    ressalva: O universo real de QUA (9 registos) cabe sempre numa página; não foi
+      possível observar paginação com mais de uma página nesta passagem, tal
+      como o próprio documento antecipa na secção de riscos.
+  - id: exportar-xlsx
+    tipo: exportacao
+    nome: Exportar resultados para XLSX
+    como: Clicar no botão 'Exportar XLSX' acima da grelha, com pelo menos um
+      resultado na pesquisa.
+    promessa: Botão 'Exportar XLSX' (desativado quando a pesquisa devolve 0
+      resultados); testado com o filtro de data, gerou o ficheiro
+      facturas-dispensa-proximidade.xlsx.
+    casos_documento: []
+  - id: navegar-detalhe-factura
+    tipo: navegacao
+    nome: Abrir detalhe de uma factura
+    como: Clicar no botão 'Ver detalhe da factura <número>' na primeira coluna de
+      uma linha da grelha.
+    promessa: Navega para /dispensa-proximidade/factura/{PIID} e mostra o cabeçalho
+      'Detalhe Factura' com NIF Prestador, Código prestador, Estado, Descrição
+      prestador, Número factura, Data factura, Número processo, NIF/Nome Ent.
+      Adquirente, Totais comunicados, Totais apurados, Identificadores (GUID
+      Factura/Resumo) e Localização do arquivo (Caixa/Pasta/Lugar/Estado Caixa).
+    rota: /dispensa-proximidade/factura/{piid}
+    casos_documento:
+      - CT-06
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-10
+  - id: tab-informacao
+    tipo: consulta
+    nome: Separador Informação do detalhe
+    como: No detalhe da factura, clicar no separador 'Informação' (selecionado por
+      omissão).
+    promessa: "Três tabelas por Tipo Lote: 'Informação comunicada', 'Informação
+      conferida' e 'Diferenças', cada uma com colunas N. Lotes, N. Lotes
+      Indexados, N. Receitas, Total PVP, Total PVU, Total Comp., Total FEE, e
+      linha TOTAL."
+    casos_documento:
+      - CT-06
+      - CT-07
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: A tabela 'Diferenças' desta aba é a parte 'apurado vs comunicado' que
+      o documento associa ao modal 'Erros e diferenças' (CT-08); não existe um
+      modal com esse nome — ver a ação 'tab-erros'.
+  - id: tab-lotes
+    tipo: consulta
+    nome: Separador Lotes do detalhe
+    como: No detalhe da factura, clicar no separador 'Lotes'.
+    promessa: Tabela 'Tabela de Lotes' por Tipo Lote com N. Prestações e Total, mais
+      botão 'Ver lotes da factura'.
+    casos_documento:
+      - CT-07
+  - id: navegar-lotes-da-factura
+    tipo: navegacao
+    nome: Ver lotes da factura noutro ecrã
+    como: No separador Lotes do detalhe, clicar em 'Ver lotes da factura'.
+    promessa: Botão 'Ver lotes da factura' no separador Lotes.
+    rota: /dispensa-proximidade/lote?numFactura={numero}
+    casos_documento: []
+  - id: tab-erros
+    tipo: consulta
+    nome: Separador Erros do detalhe
+    como: No detalhe da factura, clicar no separador 'Erros'.
+    promessa: Tabela 'Erros da factura' com colunas Cod. Erro, Descrição Erro, Estado.
+    casos_documento:
+      - CT-04
+      - CT-07
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: Não existe modal separado 'Erros e diferenças' (CT-08); a informação
+      equivalente está dividida entre este separador (códigos de erro) e a
+      tabela Diferenças do separador Informação. Na única factura CCE observada
+      (27146, E013-609) esta tabela mostra 'Sem erros', apesar do estado ser
+      Conferida Com Erros.
+  - id: tab-notas-credito-debito
+    tipo: consulta
+    nome: Separador Notas Crédito/Débito do detalhe
+    como: No detalhe da factura, clicar no separador 'Notas Crédito/Débito'.
+    promessa: Tabela com colunas N. Nota, Data Nota, Tipo Nota, Valor Nota.
+    casos_documento:
+      - CT-07
+  - id: tab-expedicao
+    tipo: consulta
+    nome: Separador Expedição do detalhe
+    como: No detalhe da factura, clicar no separador 'Expedição'.
+    promessa: Tabela com colunas N. Factura, Data Expedição, Ind. Expedido, N.
+      Documentos.
+    casos_documento:
+      - CT-07
+  - id: modal-ver-factura
+    tipo: consulta
+    nome: Abrir modal Ver Factura
+    como: No cabeçalho do detalhe da factura, clicar no botão 'Ver Factura' (fica
+      desativado quando a factura não tem GUID de documento, como no registo de
+      teste 999000001).
+    promessa: "Modal 'Factura' com visualizador de imagem: zoom (+/-), repor vista,
+      rodar 90° esquerda/direita, guardar imagem, e botão 'Fechar visualizador
+      de documento'."
+    casos_documento:
+      - CT-09
+    ressalva: "Na fatura 27146 (E013-609) o modal abriu mas a imagem não carregou: o
+      pedido a /ccmsns/api/documentos/{guid} devolveu 502 Bad Gateway neste
+      ambiente (erro visível na consola do browser). O botão fica desativado
+      quando a factura não tem GUID, o que é um tipo de 'sem imagem' diferente
+      da mensagem de texto que o documento antecipa."
+  - id: voltar-lista
+    tipo: navegacao
+    nome: Voltar à lista de faturas
+    como: No detalhe da factura, clicar no botão 'Voltar'.
+    promessa: Botão 'Voltar' no fundo do detalhe.
+    rota: /dispensa-proximidade/factura
+    casos_documento: []
+  - id: ver-notas-credito-debito-detalhe-factura
+    tipo: consulta
+    nome: Separador 'Notas Crédito/Débito' no detalhe da fatura
+    como: Na lista de faturas, pesquisar Número da Factura 'FT-NORMAL-TEST/001' (ou
+      navegar diretamente para /dispensa-proximidade/factura/999000003), clicar
+      na linha para abrir o detalhe e selecionar o separador 'Notas
+      Crédito/Débito'.
+    promessa: Lista as notas de crédito/débito associadas à fatura, com Número da
+      Nota, Data da Nota, Tipo de Nota e Valor da Nota.
+    rota: /dispensa-proximidade/factura/999000003
+    casos_documento:
+      - "CT-07: Separadores Lotes, Erros, Notas e Expedição"
+insumos_necessarios:
+  - descricao: Fatura em estado Conferida Com Erros (CCE) cujo separador Erros
+      mostre códigos de erro reais (não 'Sem erros')
+    obtivel: bd
+    razao: A única fatura CCE encontrada em QUA (27146/E013-609) mostra 'Sem erros'
+      na tela apesar do estado; seria preciso confirmar por SQL se existem
+      registos de erro associados nas tabelas de conferência e, não existindo,
+      não há via na tela para os criar (ecrã é read-only).
+  - descricao: Fatura com Notas de Crédito/Débito associadas
+    obtivel: tela
+    razao: As notas só aparecem na fatura de teste FT-NORMAL-TEST/001 (id 999000003,
+      NIF 501123083, código prestador 34622, estado Recepcionada), que não
+      consta das '7 faturas reais' listadas na secção 5 do documento — nenhuma
+      das faturas reais tem notas. Um dos dois registos tem Tipo Nota 'ANULADO',
+      que não é um tipo de nota (Crédito/Débito) mas um estado; vale a pena
+      confirmar com o dono dos dados se é massa de teste malformada ou um valor
+      de catálogo legítimo.
+  - descricao: Fatura com registo de Expedição preenchido
+    obtivel: bd
+    razao: Todas as faturas exploradas mostram 'Sem expedições'; o documento aponta
+      que E015-283, E162-79 e E013-646 também aparecem em
+      GESTARMAZEM.TDFACTURAPRESTADOR (tipo 13), o que sugere que a massa de
+      expedição pode existir noutra tabela/fluxo de Gestão de Armazém, não
+      confirmado nesta passagem.
+  - descricao: Documento digitalizado da fatura acessível pelo visualizador (Ver Factura)
+    obtivel: nao
+    razao: O pedido ao endpoint de documentos devolveu 502 Bad Gateway neste
+      ambiente para a fatura 27146; parece depender de um serviço de arquivo
+      externo indisponível, não replicável só com dados de BD.
+  - descricao: Faturas em cada um dos 11 estados do catálogo Estado, para validar o
+      filtro exaustivamente
+    obtivel: tela
+    razao: O combobox já lista os 11 estados; só foram exercitados CCE (via filtro)
+      e CSE (visto na grelha) nesta passagem — falta pesquisar pelos restantes
+      9.
+  - descricao: Faturas com data em cada um dos ciclos 202509, 202511, 202602 e
+      202604, para exercitar CT-05 sem depender de um único dia exato
+    obtivel: tela
+    razao: A massa real já cobre estes ciclos (secção 5 do documento); só é preciso
+      pesquisar dia a dia, já que o campo de data não aceita intervalo.
+  - descricao: Grupo de faturas maior que 10 (o valor mínimo de 'Resultados por
+      página'), para exercitar paginação e ordenação com mais de uma página
+    obtivel: nao
+    razao: O universo real de QUA é pequeno (9 registos) e o maior grupo por NIF
+      encontrado tem 3 faturas, sempre numa só página; testar paginação com
+      volume exigiria massa nova via carregamento oficial, que o documento já
+      assinala como fora de alcance de DML manual em QUA.
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: Fatura com Notas de Crédito/Débito associadas
+      procurei:
+        - Abri o separador 'Notas Crédito/Débito' no detalhe de cada uma das
+          faturas reais encontradas no universo (27112, 26090, 26461, 27146,
+          28616, 29807, 29760, 29791, 29769, 29794, 25175, 24461) — todas
+          mostravam 'Sem notas de crédito/débito', tal como a primeira passagem
+          já tinha registado.
+        - "Verifiquei também os dois registos de teste que o documento assinala
+          como casos-limite: 999000001 (FT-TRAG-TEST/001) e 999000003
+          (FT-NORMAL-TEST/001)."
+        - Antes de validar visualmente, consultei a API de detalhe (GET
+          /ccmsns/api/dispensa-proximidade/facturas/{id}) para o campo
+          notasCreditoDebito das 13 faturas que compõem o universo real da área
+          em QUA, para não depender de amostragem manual.
+        - Com o candidato identificado por API, abri a tela normalmente (clique
+          na linha da lista de resultados > separador 'Notas Crédito/Débito')
+          para confirmar que o elemento é mesmo renderizado no ecrã.
+      onde:
+        - /dispensa-proximidade/factura — separador 'Notas Crédito/Débito' no
+          detalhe de cada fatura do universo
+        - "/dispensa-proximidade/factura/999000003 — onde as notas aparecem:
+          ND-TEST/2026-001 (tipo ANULADO, -5,50) e NC-TEST/2026-001 (tipo
+          Débito, 10,00)"
+      resultado: encontrado
+      accao: ver-notas-credito-debito-detalhe-factura
+      captura: alvo1-notas-credito-debito-ft-normal-test-001.png
+      nota: As notas só aparecem na fatura de teste FT-NORMAL-TEST/001 (id 999000003,
+        NIF 501123083, código prestador 34622, estado Recepcionada), que não
+        consta das '7 faturas reais' listadas na secção 5 do documento — nenhuma
+        das faturas reais tem notas. Um dos dois registos tem Tipo Nota
+        'ANULADO', que não é um tipo de nota (Crédito/Débito) mas um estado;
+        vale a pena confirmar com o dono dos dados se é massa de teste
+        malformada ou um valor de catálogo legítimo.
+    - alvo: Documento digitalizado da fatura acessível pelo visualizador (Ver Factura)
+      procurei:
+        - Abri o botão 'Ver Factura' no detalhe de uma fatura diferente da 27146
+          mencionada no relatório original — a fatura 25175 (E015-138, estado
+          Conferida Com Erros, com GUID Factura preenchido) — para perceber se o
+          502 era exclusivo daquele registo.
+        - Inspecionei a rede do browser ao abrir o modal para confirmar o
+          endpoint chamado e o código de resposta devolvido.
+        - "Verifiquei o comportamento do botão quando a fatura não tem GUID: na
+          fatura de teste 999000003 (sem GUID Factura nem GUID Resumo) o botão
+          'Ver Factura' aparece desabilitado em vez de tentar carregar."
+        - Procurei um caminho alternativo (ícone sem texto, menu de contexto,
+          rota directa, ação noutra tela da secção) que desse acesso ao mesmo
+          documento sem passar pelo botão 'Ver Factura'.
+      onde:
+        - /dispensa-proximidade/factura/25175 — botão 'Ver Factura' no cabeçalho
+          do detalhe
+        - /dispensa-proximidade/factura/999000003 — mesmo botão, aparece
+          desabilitado por falta de GUID
+        - "Network do browser: GET
+          /ccmsns/api/documentos/{14814fcb-84b2-44c1-a016-fd61237f73a5}_310725_A
+          devolveu 502 Bad Gateway"
+      resultado: nao_existe
+      accao: null
+      nota: O 502 repete-se numa fatura diferente da 27146 (agora a 25175, com um GUID
+        distinto), o que reforça que não é um caso isolado de um registo mas sim
+        o serviço de arquivo externo indisponível neste ambiente para toda a
+        área. Não há botão, ícone, menu ou rota alternativa nesta tela que dê
+        acesso ao documento sem depender do mesmo serviço; quando não há GUID
+        (fatura de teste), o botão fica simplesmente desabilitado, confirmando
+        que a UI já trata a ausência de documento — o problema é externo à
+        aplicação.
+    - alvo: Grupo de faturas maior que 10 (o valor mínimo de 'Resultados por página'),
+        para exercitar paginação e ordenação com mais de uma página
+      procurei:
+        - "Testei se o formulário de pesquisa permite obter o universo completo
+          (todos os estados) numa única pesquisa: o campo Estado é de seleção
+          única e a aplicação exige pelo menos um filtro preenchido — não há
+          opção 'Todos os estados'."
+        - Testei pesquisa por Número da Factura com valor parcial ('E0') para
+          ver se a busca aceita prefixo/LIKE; devolveu 'Nenhuma factura
+          encontrada com os filtros aplicados', confirmando que a pesquisa por
+          número exige correspondência exacta.
+        - Consultei diretamente a API do ecrã (GET
+          /ccmsns/api/dispensa-proximidade/facturas?estadoId=X) para cada um dos
+          11 estados do catálogo (Aguarda Comunicação de Correcções, Aguarda
+          Regularização, Anulada, Comunicada Informação Não Conferida, Conferida
+          Com Erros, Conferida Sem Erros, Em Reconferência, Processamento
+          Concluído, Recepcionada, Recepcionada com Erros, Verificada) e somei o
+          total de registos (meta.totalRegistos) devolvido por cada um.
+        - Verifiquei as opções do combobox 'Resultados por página' (10, 20, 25,
+          50, 100) para confirmar se existe algum valor abaixo de 10 que pudesse
+          forçar paginação com um volume menor de registos.
+      onde:
+        - /dispensa-proximidade/factura — formulário de pesquisa e combobox
+          Estado
+        - "/dispensa-proximidade/factura?estadoId=14 (Conferida Sem Erros) —
+          maior grupo único obtido numa única pesquisa: 9 faturas"
+        - Chamadas diretas a
+          /ccmsns/api/dispensa-proximidade/facturas?estadoId=... para os 11
+          estados do catálogo /ccmsns/api/dispensa-proximidade/facturas/estados
+        - Combobox 'Resultados por página' no rodapé da tabela de resultados
+      resultado: nao_existe
+      accao: null
+      nota: "O universo real desta área em QUA é maior do que o documento assumia —
+        encontrei 13 faturas no total (9 em Conferida Sem Erros, incluindo três
+        não listadas na secção 5 do documento: E012-699, E060-532, E013-453; 2
+        em Conferida Com Erros incluindo uma quarta fatura nova, E015-138; 1 em
+        Recepcionada — a fatura de teste 999000003; 1 em Verificada), mas
+        nenhuma pesquisa única devolve mais de 9 registos porque o filtro Estado
+        é de seleção única e obrigatório e o tamanho mínimo de página é 10 —
+        logo não há forma, dentro da tela, de exercitar uma segunda página. Não
+        tive acesso a SQLcl/BD neste ambiente (não encontrei o ficheiro
+        db/conexao-qua.local.md nem um cliente SQL disponível) para confirmar se
+        existe massa adicional fora do que a API do ecrã expõe; por isso não
+        marco 'obtivel: bd' — apenas registo que essa via não foi verificada por
+        mim, ficando como hipótese em aberto para quem tiver acesso à BD."
+observacoes_gerais:
+  - "O universo em QUA já não coincide exatamente com a foto do documento
+    (datado de 2026-07-13): apareceu uma 8ª fatura real em estado CCE não
+    listada no documento (E015-138, farmácia 19739/NIF 517993694, total 23,92),
+    além das faturas já descritas."
+  - O registo de teste 999000001 (FT-TRAG-TEST/001) tem o campo 'Código
+    prestador' a mostrar o valor 'E162-79' (um número de fatura de outro
+    registo, não um código de farmácia) e 'Estado' vazio ('—'); é um bom
+    caso-limite para CT-10, mas revela dados malformados nesse registo de teste
+    específico.

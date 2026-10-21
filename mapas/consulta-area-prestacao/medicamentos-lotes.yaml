@@ -1,0 +1,413 @@
+documento: consulta-area-prestacao/medicamentos-lotes.md
+rota: /medicamentos/lote
+mapeado_em: exploração manual via browser (Playwright), sessão única em
+  2026-09-03, ambiente http://localhost:4174
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Número da Factura
+    como: textbox no bloco 'Pesquisa Lotes'
+    promessa: restringe a pesquisa de lotes a uma factura específica
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: "texto livre, ex.: E017-1"
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-10
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Data da Factura
+    como: campo de texto DD/MM/YYYY com calendário associado (botão 'Abrir/fechar
+      calendário')
+    promessa: "filtra lotes por data da factura; o calendário desabilita datas
+      futuras à data corrente (testado em 2026-09-03: dias a partir de 4 de
+      setembro de 2026 aparecem desabilitados)"
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: calendário ou digitação DD/MM/YYYY
+    casos_documento:
+      - CT-01
+    ressalva: não testado isoladamente como único critério (o alerta de validação da
+      tela indica que Data da Factura sozinha não é suficiente, tem de vir
+      acompanhada de NIF, código da farmácia, número de lote ou tipo de lote).
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: NIF Prestador
+    como: textbox no bloco 'Pesquisa Lotes'
+    promessa: restringe lotes ao prestador identificado pelo NIF
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre numérico
+    casos_documento:
+      - CT-01
+  - id: filtro-codigo-farmacia
+    tipo: filtro
+    nome: Código da Farmácia
+    como: textbox no bloco 'Pesquisa Lotes'
+    promessa: restringe lotes à farmácia pelo código interno
+    entradas:
+      - campo: Código da Farmácia
+        obrigatorio: false
+        origem_valores: texto livre numérico
+    casos_documento: []
+    ressalva: não exercitado isoladamente nesta sessão; presente na mensagem de
+      validação como critério alternativo válido.
+  - id: filtro-tipo-lote
+    tipo: filtro
+    nome: Tipo de Lote
+    como: combobox 'Tipo de Lote', abre uma listbox com 22 opções
+    promessa: "restringe lotes ao tipo selecionado; a lista de opções observada foi:
+      Normal; Doenças Profissionais; Paramiloidose; Lúpus, Hemofilia, Talassemia
+      e Depranocitose; Pensionistas; Pensionistas com regulamentação própria;
+      Convenções bilaterais/Acordos internacionais; Normal e Convenções
+      bilaterais/Acordos internacionais com regulamentação própria; Manipulados
+      e Prod. Dietéticos (...); 3º Protocolo de Diabetes SNS; Diabetes ADSE (3º
+      Protocolo); Diabetes Outros Subsistemas (3º Protocolo); Cuidados
+      Farmacêuticos (3º Protocolo); Pensionistas Ind. Lanifícios; Produtos de
+      ostomia e produtos de retenção/incontinência urinária; Câmaras expansoras;
+      Asilo/Refugiados; Estatuto de Vítima dos Incêndios; Benefício adicional;
+      Receitas sem papel sem sucesso na validação, com erros; Receitas sem papel
+      com sucesso na validação, sem erros; Receitas materializadas sem sucesso
+      na validação, com erros; Receitas materializadas com sucesso na validação,
+      sem erros"
+    entradas:
+      - campo: Tipo de Lote
+        obrigatorio: false
+        origem_valores: catálogo carregado do backend (aparenta ser TRTIPOLOTEMED), 22 entradas
+    casos_documento:
+      - CT-02
+      - CT-03
+    ressalva: "duas opções do catálogo têm mojibake de codificação: 'Diabetes ADSE
+      (3Âº Protocolo)' e 'Cuidados FarmacÃªuticos (3Âº Protocolo)' — os
+      restantes 'º'/acentos aparecem corretos noutras opções, então o defeito é
+      pontual, não sistémico. O catálogo tem mais entradas do que a lista da
+      secção 5 do documento (que lista só um subconjunto ilustrativo), então não
+      há divergência real, só cobertura mais ampla."
+  - id: filtro-numero-lote
+    tipo: filtro
+    nome: Número de Lote
+    como: textbox no bloco 'Pesquisa Lotes'
+    promessa: restringe lotes ao número indicado (não único por si só, pois reinicia
+      por fatura/tipo)
+    entradas:
+      - campo: Número de Lote
+        obrigatorio: false
+        origem_valores: texto livre numérico
+    casos_documento:
+      - CT-02
+    ressalva: usado isoladamente, a tela bloqueia a pesquisa com um alerta de
+      validação em vez de devolver resultados (ver ressalva em
+      consulta-pesquisar-lotes).
+  - id: consulta-pesquisar-lotes
+    tipo: consulta
+    nome: Pesquisar Lotes
+    como: botão 'Pesquisar' no bloco 'Pesquisa Lotes'; grelha 'Resultados da
+      Pesquisa' com colunas Ações, Cód. Farmácia, NIF Prestador, Descrição, Nº
+      da Factura, Data Factura, Nº Lote, Tipo Lote, Nº Receitas/Nº
+      Embalagens/Total PVP/Total PVU/Total Comp./Total Fee (Comunicado e
+      Apurado, 12 colunas), ordenável por clique no cabeçalho (URL usa
+      sort=campo,asc|desc), paginada server-side (URL usa pagina=N&tamanho=N)
+    promessa: "lista de lotes Comunicado vs Apurado; exige pelo menos um critério
+      mínimo, anunciado literalmente pelo alerta: 'Deverá estar preenchido, pelo
+      menos: número da factura; ou data da factura com NIF, código da farmácia,
+      número de lote ou tipo de lote; ou tipo de lote com número de lote.'"
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-06
+      - CT-10
+    ressalva: "testado com Número da Factura=E017-1 + NIF=501137688: devolveu
+      exatamente os 3 lotes e valores do documento (513,89/316,27; 58,82/58,82;
+      41.696,17/26.331,93). Testado Número de Lote=1 sozinho: bloqueado pelo
+      alerta de validação (não devolve conjunto grande como o documento
+      hipotetizava — bloqueia mesmo). Testado Tipo de Lote=13 + Número de Lote=1
+      sem fatura: aceite pela validação mas devolveu 1.511 resultados em 152
+      páginas de farmácias/faturas diferentes — confirma concretamente a
+      ambiguidade que o documento antecipava (nº de lote não é chave)."
+  - id: exportacao-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: botão 'Exportar XLSX' acima da grelha de resultados, só aparece depois de
+      haver resultados
+    promessa: exporta os resultados da pesquisa corrente para ficheiro XLSX (chama
+      GET /ccmsns/api/medicamentos/lotes/exportar com os mesmos parâmetros da
+      pesquisa)
+    casos_documento: []
+    ressalva: funcionou e descarregou lotes-medicamentos.xlsx para a pesquisa
+      pequena (3 resultados, E017-1+NIF); falhou com HTTP 500 (Internal Server
+      Error) para a pesquisa grande (tipoLote=13+numeroLote=1, 1.511 resultados)
+      — o próprio documento antecipa este risco na secção 6 ('a exportação de
+      limites'). Ação não coberta por nenhum CT do documento, que não menciona
+      exportação.
+  - id: navegacao-ver-detalhe-lote
+    tipo: navegacao
+    nome: Ver detalhe do lote
+    como: botão-ícone na coluna 'Ações' de cada linha da grelha de resultados
+    promessa: abre o detalhe do lote clicado, navegando para
+      /medicamentos/lote/{PIIDLOTE} (identificador interno, não o número
+      visível)
+    casos_documento:
+      - CT-04
+      - CT-05
+      - CT-06
+      - CT-07
+  - id: consulta-detalhe-lote-info
+    tipo: consulta
+    nome: Detalhe do Lote — identificação, localização e totais
+    como: "tab 'Detalhe do Lote' (selecionada por omissão) dentro do ecrã
+      /medicamentos/lote/{id}: bloco de identificação (NIF Prestador,
+      Código/Nome Farmácia, Nº/Data Factura, Estado, Número do Lote, Tipo de
+      Lote, 'Chave do Lote*', Guid), bloco 'Localização dos Arquivos' (Caixa,
+      Pasta, Lugar, Estado da Caixa), blocos 'Totais Comunicados' e 'Totais
+      Apurados' (Nº Receitas, Nº Etiquetas, Total PVP/PVU/Comp./Fee)"
+    promessa: identificação completa do lote e comparação Comunicado vs Apurado
+    casos_documento:
+      - CT-04
+      - CT-05
+      - CT-07
+    ressalva: "lote 28479552 (Normal, físico): Estado mostrado traduzido como
+      'Recepcionado' e localização física preenchida (Caixa C08194, Pasta
+      3294878, Lugar 711). Lote 28479554 (tipo 97, receitas sem papel): mesma
+      tela mas Caixa/Pasta/Lugar/Estado da Caixa e Guid aparecem como '—'
+      (coerente, é lote eletrónico sem arquivo físico). Totais batem exatamente
+      com os valores do documento e da grelha de pesquisa. Comparando com a
+      fatura mãe (603530): o campo Estado da fatura aparece como o enum cru
+      'CONFERIDA_COM_ERROS', não traduzido, enquanto o Estado do lote aparece
+      traduzido ('Recepcionado') — inconsistência de tratamento entre os dois
+      ecrãs, registada como facto observado, não como veredito."
+  - id: consulta-lote-medicamentos-receitas
+    tipo: consulta
+    nome: Lote Medicamentos — tabela de receitas do lote
+    como: tabela dentro da tab 'Detalhe do Lote', colunas Ações, Nº Utente, Data
+      Prestação, Nº Sequencial, Total PVP, Total PVU, Total Comp.
+    promessa: lista as receitas do lote identificadas só por Nº Utente (nunca nome),
+      conforme risco de RGPD do documento
+    casos_documento:
+      - CT-04
+    ressalva: nos dois lotes abertos (28479552 com 14 receitas, 28479554 com 1.393
+      receitas) a tabela devolveu sempre 'A pesquisa não retornou resultados',
+      apesar de os totais no bloco acima mostrarem 14 e 1.393 receitas
+      respetivamente, e de as mesmas receitas aparecerem preenchidas na tab
+      Prestações. Não consegui verificar a promessa central do CT-04
+      (identificação só por Nº Utente) porque a tabela nunca teve linhas nesta
+      sessão.
+  - id: consulta-erros-lote
+    tipo: consulta
+    nome: Erros do lote
+    como: tabela 'Erros' dentro da tab 'Detalhe do Lote', colunas Ações, Cód. Erro,
+      Descrição Erro
+    promessa: lista erros de conferência do lote com código e descrição do catálogo
+    casos_documento:
+      - CT-08
+    ressalva: nos dois lotes abertos a tabela mostrou o estado vazio tratado 'Nenhum
+      erro registado' (não é erro técnico, conforme o documento pede). Não
+      encontrei nesta sessão um lote com erros reais para confirmar o formato
+      Cód./Descrição preenchido — precisaria de identificar via BD um lote de
+      uma fatura CCE com erros.
+  - id: consulta-tab-prestacoes-lote
+    tipo: consulta
+    nome: Tab Prestações do lote
+    como: tab 'Prestações' dentro do ecrã /medicamentos/lote/{id}; grelha com
+      colunas Ações, Nº Receita, Nº Embalagens, Total PVP/PVU/Comp./Fee
+      (Comunicado e Apurado), paginação server-side, resumo de totais no rodapé
+    promessa: lista as receitas do lote com valores Comunicado/Apurado e paginação
+      para lotes grandes
+    casos_documento:
+      - CT-06
+    ressalva: "lote pequeno 28479552 (14 receitas): 2 páginas de 10, sem exigir
+      muito scroll. Lote grande 28479554 (1.393 receitas): 140 páginas de 10,
+      totais do rodapé batem exatamente com os totais do bloco superior
+      (41.696,17 / 15.364,24 / 26.331,93) — confirma paginação server-side
+      funcional mesmo em volume alto, exatamente como o CT-06 pedia para
+      verificar."
+  - id: navegacao-ver-prestacao
+    tipo: navegacao
+    nome: Ver prestação
+    como: botão-ícone em cada linha da tab Prestações
+    promessa: abre o detalhe da prestação individual
+    casos_documento: []
+    ressalva: navega para /medicamentos/prestacoes/{id}, ou seja, para o ecrã de
+      Prestações de Medicamentos (mapa separado). Ação real da tela, mas não
+      mencionada explicitamente pelo documento (que só cita a tab Prestações
+      como listagem, não como ponto de entrada para o detalhe de uma prestação).
+  - id: navegacao-ir-para-factura
+    tipo: navegacao
+    nome: Ir para Factura / Factura
+    como: botão 'Ir para Factura' no cabeçalho do detalhe do lote, e botão 'Factura'
+      junto ao 'Voltar' no rodapé — ambos parecem levar ao mesmo destino
+    promessa: abre o detalhe da fatura mãe do lote
+    casos_documento:
+      - CT-09
+    ressalva: "confirmado: a partir do lote 28479552 (fatura E017-1) navega para
+      /medicamentos/factura/603530, usando o identificador interno (603530) e
+      não o número visível (E017-1) — exatamente o que o CT-09 esperava. Em
+      contraste, a ação irmã que o mesmo CT-09 descreve, 'Detalhe conferência'
+      (abrir execuções de conferência no contexto do lote), NÃO existe em lugar
+      nenhum deste ecrã — nem na coluna Ações da grelha de pesquisa (só tem 'Ver
+      detalhe do lote'), nem no cabeçalho ou rodapé do detalhe do lote."
+  - id: navegacao-voltar
+    tipo: navegacao
+    nome: Voltar
+    como: botão 'Voltar' no rodapé do detalhe do lote
+    promessa: regressa ao ecrã anterior sem perda de contexto
+    casos_documento:
+      - CT-09
+    ressalva: presente e visível; não cliquei para não perder o estado da sessão de
+      exploração, mas o rótulo e posição são consistentes com os outros ecrãs de
+      detalhe do CCMSNS.
+  - id: consulta-visualizador-documento
+    tipo: consulta
+    nome: Visualizador de documento do lote
+    como: painel lateral no detalhe do lote, tab 'Lote', com controlos
+      Diminuir/Aumentar zoom, Repor vista, Rodar 90º esquerda/direita, Guardar
+      imagem, e botão 'Fechar visualizador de documento'
+    promessa: mostra a imagem digitalizada do lote (documento físico arquivado)
+    casos_documento: []
+    ressalva: "não mencionado pelo documento de cenários. Lote 28479552 (físico,
+      Normal): a tela tentou carregar a imagem e falhou com HTTP 502 (Bad
+      Gateway) em GET /ccmsns/api/documentos/{guid} — falha de infraestrutura
+      deste ambiente, não necessariamente do desenho. Lote 28479554 (eletrónico,
+      tipo 97, sem Guid): a tela mostrou corretamente o texto 'Documento não
+      disponível para este lote', sem tentar chamar a API — tratamento correto
+      do caso 'não há documento'. O mesmo padrão de 502 repetiu-se no
+      visualizador da fatura mãe (603530)."
+insumos_necessarios:
+  - descricao: "Fatura com vários lotes de tipos diferentes e mesmo número de lote
+      (para repetir o cenário de ambiguidade Nº Lote), ex.: fatura E017-1/NIF
+      501137688 já usada nesta sessão"
+    obtivel: tela
+    razao: encontrável diretamente pela pesquisa por Número da Factura + NIF, sem
+      precisar de acesso à BD.
+  - descricao: "Lote em estado diferente de Recepcionado (ex.: 20 CONF Em
+      conferência, 21 CSE, 23 CCE) para confirmar que a tradução de Estado cobre
+      todos os códigos de TRCFESTADO"
+    obtivel: bd
+    razao: os 3 lotes do drill do documento estão todos em RECP; para achar um lote
+      noutro estado é preciso query SQL, não há filtro de Estado no ecrã de
+      pesquisa.
+  - descricao: Lote com erros de conferência efetivamente registados (para ver a
+      tabela Erros preenchida com Cód./Descrição)
+    obtivel: bd
+    razao: os lotes abertos nesta sessão estavam todos sem erros; o documento sugere
+      identificar via BD ou drill a partir de uma fatura CCE — precisa de query
+      em TRCFERROS/TDCFLOTEMED.
+  - descricao: Lote com receitas visíveis na tabela 'Lote Medicamentos' (Detalhe do
+      Lote) para confirmar a promessa de identificação só por Nº Utente
+    obtivel: bd
+    razao: nos dois lotes testados a tabela devolveu sempre vazia apesar dos totais
+      indicarem receitas; não há como saber pela UI se algum lote popula essa
+      tabela sem inspecionar a origem dos dados na BD.
+  - descricao: Ambiente de backend com o serviço de documentos
+      (/ccmsns/api/documentos/...) operacional, sem 502
+    obtivel: nao
+    razao: depende de infraestrutura/configuração fora do alcance de um testador na
+      UI; é uma falha observada no ambiente local, não algo que se cria por
+      dados de teste.
+  - descricao: Endpoint de exportação XLSX capaz de suster pesquisas grandes (>1000
+      linhas) sem erro 500
+    obtivel: nao
+    razao: é uma limitação/bug de backend observado (500 Internal Server Error), não
+      uma condição de massa de dados que se prepare via BD ou UI.
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: Ambiente de backend com o serviço de documentos
+        (/ccmsns/api/documentos/...) operacional, sem 502
+      procurei:
+        - Abrir o detalhe de um lote real da massa do plano (28479552, guid
+          {A1EB5F23-A98C-4257-9D32-51DA17F21212}_160126_B) e observar o
+          visualizador de documento embutido (tab 'Lote', com
+          zoom/rotação/guardar imagem) que a própria tela de Lotes já expõe —
+          não é preciso outro rótulo, o visualizador já existe; o que se
+          procurava era se o pedido ao backend respondia sem 502
+        - Inspecionar os pedidos de rede (browser_network_requests) filtrando
+          por 'documentos' para ver o código de resposta real do GET a
+          /ccmsns/api/documentos/{guid}
+        - "Repetir a mesma verificação noutra tela da mesma secção que também
+          tem visualizador de documento: o detalhe da Factura de Medicamentos
+          (mesmo drill, fatura 603530/E017-1, guid diferente
+          {fcd166f0-c086-4a90-ae31-d0a53bd64361}_050126_A)"
+        - Verificar se um lote sem guid (28479554, tipo 97, 1.393 receitas)
+          tratava a ausência de documento de forma graciosa, para perceber se o
+          502 era específico de um guid ou sistémico do serviço
+        - Tentar uma terceira tela da secção (Tratamentos Termais > Lotes) para
+          ver se havia massa alternativa com documento válido; a pesquisa vazia
+          não devolveu nenhum registo para testar
+      onde:
+        - http://localhost:4174/medicamentos/lote/28479552 (tab Detalhe do Lote,
+          visualizador de documento 'Lote')
+        - http://localhost:4174/medicamentos/factura/603530 (visualizador de
+          documento da fatura)
+        - http://localhost:4174/medicamentos/lote/28479554 (lote sem guid —
+          mostra 'Documento não disponível para este lote.', sem chamada à API)
+        - http://localhost:4174/tratamentos-termais/lote (pesquisa sem filtros —
+          'Sem resultados', sem massa para testar o visualizador)
+      resultado: nao_existe
+      accao: null
+      nota: "Confirmado 502 Bad Gateway em dois pedidos reais e independentes a
+        /ccmsns/api/documentos/{guid}, com guids diferentes, disparados a partir
+        de duas telas diferentes da mesma secção (Lotes e Facturas de
+        Medicamentos). O visualizador de documento já existe na UI (tab 'Lote',
+        controlos de zoom/rotação/guardar imagem) — o problema não é a ausência
+        de uma ação ou ecrã, é o backend por trás do endpoint que devolve 502 em
+        qualquer chamada observada. Não há rota direta, ícone sem rótulo ou tela
+        alternativa que troque o backend chamado; é o mesmo serviço para todo o
+        sistema. Concordo com a primeira passagem: isto é
+        infraestrutura/ambiente, não massa de dados nem ação por descobrir."
+    - alvo: Endpoint de exportação XLSX capaz de suster pesquisas grandes (>1000
+        linhas) sem erro 500
+      procurei:
+        - "Obter um resultado de pesquisa de Lotes com mais de 1000 linhas para
+          poder testar o botão 'Exportar XLSX' já existente na tela: tentativas
+          com Tipo de Lote='Normal' isolado, Código da Farmácia='396' isolado,
+          NIF Prestador='501137688' isolado, Data da Factura='31/01/2024'
+          isolada, e Número da Factura parcial 'E017' (sem sufixo, à espera de
+          correspondência parcial)"
+        - Verificar se a tab Prestações de um lote grande (28479554, 1.393
+          receitas comunicadas — já ultrapassa as 1000 linhas do alvo) tinha um
+          botão de exportação próprio, distinto do da lista de Lotes
+        - "Procurar a mesma capacidade de exportação de pesquisas grandes noutra
+          tela da secção: Facturas de Medicamentos, incluindo filtro
+          Estado='Recepcionada' isolado (para tentar um conjunto maior de
+          facturas)"
+        - "Procurar massa maior noutra área da secção: Lotes de Tratamentos
+          Termais, com pesquisa em branco"
+      onde:
+        - "http://localhost:4174/medicamentos/lote (filtros isolados: Tipo de
+          Lote, Código da Farmácia, NIF Prestador, Data da Factura, Número da
+          Factura parcial — todos devolveram 0 resultados; só o Número da
+          Factura exato, ex. 'E017-1', devolve resultados, no máximo 35 linhas)"
+        - http://localhost:4174/medicamentos/lote/28479554 (tab 'Prestações',
+          1.393 resultados paginados — sem botão 'Exportar XLSX' nesta tab, o
+          botão só existe na lista principal de pesquisa de Lotes)
+        - http://localhost:4174/medicamentos/factura (filtro
+          Estado='Recepcionada' isolado — devolveu apenas 3 resultados)
+        - http://localhost:4174/tratamentos-termais/lote (pesquisa em branco —
+          'Sem resultados', sem massa alternativa disponível)
+      resultado: nao_existe
+      accao: null
+      nota: "Neste ambiente a massa de teste é claramente inferior a 1000 linhas em
+        qualquer pesquisa que a UI permita executar: o maior conjunto
+        pesquisável (lista de Lotes/Facturas, onde existe o botão 'Exportar
+        XLSX') nunca passou de 35 linhas nas combinações de filtro tentadas, e
+        os filtros isolados (sem Número da Factura exato) devolvem
+        sistematicamente 0 resultados — parece haver uma exigência de filtro
+        exato por fatura, não uma pesquisa livre. A única tabela que ultrapassa
+        as 1000 linhas observadas (a tab Prestações de um lote, com 1.393
+        receitas) não tem exportação XLSX própria — só a lista de Lotes tem esse
+        botão, e essa lista está limitada pela massa disponível. Não encontrei
+        via UI nenhuma pesquisa de Lotes/Facturas com >1000 linhas para repetir
+        o erro 500, nem uma tela alternativa da secção com dados suficientes;
+        sem acesso à BD local (o `db/conexao-qua.local.md` referido no plano é
+        para a QUA real, não para este ambiente), também não há via SQL
+        disponível aqui. Mantenho como não obtido, alinhado com a primeira
+        passagem."

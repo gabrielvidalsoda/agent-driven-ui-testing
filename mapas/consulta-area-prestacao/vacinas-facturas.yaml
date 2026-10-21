@@ -1,0 +1,303 @@
+documento: consulta-area-prestacao/vacinas-facturas.md
+rota: /vacinas/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: A01
+    tipo: filtro
+    nome: Filtro Número da Fatura
+    como: Escrever no campo de texto "Número da Fatura" (placeholder "Ex.
+      00000000000") e carregar em Pesquisar.
+    promessa: Filtra as faturas de vacinas pelo número exato da fatura.
+    entradas:
+      - campo: Número da Fatura
+        obrigatorio: false
+        origem_valores: texto livre, sem máscara aplicada; aceita formatos reais como FT16-145
+    casos_documento:
+      - CT-01
+  - id: A02
+    tipo: filtro
+    nome: Filtro Data da Factura
+    como: Abrir o calendário pelo ícone junto ao campo "Data da Factura" (o
+      placeholder é DD/MM/YYYY) e selecionar um dia; navega por ano ("Selecionar
+      ano") e por mês ("Mês anterior"/"Próximo mês"). Datas futuras a partir de
+      hoje (2026-09-03) aparecem desativadas na grelha do calendário.
+    promessa: Filtra as faturas pela data exata da fatura.
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: seletor de calendário; um único dia, sem intervalo de/até
+    casos_documento:
+      - CT-03
+    ressalva: 'Escrever a data diretamente no campo de texto (ex. "31/12/2025") não
+      filtra nada: a pesquisa corre sem esse parâmetro e a URL não regista
+      dataFatura. Só a seleção via calendário aplica o filtro (confirmado com
+      dataFatura=2025-12-31, que devolveu 2 faturas). Não existe filtro de
+      intervalo de datas, pelo que o "tour de cobertura de ciclos" do documento
+      (que pede pesquisas por intervalo) só pode ser feito combinando outros
+      filtros (ex. NIF Prestador) ou repetindo buscas dia a dia.'
+  - id: A03
+    tipo: filtro
+    nome: Filtro Número do processo
+    como: Escrever no campo de texto "Número do processo" e carregar em Pesquisar.
+    promessa: Filtra as faturas pelo número de processo.
+    entradas:
+      - campo: Número do processo
+        obrigatorio: false
+        origem_valores: texto livre; testado com 1921180, devolveu a fatura FT16-145
+    casos_documento: []
+  - id: A04
+    tipo: filtro
+    nome: Filtro NIF Prestador
+    como: Escrever no campo de texto "NIF Prestador" e carregar em Pesquisar.
+    promessa: Filtra as faturas pelo NIF do prestador/farmácia.
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre; testado com 506163717, devolveu as 3 faturas do
+          prestador 17566 (ciclos 202510, 202511, 202512)
+    casos_documento:
+      - CT-03
+  - id: A05
+    tipo: filtro
+    nome: Filtro Cod. Prestador
+    como: Escrever no campo de texto "Cod. Prestador" e carregar em Pesquisar.
+    promessa: Filtra as faturas pelo código do prestador/farmácia.
+    entradas:
+      - campo: Cod. Prestador
+        obrigatorio: false
+        origem_valores: texto livre; testado com 3620, devolveu as faturas da FARMACIA
+          DAS ANTAS
+    casos_documento:
+      - CT-02
+    equivalente_aproximado: true
+    ressalva: O documento chama a este filtro "Código da Farmácia"; na tela o rótulo
+      é "Cod. Prestador", mais genérico (a área de Vacinas também tem
+      prestadores que não são farmácias, ex. "ARS LVT" nos registos mais
+      antigos).
+  - id: A06
+    tipo: filtro
+    nome: Filtro Estado
+    como: Abrir o combobox "Estado" e escolher uma opção da listbox.
+    promessa: Filtra as faturas pelo estado de conferência.
+    entradas:
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: "combobox com 6 opções: Rececionada, Rececionada com erros,
+          Enriquecida, Conferida sem erros, Conferida com erros, Anulada.
+          Confirmados na URL os códigos CSE (Conferida sem erros) e CCE
+          (Conferida com erros); os restantes 4 códigos não foram confirmados."
+    casos_documento:
+      - CT-02
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento espera o catálogo completo de TRCFESTADO (RECP, V, CSE,
+      CCE, AR, ER, ACC, PC, CINC, RE, AN — 11 estados). O combobox só oferece 6
+      rótulos (Rececionada, Rececionada com erros, Enriquecida, Conferida sem
+      erros, Conferida com erros, Anulada); não há opção visível para V, AR,
+      ACC, PC, CINC ou RE.
+  - id: A07
+    tipo: filtro
+    nome: Limpar filtros
+    como: Carregar no botão "Limpar" junto a Pesquisar.
+    promessa: "Repõe todos os campos de pesquisa em branco e remove os parâmetros da
+      URL (confirmado: a URL volta a /vacinas/factura sem query string)."
+    casos_documento: []
+  - id: A08
+    tipo: consulta
+    nome: Pesquisar faturas
+    como: Carregar no botão "Pesquisar" com qualquer combinação (ou nenhuma) dos
+      filtros preenchidos.
+    promessa: Executa a busca na grelha "Resultado da pesquisa" com os filtros
+      aplicados; os parâmetros ficam na URL (ex.
+      ?numeroFatura=FT16-145&pagina=1&tamanho=10).
+    entradas: []
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-09
+    ressalva: 'Pesquisar sem nenhum filtro preenchido não lista o universo das 248
+      faturas: devolve "Nenhum resultado encontrado..." (0 resultados). É
+      preciso pelo menos um filtro para obter linhas.'
+  - id: A09
+    tipo: consulta
+    nome: Ordenar colunas da grelha
+    como: Carregar no cabeçalho de uma coluna (ex. "Ordenar por Factura").
+    promessa: Ordena os resultados pela coluna escolhida; testado na coluna Factura,
+      que adicionou ordenar=numeroFatura,asc à URL.
+    casos_documento: []
+  - id: A10
+    tipo: navegacao
+    nome: Paginação de resultados
+    como: Carregar nos botões numerados ou nas setas "Go to first/previous/next/last
+      page" da barra de paginação.
+    promessa: "Navega entre páginas do resultado; testado com estado=CSE (78
+      resultados, 8 páginas de 10): ir para a página 2 atualizou a URL para
+      pagina=2."
+    casos_documento:
+      - CT-03
+  - id: A11
+    tipo: filtro
+    nome: Resultados por página
+    como: Abrir o combobox "Resultados por página" junto à paginação e escolher um
+      valor.
+    promessa: Ajusta o tamanho da página do resultado.
+    entradas:
+      - campo: Resultados por página
+        obrigatorio: false
+        origem_valores: "combobox com 3 opções: 10, 15, 20"
+    casos_documento:
+      - CT-03
+  - id: A12
+    tipo: consulta
+    nome: Grelha de resultados (colunas e grupos Comunicado/Apurado)
+    como: Ler as colunas da tabela de resultados após uma pesquisa.
+    promessa: "Mostra por fatura: Cod., NIF, Descrição, Processo, Factura, Mês/Ano,
+      Adquirente, Estado, Total (Comunicado), Total (Apurado)."
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: 'Divergências face ao documento: (1) não existem as colunas Comp./Fee
+      (consistente com o documento, que já as dava como ausentes nesta área);
+      (2) os grupos Comunicado/Apurado não têm subcolunas Lotes/Prest./Total PVP
+      — há apenas uma coluna "Total (Comunicado)" e uma "Total (Apurado)", sem
+      discriminar lotes nem prestações; (3) a coluna de data mostra "Mês/Ano"
+      (ex. 12/2025), não a data completa da fatura que o documento chama de
+      "Data Factura"; (4) a coluna Adquirente mistura terminologias: registos de
+      2025 mostram "Unidade Local de Saúde de ...", mas registos mais antigos
+      (ciclo ~10/2023) mostram "ARS LVT", "ARS NORTE", "ARS CENTRO", "ARS
+      ALENTEJO" — o risco de terminologia ULS/ARS descrito no documento está
+      presente nos dados reais.'
+  - id: A13
+    tipo: consulta
+    nome: Linhas de resultado não clicáveis
+    como: Carregar sobre uma linha da tabela de resultados.
+    promessa: "Nenhuma: testado clicar na linha da fatura FT16-145 e a URL/estado da
+      página não mudou — não abre detalhe de fatura."
+    casos_documento:
+      - CT-08
+  - id: A14
+    tipo: navegacao
+    nome: Navegar para Prestações de Vacinas
+    como: No menu lateral, abrir "Consulta por Área de Prestação" > "Vacinas" >
+      "Prestações".
+    promessa: Leva ao ecrã de Prestações de Vacinas, o ecrã relacionado citado no
+      documento.
+    rota: /vacinas/prestacao
+    casos_documento: []
+insumos_necessarios:
+  - descricao: Fatura de vacinas em estado Conferida Sem Erros (CSE)
+    obtivel: tela
+    razao: "confirmado: pesquisa por Estado=Conferida sem erros devolve 78 faturas
+      reais"
+  - descricao: Fatura de vacinas em estado Conferida Com Erros (CCE) com Apurado
+      divergente do Comunicado
+    obtivel: tela
+    razao: "confirmado com a fatura E015-354 (Cod. Prestador 3620): Comunicado
+      24,00, Apurado 0,00"
+  - descricao: Conjunto de faturas do mesmo prestador em ciclos consecutivos (202510
+      a 202512), para testar cobertura de ciclos
+    obtivel: tela
+    razao: "confirmado com NIF 506163717 (prestador 17566): 3 faturas, uma por ciclo"
+  - descricao: Resultado de pesquisa com mais de uma página (>10/15/20 registos),
+      para exercitar paginação real
+    obtivel: tela
+    razao: confirmado com Estado=CSE, 78 resultados em 8 páginas
+  - descricao: Fatura de vacinas inexistente, para o cenário de "Nenhum resultado
+      encontrado"
+    obtivel: tela
+    razao: basta um Número da Fatura fictício, testado com ZZ99-999
+  - descricao: Fatura em estado fora das 6 opções do combobox Estado (V, AR, ER,
+      ACC, PC, CINC ou RE)
+    obtivel: bd
+    razao: o filtro Estado só oferece 6 rótulos; para confirmar se existem faturas
+      de vacinas nesses estados só é possível consultar diretamente
+      TDCFFACTURAVACINAS/TRCFESTADO, já que a tela não deixa filtrar por eles
+  - descricao: Lote de vacinas associado a uma fatura (ex. lote 38301 da fatura
+      80208/E015-354), para cruzar com o ecrã de Prestações
+    obtivel: tela
+    razao: a fatura E015-354 está acessível pela pesquisa nesta tela; o lote
+      associado exigiria confirmar no ecrã de Prestações de Vacinas (A14) ou por
+      SQL
+casos_sem_accao:
+  - CT-04
+  - CT-07
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-04
+      procurei:
+        - Uma linha de rodapé 'Total' na tabela de resultados que agregue as
+          colunas numéricas (Total Comunicado, Total Apurado), com rótulos
+          alternativos possíveis (Totais, Soma, Subtotal).
+        - Pesquisa por Cod. Prestador 3620 (3 resultados) e por Número da Fatura
+          FT16-145 (1 resultado), para ver se a linha só aparece com mais de 1
+          resultado.
+        - Inspeção do DOM completo da tabela (rowgroup de cabeçalho, rowgroup de
+          corpo, rowgroup final) à procura de uma terceira secção de tabela
+          (tfoot) com valores agregados.
+        - Busca de texto '/^Total$/' e da palavra 'Total' em toda a página
+          (incluindo fora da tabela, ex. resumo/cartão de sumário acima ou
+          abaixo da tabela) via accessibility tree e via innerText.
+        - Comparação com o ecrã irmão desta secção, Vacinas > Prestações
+          (/vacinas/prestacao), para ver se a agregação aparece aí em vez de em
+          Facturas.
+      onde:
+        - http://localhost:4174/vacinas/factura (pesquisa por Cod.
+          Prestador=3620 e por Número da Fatura=FT16-145)
+        - http://localhost:4174/vacinas/prestacao
+      resultado: nao_existe
+      accao: null
+      nota: "A tabela de resultados de Vacinas/Facturas só tem duas rowgroups
+        (cabeçalho e corpo); não existe nenhuma linha ou secção de totais
+        agregados. A única ocorrência da palavra 'Total' na página é como parte
+        dos rótulos das colunas 'Total (Comunicado)' e 'Total (Apurado)', que
+        mostram o valor de cada fatura individual, não uma soma da pesquisa.
+        Confirmado por inspeção do DOM (accessibility snapshot) e por innerText
+        da página com resultados reais (3620 → 3 faturas: 24,00/0,00;
+        294,00/0,00; 168,00/168,00). O mesmo ecrã de Prestações de Vacinas
+        também não tem equivalente. Sem equivalente aproximado encontrado."
+    - alvo: CT-07
+      procurei:
+        - "Um botão/ícone 'Exportar' na barra de resultados (rótulos
+          alternativos testados: Exportar, Exportar XLSX, Download,
+          Descarregar), incluindo com resultados de pesquisa preenchidos."
+        - "Um link ou botão 'Detalhe conferência' (rótulos alternativos:
+          Detalhe, Ver detalhe, Execuções de conferência, Conferência) na barra
+          de resultados ou como ação por linha."
+        - Uma coluna 'Ações' com ícones sem rótulo por linha da tabela (padrão
+          visto noutros ecrãs da secção) que pudesse conter estas duas ações.
+        - Busca de texto 'Exportar', 'Detalhe' e 'confer' em toda a página
+          (accessibility tree via browser_find e innerText via evaluate), com e
+          sem resultados de pesquisa.
+        - Comparação com o ecrã irmão Vacinas > Prestações, e com os ecrãs de
+          Facturas de Medicamentos e de Dispensa em Proximidade (mesma secção de
+          menu, mais desenvolvidos), para ver se a ação foi implementada aí em
+          vez de em Vacinas.
+      onde:
+        - http://localhost:4174/vacinas/factura (sem filtros e com resultados de
+          Cod. Prestador=3620)
+        - http://localhost:4174/vacinas/prestacao
+        - http://localhost:4174/medicamentos/factura (com e sem resultados)
+        - http://localhost:4174/dispensa-proximidade/factura (com e sem
+          resultados)
+      resultado: nao_existe
+      accao: null
+      nota: "Nem 'Exportar' nem 'Detalhe conferência' existem em Vacinas/Facturas, em
+        nenhuma forma: a barra 'Resultado da pesquisa' só tem o contador '0
+        itens selecionados' e o botão 'Limpar seleção', sem coluna 'Ações' e sem
+        botão de exportação, confirmado tanto no accessibility snapshot como em
+        innerText (buscas 'exportar' e 'detalhe' devolveram false). Isto
+        contrasta com Medicamentos/Facturas e Dispensa em Proximidade/Facturas,
+        que têm os botões 'Escolher colunas' e 'Exportar XLSX' (desativado até
+        seleção) e uma coluna 'Ações' na tabela — ou seja, o padrão de Exportar
+        existe na secção, mas não foi implementado neste ecrã específico. Não
+        encontrei 'Detalhe conferência' em nenhum dos ecrãs verificados (nem nos
+        que têm coluna Ações), pelo que não há indício de que viva noutro sítio
+        já visível; pode ainda não estar implementado em lado nenhum. Sem
+        elemento visível equivalente em Vacinas/Facturas, não há 'encontrado' a
+        registar; o achado de Exportar existir noutros ecrãs da secção é só um
+        indício do padrão, não uma confirmação para este ecrã."

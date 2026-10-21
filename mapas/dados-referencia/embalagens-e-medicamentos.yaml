@@ -1,0 +1,360 @@
+documento: dados-referencia/embalagens-e-medicamentos.md
+rota: /dados-referencia/embalagens-medicamentos
+mapeado_em: 2026-09-02
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-registo
+    tipo: filtro
+    nome: Pesquisar por N.º Registo
+    como: Preencher o campo 'N.º Registo' e clicar em 'Pesquisar'; o valor entra na
+      URL como numeroRegisto
+    promessa: Placeholder 'Insira o número de registo'; devolve na grelha
+      'Resultados da Pesquisa' a(s) embalagem(ns) com esse registo
+    entradas:
+      - campo: N.º Registo
+        obrigatorio: false
+        origem_valores: texto livre numérico
+    casos_documento:
+      - CT-01
+      - CT-04
+      - CT-07
+  - id: filtro-nome-medicamento
+    tipo: filtro
+    nome: Pesquisar por Nome Medicamento
+    como: Preencher 'Nome Medicamento' e clicar em 'Pesquisar'
+    promessa: Placeholder 'Insira o nome'; pesquisa por conteúdo (testado 'Dostinex'
+      → 5 embalagens, 'Para' → 188 páginas), não exige nome exato
+    entradas:
+      - campo: Nome Medicamento
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-02
+      - CT-09
+  - id: filtro-denominacao-dci
+    tipo: filtro
+    nome: Pesquisar por Denominação DCI
+    como: Preencher 'Denominação DCI' e clicar em 'Pesquisar'
+    promessa: Placeholder 'Insira a denominação DCI'; pesquisa por conteúdo (testado
+      'Tramadol' → 79 páginas de resultados, incluindo combinações como
+      'Tramadol + Paracetamol')
+    entradas:
+      - campo: Denominação DCI
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-02
+  - id: filtro-data-vigencia
+    tipo: filtro
+    nome: Filtrar por Data (vigência dos históricos)
+    como: Preencher 'Data' (campo de texto DD/MM/YYYY ou seletor de calendário) e
+      clicar em 'Pesquisar'
+    promessa: Campo 'Data' com calendário próprio (mês corrente pré-selecionado);
+      pelo texto de validação da própria tela, serve para escolher a versão
+      vigente à data indicada
+    entradas:
+      - campo: Data
+        obrigatorio: false
+        origem_valores: calendário ou texto DD/MM/YYYY
+    casos_documento:
+      - CT-05
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: Submeter Data sem preencher CNPEM é bloqueado com o alerta 'Para
+      pesquisar por data de vigência é obrigatório indicar o CNPEM.' — testado
+      combinando Data com N.º Registo sozinho, que não passa. Isto contraria o
+      pressuposto do documento (tours 1 e CT-05/CT-07) de que a Data filtra
+      livremente por N.º Registo/Nome/DCI; na prática só funciona com CNPEM
+      preenchido, e a tela não expõe esse código em lado nenhum (nem na grelha,
+      nem na ficha de detalhe).
+  - id: filtro-cnpem
+    tipo: filtro
+    nome: Pesquisar por CNPEM
+    como: Preencher 'CNPEM' e clicar em 'Pesquisar'; é o campo exigido para ativar a
+      Data de vigência
+    promessa: Placeholder 'Insira o código CNPEM'
+    entradas:
+      - campo: CNPEM
+        obrigatorio: false
+        origem_valores: texto livre, código CNPEM
+    casos_documento: []
+  - id: filtro-titular-aim
+    tipo: filtro
+    nome: Pesquisar por Titular AIM
+    como: Preencher 'Titular AIM' e clicar em 'Pesquisar'
+    promessa: Placeholder 'Insira o titular AIM'
+    entradas:
+      - campo: Titular AIM
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento: []
+  - id: filtro-forma-farmaceutica
+    tipo: filtro
+    nome: Filtrar por Forma Farmacêutica
+    como: Abrir o combobox 'Forma Farmacêutica', escolher uma opção e clicar em
+      'Pesquisar'
+    promessa: "Combobox com lista extensa (300+ formas do dicionário INFARMED:
+      Comprimido, Cápsula, Xarope, N.A., N.D., etc.)"
+    entradas:
+      - campo: Forma Farmacêutica
+        obrigatorio: false
+        origem_valores: combobox — catálogo de formas farmacêuticas INFARMED
+    casos_documento: []
+    ressalva: Na primeira abertura do combobox, a lista apareceu momentaneamente
+      como 'Não existem opções' antes de, numa reabertura, mostrar as 300+
+      opções — pode ser apenas um carregamento assíncrono lento/condição de
+      corrida, não confirmado como bug consistente.
+  - id: filtro-indicador-generico
+    tipo: filtro
+    nome: Filtrar por Indicador Genérico
+    como: Abrir o combobox 'Indicador Genérico', escolher Sim/Não e clicar em
+      'Pesquisar'
+    promessa: Combobox com opções 'Sim' e 'Não'; testado com 'Etofenamato' + Não → 0
+      resultados (todas as embalagens Etofenamato são genéricas), confirmando
+      separação correta
+    entradas:
+      - campo: Indicador Genérico
+        obrigatorio: false
+        origem_valores: "combobox fixo: Sim, Não"
+    casos_documento:
+      - CT-03
+  - id: filtro-indicador-venda-livre
+    tipo: filtro
+    nome: Filtrar por Indicador Venda Livre
+    como: Abrir o combobox 'Indicador Venda Livre', escolher Sim/Não e clicar em
+      'Pesquisar'
+    promessa: Combobox com opções 'Sim' e 'Não'
+    entradas:
+      - campo: Indicador Venda Livre
+        obrigatorio: false
+        origem_valores: "combobox fixo: Sim, Não"
+    casos_documento: []
+  - id: filtro-checkbox-diabetico
+    tipo: filtro
+    nome: Checkbox Diabético
+    como: Marcar o checkbox 'Diabético' e clicar em 'Pesquisar'
+    promessa: "Ao marcar, a pesquisa muda de modo inteiro (URL passa a
+      modo=diabetico) e devolve uma grelha diferente, de produtos do protocolo
+      da diabetes, com colunas próprias: Nome do Produto, Código, Quantidade,
+      Quantidade Total, Data Início, Data Fim — não é apenas um filtro adicional
+      sobre a grelha de embalagens"
+    casos_documento:
+      - CT-08
+  - id: filtro-checkbox-dietetico
+    tipo: filtro
+    nome: Checkbox Dietético
+    como: Marcar o checkbox 'Dietético' e clicar em 'Pesquisar'
+    promessa: Muda para modo=dietetico, grelha com colunas Nome do Produto, Código,
+      Data Início, Data Fim (sem Quantidade)
+    casos_documento:
+      - CT-08
+  - id: filtro-checkbox-subs-manipulada
+    tipo: filtro
+    nome: Checkbox Subs. Manipulada
+    como: Marcar o checkbox 'Subs. Manipulada' e clicar em 'Pesquisar'
+    promessa: Muda para modo=substancias-manipuladas, grelha com colunas Nome da
+      Substância, Código, Data Início, Data Fim
+    casos_documento:
+      - CT-08
+  - id: filtro-limpar
+    tipo: filtro
+    nome: Limpar filtros
+    como: Clicar em 'Limpar'
+    promessa: Reset de todos os campos do formulário de pesquisa
+    casos_documento: []
+  - id: consulta-ordenar-coluna
+    tipo: consulta
+    nome: Ordenar resultados por coluna
+    como: Clicar nos cabeçalhos 'Ordenar por Número Registo', 'Ordenar por
+      Genérico', 'Ordenar por Venda livre' ou 'Ordenar por Estado'
+    promessa: Cabeçalhos clicáveis com estado de ordenação refletido na URL
+      (parâmetro ordenar=campo,asc)
+    casos_documento: []
+  - id: consulta-paginacao
+    tipo: consulta
+    nome: Paginar e escolher resultados por página
+    como: Usar a navegação de páginas (primeira/anterior/número/próxima/última) e o
+      combobox 'Resultados por página' (opções 10/15/20)
+    promessa: "Contagem real de resultados (ex.: '188 resultados' em 'X…N' páginas)
+      e paginação efetiva confirmada saltando para a última página"
+    casos_documento:
+      - CT-09
+  - id: exportacao-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Clicar no botão 'Exportar XLSX' por cima da grelha de resultados
+    promessa: Rótulo do botão promete exportação da grelha atual para XLSX
+    casos_documento: []
+    ressalva: Não foi acionado nesta passagem (gera um download real de ficheiro). O
+      documento (secção 6, riscos) só pede para 'validar contagem real,
+      paginação efetiva e conteúdo exportado' como risco geral, sem CT-nn
+      dedicado a esta ação.
+  - id: navegacao-ver-detalhes
+    tipo: navegacao
+    nome: Ver detalhes da embalagem
+    como: Clicar no botão 'Ver detalhes da embalagem <registo>' na primeira coluna
+      de cada linha da grelha
+    promessa: Abre /dados-referencia/embalagens-medicamentos/<id-interno> com a
+      ficha completa da embalagem e os 10 históricos
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-06
+      - CT-07
+      - CT-08
+  - id: consulta-ficha-embalagem
+    tipo: consulta
+    nome: Consultar ficha da embalagem
+    como: Ler o bloco superior do detalhe
+    promessa: "13 campos: Número Registo, Denominação DCI, Nome Medicamento, Titular
+      AIM, Indicador genérico, Indicador venda livre, Forma Farmacêutica,
+      Agrupamento forma farmacêutica, Nome Embalagem, Dosagem, Embalagem
+      unitária, Data Início, Data Fim, Tratamento. No caso não-medicamento
+      (ostomia), Forma Farmacêutica mostra 'N.A.' e Denominação DCI mostra '—' —
+      sem valores enganadores"
+    casos_documento:
+      - CT-01
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-06
+  - id: consulta-lista-precos
+    tipo: consulta
+    nome: Consultar 'Lista de Preços'
+    como: Ler a 1ª secção de histórico no detalhe da embalagem
+    promessa: Colunas PVP, Preço Ref. Geral, Preço Ref. Especial, Preço 100% Ref.,
+      Data Início, Data Fim; 'Nenhum resultado apresentado' quando vazio
+    casos_documento:
+      - CT-05
+  - id: consulta-lista-taxas-comparticipacao
+    tipo: consulta
+    nome: Consultar 'Lista de Taxas de Comparticipação'
+    como: Ler a 2ª secção de histórico
+    promessa: Colunas Nome Escalão, Taxa Comp. Geral, Taxa Comp. Especial, Data
+      Início, Data Fim; linha em vigor com Data Fim '—'
+    casos_documento:
+      - CT-05
+  - id: consulta-lista-precos-referencia
+    tipo: consulta
+    nome: Consultar 'Lista de Preços de Referência'
+    como: Ler a 3ª secção de histórico
+    promessa: Colunas Preço Ref. Geral, Preço Ref. Especial, Preço 100% Ref., Data
+      Início, Data Fim; testado com 7 linhas encadeadas sem buracos nem
+      sobreposições para a embalagem 5826532
+    casos_documento:
+      - CT-05
+  - id: consulta-lista-pamb
+    tipo: consulta
+    nome: Consultar 'Lista PAMB'
+    como: Ler a 4ª secção de histórico
+    promessa: Colunas PVP 4MB, Data Início, Data Fim
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: O documento chama-lhe 'Lista P4MB'; a tela rotula a secção como 'Lista
+      PAMB' (a coluna interna é 'PVP 4MB'). Divergência de nomenclatura entre
+      documento e produto.
+  - id: consulta-historico-pvp-notificado
+    tipo: consulta
+    nome: Consultar 'Histórico PVP Notificado'
+    como: Ler a 5ª secção de histórico
+    promessa: Colunas PVP Notificado, Data Início, Data Fim
+    casos_documento:
+      - CT-06
+  - id: consulta-lista-estados
+    tipo: consulta
+    nome: Consultar 'Lista de Estados'
+    como: Ler a 6ª secção de histórico
+    promessa: Colunas Descrição Estado, Data Início, Data Fim
+    casos_documento:
+      - CT-06
+  - id: consulta-lista-pvp-maximo
+    tipo: consulta
+    nome: Consultar 'Lista PVP Máximo'
+    como: Ler a 7ª secção de histórico
+    promessa: Colunas PVP Máximo, PVP Descontado, Data Início, Data Fim
+    casos_documento:
+      - CT-06
+  - id: consulta-lista-diplomas
+    tipo: consulta
+    nome: Consultar 'Lista de Diplomas'
+    como: Ler a 8ª secção de histórico
+    promessa: Colunas Código Diploma, Descrição Diploma, Comparticipação, Data
+      Início, Data Fim; testado com 9 diplomas para a embalagem 5826532
+    casos_documento:
+      - CT-06
+  - id: consulta-historico-cnpem
+    tipo: consulta
+    nome: Consultar 'Histórico CNPEm'
+    como: Ler a 9ª secção de histórico
+    promessa: Colunas Código CNPEm, Designação, Data Início, Data Fim; 16 linhas
+      para 5826532, paginadas (2 páginas)
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento escreve 'Histórico CNPEM' (maiúsculas); a tela rotula
+      'Histórico CNPEm' (minúscula no 'm').
+  - id: consulta-historico-grupo-homogeneo
+    tipo: consulta
+    nome: Consultar 'Histórico de Grupo Homogéneo'
+    como: Ler a 10ª e última secção de histórico
+    promessa: Colunas Código, Descrição, Data Início, Data Fim
+    casos_documento:
+      - CT-06
+  - id: navegacao-breadcrumb-lista
+    tipo: navegacao
+    nome: Regressar à lista via breadcrumb
+    como: Clicar no link 'Embalagens e Medicamentos' do breadcrumb (Dados de
+      Referência / Embalagens e Medicamentos / Detalhes)
+    promessa: Breadcrumb clicável leva de volta ao ecrã de pesquisa
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento espera 'botão Voltar e breadcrumb' devolvendo 'à lista no
+      estado em que estava (filtros e página preservados)'. Na tela não existe
+      um botão 'Voltar' dedicado — só o link do breadcrumb — e, testado a partir
+      de uma pesquisa por N.º Registo 5826532, clicar nesse link limpa todos os
+      filtros e volta ao estado inicial vazio ('Filtre os campos de pesquisa
+      para visualizar resultados'), não ao resultado da pesquisa anterior.
+insumos_necessarios:
+  - descricao: "Registos reais do dicionário INFARMED referidos na massa do
+      documento (ex.: 5826532 Sitagliptina Anova, 5797410 Dostinex, 5449137
+      Etofenamato Farmoz, 7017269 B Ostomy, 5854146 Tramadol Basi)"
+    obtivel: tela
+    razao: "Confirmados nesta passagem: pesquisando por N.º Registo/Nome, todos
+      devolveram exatamente os dados descritos no documento, sem preparação
+      adicional."
+  - descricao: Código CNPEM válido de uma embalagem conhecida, necessário para
+      ativar o filtro Data (vigência)
+    obtivel: bd
+    razao: A tela não mostra o código CNPEM em lado nenhum (nem na grelha de
+      resultados, nem na ficha de detalhe); sem ele a Data é bloqueada por
+      validação. Teria de vir de consulta direta à massa
+      (INTEGRACOES.TREMBALAGENS ou equivalente) ou do ecrã 'CNPEM' do menu.
+  - descricao: Embalagem com sobreposição ou buraco de datas nos históricos (Lista
+      de Preços, Taxas de Comparticipação, etc.), para exercitar a regra de
+      coerência temporal do CT-05
+    obtivel: bd
+    razao: É preciso localizar um caso anómalo real na base; a tela apenas apresenta
+      os dados, não sinaliza inconsistências.
+  - descricao: Amostra de produtos do protocolo da diabetes, dietéticos e de
+      substância manipulada
+    obtivel: tela
+    razao: Os três checkboxes (Diabético/Dietético/Subs. Manipulada) já devolvem,
+      sozinhos, listas reais e distintas (confirmadas nesta passagem) sem
+      necessidade de preparar dados.
+  - descricao: Utilizador com perfil de consulta no ambiente de Qualidade
+    obtivel: tela
+    razao: A sessão usada nesta passagem (utilizador 'Manta' / PRRmanta_dev) já
+      tinha acesso pleno ao ecrã e às pesquisas.
+  - descricao: Embalagem em estado 'Revogado' para contrastar com uma 'Activo'
+    obtivel: tela
+    razao: "Aparecem misturadas em qualquer pesquisa ampla por nome/DCI (ex.:
+      'Dostinex', 'Etofenamato', 'Tramadol'); a coluna 'Estado' já distingue as
+      duas sem filtro dedicado."
+casos_sem_accao: []

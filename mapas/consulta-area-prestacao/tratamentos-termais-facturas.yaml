@@ -1,0 +1,353 @@
+documento: consulta-area-prestacao/tratamentos-termais-facturas.md
+rota: /tratamentos-termais/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: acc-01
+    tipo: filtro
+    nome: Pesquisar facturas de termas
+    como: "Preencher um ou mais dos 7 campos do formulário 'Pesquisa factura termas'
+      e clicar em Pesquisar; os filtros combinam-se em AND e ficam refletidos na
+      querystring da URL (ex.: ?estadoId=15&pagina=0&tamanho=20)."
+    promessa: Grelha 'Resultado da pesquisa' com colunas Cód. Prest., NIF,
+      Denominação Prestador, N. Factura, Data Factura, Data Facturação, N.
+      Lotes, Estado, Comunicado (Tot. Comp.) e Apurado (Tot. Comp.), ordenada
+      por Data Factura descendente.
+    entradas:
+      - campo: N. factura
+        obrigatorio: false
+        origem_valores: "texto livre; aceita valores alfanuméricos com hífen (ex.:
+          25E1-76, A-148, SNS-254)"
+      - campo: Data factura
+        obrigatorio: false
+        origem_valores: campo de data DD/MM/YYYY com seletor de calendário; uma data
+          inválida (testado 31/02/2025) é rejeitada e o campo fica vazio, sem
+          mensagem de erro
+      - campo: Data facturação
+        obrigatorio: false
+        origem_valores: campo de data DD/MM/YYYY com seletor de calendário; mesmo
+          comportamento de Data factura
+      - campo: N. Processo
+        obrigatorio: false
+        origem_valores: texto livre; confirmado que corresponde ao campo 'ID Processo'
+          apresentado no detalhe da factura (o valor 1892477 devolveu exatamente
+          a factura 25E1-68/PIID 8087)
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre numérico
+      - campo: Cod. Prestador
+        obrigatorio: false
+        origem_valores: texto livre; aceita código alfanumérico com letra intercalada
+          (testado 9001523L9) sem máscara bloqueante
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: "combobox fechado (MUI, não é <select>) com exatamente 5 opções:
+          Recepcionada, Verificada, Conferida Sem Erros, Conferida Com Erros,
+          Recepcionada com Erros; não existe opção 'limpar'/'Selecione' dentro
+          da própria lista de opções"
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: O catálogo real de Estado usado na consulta e na coluna Estado tem 5
+      valores, não os 11 do TRCFESTADO citados no documento (RECP, V, CSE, CCE,
+      AR, ER, ACC, PC, CINC, RE, AN); não foi possível confirmar se os 6 estados
+      em falta (AR, ER, ACC, PC, CINC, RE, AN) existem em algum registo da
+      tabela. A pesquisa por Estado=Conferida Com Erros devolveu 2553 de 4996
+      registos totais e incluiu as âncoras esperadas 8087 (25E1-68) e 7342
+      (A-118). Pesquisa sem resultados mostra a frase 'Nenhuma factura
+      encontrada com os filtros aplicados.' com grelha vazia e paginação a 0
+      resultados; não há intervalo de datas (de/até) nos campos Data
+      factura/Data facturação, apenas uma data exata cada, pelo que o cenário de
+      'intervalo invertido' do CT-10 não se aplica a este ecrã.
+  - id: acc-02
+    tipo: filtro
+    nome: Limpar filtros de pesquisa
+    como: Clicar no botão 'Limpar' junto ao formulário de pesquisa.
+    promessa: Rótulo 'Limpar'; repõe os 7 campos do formulário ao estado inicial e
+      remove os parâmetros da querystring, voltando ao estado 'Sem resultados'.
+  - id: acc-03
+    tipo: consulta
+    nome: Ordenar resultados por coluna
+    como: Clicar num cabeçalho de coluna com aria-label 'Ordenar por X' (Cód.
+      Prest., NIF, Denominação Prestador, N. Factura, Data Factura, Data
+      Facturação, N. Lotes, Estado, Comunicado, Apurado).
+    promessa: Cabeçalhos com cursor de mão e rótulo acessível 'Ordenar por
+      <coluna>', sugerindo reordenação da grelha por essa coluna.
+    ressalva: "Testado com uma pesquisa de 232 resultados (NIF 504134353): clicar em
+      'Ordenar por N. Factura' não alterou a ordem das linhas nem a URL — a
+      grelha manteve-se ordenada por Data Factura descendente, igual ao estado
+      anterior ao clique."
+  - id: acc-04
+    tipo: consulta
+    nome: Paginação e resultados por página
+    como: Navegar entre as páginas numeradas da paginação, ou escolher o valor no
+      combobox 'Resultados por página'.
+    promessa: "Combobox com opções 10, 20, 25, 50 e 100; contador 'N resultados' e
+      paginação numerada (ex.: 232 resultados / 24 páginas a 10 por página; 2553
+      resultados / 256 páginas)."
+  - id: acc-05
+    tipo: consulta
+    nome: Selecionar registos da grelha
+    como: Não identificada nenhuma interação que produza seleção — procurado por
+      checkboxes ou outro controlo de seleção nas linhas.
+    promessa: Acima da grelha existe um contador '0 itens selecionados' e um botão
+      'Limpar seleção', sugerindo que as linhas são selecionáveis.
+    ressalva: Em nenhuma pesquisa realizada (1, 4, 232 ou 2553 resultados) foi
+      encontrada checkbox ou outro elemento de seleção nas linhas da tabela; o
+      contador manteve-se sempre em '0 itens selecionados'.
+  - id: acc-06
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Com um resultado de pesquisa apresentado, clicar no botão 'Exportar XLSX'
+      acima da grelha.
+    promessa: "Rótulo 'Exportar XLSX'; descarrega um ficheiro (confirmado:
+      facturas-termas.xlsx)."
+    casos_documento:
+      - CT-11
+    ressalva: Testado com pesquisa de 1 resultado (25E1-76); o ficheiro foi
+      transferido com sucesso. Não foi possível abrir/inspecionar o conteúdo do
+      XLSX nesta passagem, pelo que não se confirma se exporta apenas a página
+      visível ou o resultado completo da pesquisa. O botão fica desativado
+      ('Exportar XLSX' disabled) quando a pesquisa devolve 0 resultados.
+  - id: acc-07
+    tipo: consulta
+    nome: Ver detalhe da factura
+    como: Clicar no botão 'Ver detalhe da factura <número>' na primeira coluna de
+      uma linha da grelha; navega para /tratamentos-termais/factura/{id}.
+    promessa: "Ecrã 'Detalhe factura cuidados termais' com: bloco de identificação
+      (NIF Prestador, Cod. Prestador, Estado, ID Factura Termas, ID Processo,
+      Descrição, N. Factura, Data Factura, NIF Entidade Adquirente, Entidade,
+      GUID Doc. Factura, GUID Doc. Resumo); bloco 'Total comunicado' e bloco
+      'Total apurado' (cada um com Total Prestações, Total Utente, Total
+      Comparticipação); tabela 'Informação comunicada' (colunas N., Cod. SNS,
+      Nomenclatura, N. Lotes, N. Requisições, Valor Prestações, Valor Utente,
+      Valor Comparticipação); secção 'Erros'; secção 'Expedição'; botão 'Ver
+      Factura'; botão 'Voltar'."
+    casos_documento:
+      - CT-07
+      - CT-08
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: O documento descreve três quadros de totais por tipo de lote
+      (Informação Não Conferida, Informação Conferida, Diferenças) mais uma
+      secção 'Notas de Crédito/Débito'; o ecrã real (testado na factura
+      8087/25E1-68, estado Conferida Com Erros) mostra apenas dois blocos de
+      totais agregados sem quebra por tipo de lote (Total comunicado / Total
+      apurado), uma única tabela 'Informação comunicada' e não tem nenhuma
+      secção de Notas de Crédito/Débito. As secções 'Erros' e 'Expedição'
+      existem e mostram estado vazio explícito ('Sem erros associados.' / 'Não
+      existem expedições para esta factura.') quando não há conteúdo. O botão
+      'Voltar' devolveu à lista preservando a query string de filtros usada
+      antes de entrar no detalhe (estadoId=15&pagina=0&tamanho=20).
+  - id: acc-08
+    tipo: navegacao
+    nome: Voltar ao resultado da pesquisa
+    como: No detalhe da factura, clicar no botão 'Voltar'.
+    promessa: Rótulo 'Voltar'; regressa ao ecrã de lista.
+    casos_documento:
+      - CT-09
+    ressalva: Confirmado que a lista é reapresentada com os mesmos filtros e a mesma
+      página que estavam ativos antes de entrar no detalhe (verificado via
+      querystring).
+  - id: acc-09
+    tipo: consulta
+    nome: Ver Factura (documento digitalizado)
+    como: No detalhe da factura, clicar no botão 'Ver Factura' no canto superior
+      direito.
+    promessa: Abre um modal 'Factura' com um visualizador de imagem com controlos de
+      diminuir/aumentar zoom, repor vista, rodar 90° à esquerda/direita e
+      guardar imagem.
+    ressalva: "Testado na factura 8087 (25E1-68): o pedido do documento a
+      /ccmsns/api/documentos/{GUID} devolveu 502 Bad Gateway no console do
+      browser e a imagem não carregou (ícone de imagem partida); os controlos de
+      zoom/rotação/guardar continuaram visíveis mas sem imagem para atuar."
+  - id: acc-10
+    tipo: navegacao
+    nome: Navegação a partir do detalhe de Lote ('Factura')
+    como: A partir do ecrã Lotes de Tratamentos Termais, abrir o detalhe de um lote
+      e clicar no botão de rodapé 'Factura'.
+    promessa: Botão rotulado 'Factura' no rodapé do detalhe do lote (não 'Ir para
+      Fatura' como referido no documento).
+    equivalente_aproximado: true
+    ressalva: "Testado a partir do lote 37212 (associado à factura 25E1-68): o
+      clique navegou corretamente para /tratamentos-termais/factura/8087, o
+      mesmo PIID da factura de origem. O rótulo do botão é apenas 'Factura',
+      diferente de 'Ir para Fatura' citado no documento."
+  - id: mcdt-facturas-indicadores-fich-electr-fact-papel
+    tipo: consulta
+    nome: Colunas 'Ficheiro Electrónico' e 'Factura Papel' na grelha de Facturas MCDT
+    como: "Em /mcdts/factura, pesquisar facturas com um filtro (ex.: Estado =
+      Conferida Sem Erros); a grelha de resultados mostra as colunas 'Ficheiro
+      Electrónico' e 'Factura Papel' com valores Sim/Não por factura."
+    promessa: Indica, por factura, se existe ficheiro electrónico e/ou factura em
+      papel associados ao circuito de receção.
+    rota: /mcdts/factura
+    equivalente_aproximado: true
+    ressalva: O conceito 'Fich. Electr. / Fact. Papel' existe no produto, mas
+      implementado apenas para MCDT (colunas 'Ficheiro Electrónico' e 'Factura
+      Papel', com dados reais Sim/Sim visíveis). Não há qualquer coluna, campo
+      de detalhe ou seletor de colunas equivalente nas telas de Facturas ou
+      Lotes de Tratamentos Termais — a ausência é estrutural da tela de Termas,
+      não um problema de dados.
+  - id: mcdt-facturas-secao-notas-credito-debito
+    tipo: consulta
+    nome: Secção 'Notas Crédito/Débito' no detalhe de Factura MCDT
+    como: "Abrir o detalhe de uma factura MCDT (ex.: /mcdts/factura/1055348), aba
+      'Informações'; a secção 'Notas Crédito/Débito' lista Nº Nota, Data Nota,
+      Tipo Nota e Valor Nota."
+    promessa: Mostra as notas de crédito/débito associadas à factura, quando existentes.
+    rota: /mcdts/factura/{id}
+    equivalente_aproximado: true
+    ressalva: "A secção 'Notas Crédito/Débito' (mesmo padrão descrito no documento
+      de cenários: Nº Nota, Data Nota, Tipo Nota, Valor) existe no produto, mas
+      só no detalhe de Facturas de MCDT — confirma-se que a ausência na tela de
+      Tratamentos Termais é estrutural (a tela de Termas nunca a mostra,
+      independentemente da factura ou do estado), tal como a primeira passagem
+      já tinha concluído. Não foi encontrada, na amostra percorrida, nenhuma
+      factura (de Termas ou de MCDT) com notas efectivamente associadas, pelo
+      que o insumo (uma factura real com Notas de Crédito/Débito) continua por
+      confirmar."
+insumos_necessarios:
+  - descricao: Factura em cada um dos 5 estados oferecidos pelo filtro/coluna Estado
+      (Recepcionada, Verificada, Conferida Sem Erros, Conferida Com Erros,
+      Recepcionada com Erros)
+    obtivel: tela
+    razao: Todos os 5 estados são localizáveis diretamente pela própria pesquisa do
+      ecrã, sem precisar de acesso à BD
+  - descricao: "Factura em estado fora do catálogo exposto pelo filtro (ex.: RECP,
+      AR, ER, ACC, PC, CINC, RE, AN do TRCFESTADO), para confirmar se a coluna
+      Estado alguma vez apresenta um valor não coberto pelas 5 opções do
+      combobox"
+    obtivel: bd
+    razao: O filtro Estado só permite escolher entre 5 valores; para verificar os
+      restantes é preciso consultar TDCFFACTURATERMAS/TRCFESTADO diretamente
+  - descricao: Documento de factura acessível no serviço de armazenamento de
+      documentos, para que o modal 'Ver Factura' carregue a imagem sem devolver
+      502
+    obtivel: nao
+    razao: Depende da disponibilidade de um serviço externo (endpoint
+      /ccmsns/api/documentos/{GUID}) que devolveu 502 Bad Gateway neste ambiente
+  - descricao: Lote de tratamentos termais associado a uma factura conhecida, para
+      exercitar a navegação Lote → Factura
+    obtivel: tela
+    razao: Localizável pesquisando o número da factura no ecrã de Lotes de
+      Tratamentos Termais
+  - descricao: ID Processo de uma factura conhecida, para exercitar o filtro N. Processo
+    obtivel: tela
+    razao: O valor 'ID Processo' está visível no bloco de identificação do detalhe
+      de qualquer factura
+  - descricao: Factura com Notas de Crédito/Débito associadas
+    obtivel: nao
+    razao: O ecrã de detalhe não tem nenhuma secção de Notas de Crédito/Débito,
+      independentemente dos dados da factura escolhida
+  - descricao: Factura com múltiplos lotes e múltiplas linhas na tabela 'Informação
+      comunicada', para validar totais agregados por linha
+    obtivel: tela
+    razao: "Existem facturas reais com N. Lotes > 1 localizáveis pela pesquisa (ex.:
+      facturas com 3 ou 5 lotes surgiram nos resultados exploratórios)"
+casos_sem_accao:
+  - CT-06
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: "CT-06: Indicadores Fich. Electr. e Fact. Papel"
+      procurei:
+        - colunas 'Fich. Electr.' e 'Fact. Papel' na grelha de resultados da
+          pesquisa de facturas termas
+        - campos equivalentes (Ficheiro Electrónico / Factura Papel) nos dados
+          do cabeçalho do detalhe de factura termas
+        - um seletor 'Escolher colunas' na grelha de facturas termas que pudesse
+          revelar colunas ocultas (não existe nesta tela)
+        - as mesmas colunas na grelha de Lotes de Tratamentos Termais
+        - colunas/indicadores equivalentes nas telas de Facturas de outras áreas
+          da mesma secção de menu (Medicamentos, MCDT), incluindo o seletor
+          'Escolher colunas' existente em Medicamentos
+      onde:
+        - http://localhost:4174/tratamentos-termais/factura (pesquisas por N.
+          factura 25E1-76 e 25E1-68)
+        - http://localhost:4174/tratamentos-termais/factura/8333
+        - http://localhost:4174/tratamentos-termais/factura/8087
+        - http://localhost:4174/tratamentos-termais/lote
+        - http://localhost:4174/medicamentos/factura (botão 'Escolher colunas')
+        - http://localhost:4174/mcdts/factura
+      resultado: encontrado
+      accao: mcdt-facturas-indicadores-fich-electr-fact-papel
+      equivalente_aproximado: true
+      captura: mcdt-colunas-ficheiro-electronico-factura-papel.png
+      nota: O conceito 'Fich. Electr. / Fact. Papel' existe no produto, mas
+        implementado apenas para MCDT (colunas 'Ficheiro Electrónico' e 'Factura
+        Papel', com dados reais Sim/Sim visíveis). Não há qualquer coluna, campo
+        de detalhe ou seletor de colunas equivalente nas telas de Facturas ou
+        Lotes de Tratamentos Termais — a ausência é estrutural da tela de
+        Termas, não um problema de dados.
+    - alvo: Documento de factura acessível no serviço de armazenamento de documentos,
+        para que o modal 'Ver Factura' carregue a imagem sem devolver 502
+      procurei:
+        - abrir o modal 'Ver Factura' a partir do detalhe de uma factura termas
+          real (8333, GUID Doc. Factura
+          {F1B439E8-BA87-4646-B17F-983D4F71A2EF}_161225_G) e inspecionar o
+          pedido de rede ao endpoint /ccmsns/api/documentos/{GUID}
+        - confirmar o GUID de documento de uma segunda factura termas real
+          (8087, GUID {EA2676F4-E0B5-4169-8F0A-596E8ADD6228}_171125_G), para
+          excluir que a falha seja específica de um único GUID
+        - repetir o mesmo teste ('Ver Factura') numa factura de outra área da
+          mesma secção de menu (MCDT, factura 1055348, GUID
+          {EB74CE0F-BA90-43D3-A6C7-65A81F9214C4}_090126_G), para determinar se o
+          502 é específico dos dados de Termas ou sistémico do ambiente
+      onde:
+        - http://localhost:4174/tratamentos-termais/factura/8333 (botão 'Ver
+          Factura')
+        - http://localhost:4174/tratamentos-termais/factura/8087 (GUID Doc.
+          Factura no cabeçalho do detalhe)
+        - http://localhost:4174/mcdts/factura/1055348 (botão 'Ver Factura')
+      resultado: nao_existe
+      accao: null
+      captura: modal-ver-factura-8333.png
+      nota: Em todas as tentativas (2 GUIDs diferentes de facturas de termas reais e 1
+        GUID de uma factura MCDT) o pedido GET /ccmsns/api/documentos/{GUID}
+        devolveu 502 Bad Gateway, e o modal 'Ver Factura' mostra a imagem
+        quebrada (alt text 'Factura', sem conteúdo). A falha não é exclusiva dos
+        dados de Tratamentos Termais nem de um GUID específico — é sistémica do
+        serviço de armazenamento de documentos neste ambiente, confirmando a
+        hipótese da primeira passagem. O serviço não é uma tabela da BD Oracle
+        (é um endpoint externo de documentos), pelo que também não há via SQL
+        alternativa para obter o ficheiro.
+    - alvo: Factura com Notas de Crédito/Débito associadas
+      procurei:
+        - secção 'Notas de Crédito/Débito' no detalhe de duas facturas termas
+          reais em estados diferentes (8333, Conferida Sem Erros; 8087,
+          Conferida Com Erros)
+        - secção equivalente nas telas de Lotes e Prestações de Tratamentos
+          Termais
+        - secção equivalente no detalhe de facturas de outra área da mesma
+          secção de menu (MCDT), e várias facturas/estados diferentes (Conferida
+          Sem Erros, Aguarda Regularização, Anulada) à procura de um registo com
+          notas associadas
+      onde:
+        - http://localhost:4174/tratamentos-termais/factura/8333
+        - http://localhost:4174/tratamentos-termais/factura/8087
+        - http://localhost:4174/tratamentos-termais/lote
+        - http://localhost:4174/tratamentos-termais/prestacao
+        - "http://localhost:4174/mcdts/factura (filtros de Estado: Conferida Sem
+          Erros, Aguarda Regularização, Anulada) e
+          http://localhost:4174/mcdts/factura/1055348"
+      resultado: encontrado
+      accao: mcdt-facturas-secao-notas-credito-debito
+      equivalente_aproximado: true
+      captura: mcdt-secao-notas-credito-debito.png
+      nota: "A secção 'Notas Crédito/Débito' (mesmo padrão descrito no documento de
+        cenários: Nº Nota, Data Nota, Tipo Nota, Valor) existe no produto, mas
+        só no detalhe de Facturas de MCDT — confirma-se que a ausência na tela
+        de Tratamentos Termais é estrutural (a tela de Termas nunca a mostra,
+        independentemente da factura ou do estado), tal como a primeira passagem
+        já tinha concluído. Não foi encontrada, na amostra percorrida, nenhuma
+        factura (de Termas ou de MCDT) com notas efectivamente associadas, pelo
+        que o insumo (uma factura real com Notas de Crédito/Débito) continua por
+        confirmar."

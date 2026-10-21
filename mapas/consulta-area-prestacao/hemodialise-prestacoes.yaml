@@ -1,0 +1,363 @@
+documento: consulta-area-prestacao/hemodialise-prestacoes.md
+rota: /hemodialise/prestacao
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: a1
+    tipo: filtro
+    nome: Pesquisar prestações
+    como: Preencher um ou mais campos do formulário 'Pesquisa Prestações' e clicar
+      em 'Pesquisar'. Os valores submetidos aparecem como query params na URL
+      (numFactura, dataFactura, nifPrestador, codConvencao, numLote,
+      numBeneficiario, pagina, tamanho).
+    promessa: Devolve as prestações de hemodiálise cujos campos batem com o(s)
+      filtro(s) preenchido(s), numa grelha paginada.
+    rota: /hemodialise/prestacao
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Insira o número da factura'
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: só populável via o datepicker (botão 'Abrir/fechar calendário');
+          escrever diretamente no campo de texto não regista o valor
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Insira o NIF Prestador'
+      - campo: Código da Convenção
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Insira o código da convenção'
+      - campo: Número do Lote
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Insira o número do lote'
+      - campo: Número de Beneficiário
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Insira o número de beneficiário'
+    casos_documento:
+      - CT-01
+      - CT-06
+      - CT-11
+    ressalva: "Nenhum campo é individualmente obrigatório, mas ao pesquisar com
+      todos vazios aparece o alerta 'É necessário preencher pelo menos um dos
+      campos de pesquisa.' e a pesquisa não é submetida. Confirmado: pesquisa
+      por Número da Factura '10FTV2025-1772' devolveu exatamente as 3 prestações
+      esperadas (1879948/1879947/1879946, 31/12/2025, 31 sessões, SNS).
+      Confirmado também: NÃO EXISTE campo 'Número de Utente' no formulário — só
+      existe como coluna de resultado e como campo de leitura no detalhe. A
+      escrita direta no campo de texto de Data da Factura (sem passar pelo
+      calendário) não regista o valor digitado."
+  - id: a2
+    tipo: filtro
+    nome: Pesquisar por Número de Beneficiário
+    como: Preencher apenas o campo 'Número de Beneficiário' e pesquisar.
+    promessa: Devolve as prestações do beneficiário indicado; grelha mostra mensagem
+      de 'sem resultados' quando não há registos.
+    rota: /hemodialise/prestacao
+    entradas:
+      - campo: Número de Beneficiário
+        obrigatorio: false
+        origem_valores: texto livre, 11 dígitos segundo o documento
+    casos_documento:
+      - CT-03
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: "CT-03 espera 'dois campos distintos, Número de Utente e Número de
+      Beneficiário'; só o segundo existe como filtro de pesquisa, por isso a
+      comparação entre os dois campos de pessoa não é executável tal como
+      descrita. Testado com beneficiário fictício '99999999999' (inexistente): a
+      grelha mostrou a linha 'Nenhuma prestação encontrada com os filtros
+      aplicados.', sem erro técnico e com o filtro preservado no formulário e na
+      URL — usado como equivalente aproximado de CT-10 (que no documento pede um
+      Número de Utente inexistente, campo que não existe aqui). Em toda a
+      amostra navegada (subsistema SNS), a coluna 'Número de Beneficiário'
+      aparece sempre como '—'; não foi encontrado nenhum registo real de
+      beneficiário para validar um caso positivo."
+  - id: a3
+    tipo: consulta
+    nome: Ordenar resultados por coluna
+    como: Clicar nos cabeçalhos 'Cód. Convenção', 'NIF Prestador', 'Descrição
+      Convenção', 'Nº da Factura' ou 'Data Factura' (marcados como 'Ordenar por
+      ...' e com ícone de seta).
+    promessa: Reordena a grelha de resultados pela coluna escolhida.
+    rota: /hemodialise/prestacao
+    casos_documento: []
+    ressalva: Clicar em 'Ordenar por Data Factura' mudou visivelmente o conteúdo da
+      página 2 da grelha (registos diferentes dos que lá estavam antes) e fez
+      aparecer um ícone de seta junto ao cabeçalho; não foi possível confirmar
+      pela árvore de acessibilidade se ficou ascendente ou descendente. As
+      colunas 'Número de Utente', 'Número de Beneficiário' e 'Total' não têm
+      cabeçalho clicável de ordenação.
+  - id: a4
+    tipo: navegacao
+    nome: Paginar resultados / mudar tamanho de página
+    como: Usar a navegação de páginas (primeira, anterior, números, seguinte,
+      última) e o combobox 'Resultados por página' (opções 10/20/25/50/100) por
+      baixo da grelha.
+    promessa: Percorre o conjunto total de resultados em blocos, com contagem total
+      de resultados visível.
+    rota: /hemodialise/prestacao
+    casos_documento:
+      - CT-11
+    ressalva: "Confirmado paginação server-side com total verdadeiro: pesquisa por
+      NIF Prestador '511154097' devolveu 38263 resultados e por Código de
+      Convenção 'HD' devolveu 168694 (a tabela
+      GESTCONFER.TDCFPRESTACAOHEMODIALISE tem 173.285 registos no total, valor
+      citado no documento). Mudar de página atualiza o parâmetro 'pagina' na
+      URL. Inconsistência observada: o combobox mostra '10' selecionado por
+      omissão mas a URL inicial de qualquer pesquisa usa 'tamanho=20'."
+  - id: a5
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Botão 'Exportar XLSX' acima da grelha de resultados.
+    promessa: Rótulo promete exportação da lista de resultados para ficheiro XLSX.
+    rota: /hemodialise/prestacao
+    casos_documento:
+      - CT-11
+    ressalva: "NÃO EXECUTADO: por se tratar de dados de saúde sensíveis (documento
+      pede 'rigor máximo de privacidade nas evidências'), o botão não foi
+      clicado; a descrição baseia-se apenas no rótulo. Observado por inspeção: o
+      botão fica desativado quando a pesquisa devolve 0 resultados, e ativo
+      quando há resultados. A grelha mostra um contador '0 itens selecionados' e
+      um botão 'Limpar seleção' sugerindo exportação seletiva por linha, mas não
+      foi encontrada nenhuma checkbox funcional nas linhas da tabela (nem na
+      árvore de acessibilidade nem visualmente) — não ficou claro se a seleção
+      por linha está de facto implementada nesta grelha."
+  - id: a6
+    tipo: navegacao
+    nome: Abrir detalhe da prestação
+    como: Clicar no ícone/botão 'Ver detalhe da prestação {PIID}' (coluna sem
+      cabeçalho, primeira da grelha).
+    promessa: Navega para /hemodialise/prestacao/{PIID} com uma vista de detalhe da
+      prestação.
+    rota: /hemodialise/prestacao/{piid}
+    casos_documento:
+      - CT-01
+      - CT-04
+      - CT-05
+      - CT-06
+      - CT-07
+      - CT-08
+    ressalva: "O layout do detalhe não segue exatamente a estrutura do documento
+      ('Dados do GID / Utente' e 'Dados da Prestação' como duas secções
+      separadas). Na prática há: (1) 'Detalhe Prestação Hemodialise' — bloco
+      único com Subsistema, NIF/Código Prestador, Número de dias, Valor
+      comunicado/apurado, Num. Sessões comunicado/apurado, Início/Fim
+      tratamento, Código/Descrição tratamento, Num. Beneficiário, Num. Utente,
+      Nº/Data Factura; (2) 'Dados da Prestação do GID' — Número/Data de
+      referência, Médico responsável, ACES, Número Utente (repetido),
+      Código/Designação subsistema, Data nascimento, Sexo; (3) 'Erros'
+      (documento chama 'Erros de Linha de Factura'); (4) 'Movimentos'. Em TODOS
+      os registos abertos (1879948, subsistema SNS/dez-2025; 1734742, subsistema
+      SNS/jan-2025), 'Valor comunicado' e 'Valor apurado' apareceram como '—', e
+      'Descrição tratamento' também como '—', enquanto 'Num. Sessões
+      comunicado/apurado' vinham sempre preenchidos e iguais (31/31). Não foi
+      encontrado, na amostra navegada, nenhum registo com valores de
+      'Total'/sessões divergentes entre comunicado e apurado, nem qualquer
+      destaque visual para divergência — a comparação de CT-07 fica por
+      confirmar com uma fatura CCE concreta. A secção 'Movimentos' bate
+      exatamente com as colunas esperadas pelo documento (Data tratamento,
+      Código tratamento, Descrição tratamento, Número de dias, Data
+      actualização, Versão), ordenada por data decrescente, sem paginação
+      própria. A secção 'Erros' mostrou 'Sem erros associados.' em ambos os
+      registos abertos (não foi encontrado um registo com erro para validar o
+      estado com dados)."
+  - id: a7
+    tipo: navegacao
+    nome: Voltar da vista de detalhe para a lista
+    como: Botão 'Voltar' no fundo da página de detalhe.
+    promessa: Regressa à lista de resultados.
+    rota: /hemodialise/prestacao/{piid}
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: "Confirmado: 'Voltar' (e também o botão 'back' do browser) devolve à
+      lista com os filtros e a página anteriores preservados na URL (ex.: volta
+      com nifPrestador=511154097&pagina=0). Isto cobre apenas a parte de CT-09
+      sobre 'regresso sem perda dos filtros da lista' — a navegação de ida para
+      'Detalhe do processamento' não existe (ver casos_sem_accao)."
+  - id: a8
+    tipo: navegacao
+    nome: Reset via breadcrumb / menu lateral
+    como: Clicar no item 'Prestações' do breadcrumb, ou no menu lateral em Consulta
+      por Área de Prestação > Hemodiálise > Prestações/Facturas.
+    promessa: O breadcrumb reabre o ecrã de pesquisa (sem filtros); o menu lateral
+      tem itens irmãos 'Facturas' e 'Prestações' dentro de Hemodiálise, e outros
+      ecrãs relacionados de outras áreas.
+    rota: /hemodialise/prestacao
+    casos_documento: []
+    ressalva: "O item de menu 'Facturas' (Hemodiálise) foi visto mas não navegado
+      nem mapeado nesta passagem — é o ecrã relacionado citado no documento
+      ('navegação ascendente'). Nas células da grelha e no detalhe, o 'Nº da
+      Factura' (ex.: 10FTV2025-1772) é apenas texto, não é um link/botão — ou
+      seja, a partir do ecrã de Prestações não há navegação direta para o
+      detalhe dessa fatura."
+casos_sem_accao:
+  - CT-02
+  - CT-09
+insumos_necessarios:
+  - descricao: "Número da Factura HD com prestações conhecidas (ex.: 10FTV2025-1772,
+      10FTV2025-1635) para pesquisas dirigidas"
+    obtivel: bd
+    razao: Massa já identificada no documento (secção 5), mas confirmar/atualizar
+      exige SQLcl read-only contra GESTCONFER.TDCFPRESTACAOHEMODIALISE, conforme
+      pré-condição do próprio plano.
+  - descricao: "NIF de prestador de hemodiálise com muitos registos (ex.: 511154097)"
+    obtivel: tela
+    razao: Visível diretamente na grelha de resultados de qualquer pesquisa já feita
+      no ecrã.
+  - descricao: Registo com subsistema não-SNS e Número de Beneficiário real preenchido
+    obtivel: bd
+    razao: Toda a amostra navegada era subsistema SNS, com a coluna Número de
+      Beneficiário sempre a '—'; não foi encontrado nenhum registo com
+      beneficiário preenchido por navegação simples.
+  - descricao: Prestação de factura em estado CCE com Valor/Sessões comunicado
+      divergente de apurado, para testar CT-07
+    obtivel: bd
+    razao: "Não encontrada por amostragem no ecrã (todos os registos abertos tinham
+      Valor comunicado/apurado vazios e sessões comunicado=apurado); o próprio
+      documento remete para o plano de Facturas HD (ex.: fatura 27198) e para
+      consulta SQL para a localizar."
+  - descricao: Prestação com pelo menos um registo em 'Erros de Linha de Factura'
+      preenchido
+    obtivel: bd
+    razao: Os dois registos abertos mostraram 'Sem erros associados.'; não foi
+      encontrado um caso positivo por navegação simples dado o volume (173.285
+      registos).
+  - descricao: Execução de conferência associada a uma prestação, para validar
+      navegação para 'Detalhe do processamento'
+    obtivel: nao
+    razao: O botão/link 'Detalhe do processamento' descrito no documento não existe
+      em nenhum ponto do ecrã de detalhe da prestação nesta build; não há insumo
+      que o torne testável até essa navegação ser implementada.
+  - descricao: Utilizador com perfil de consulta para a área de Hemodiálise
+    obtivel: tela
+    razao: Sessão já autenticada (utilizador Manta / PRRmanta_dev) tinha acesso
+      pleno ao ecrã durante esta exploração.
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-02
+      procurei:
+        - "Campo 'Número de Utente' no formulário de Pesquisa Prestações (rótulo
+          exato e sinónimos: Nº Utente, Nº SNS, Utente)"
+        - Se o campo 'Número de Beneficiário' funcionaria também como pesquisa
+          por utente (mesmo campo, dois usos)
+        - Parâmetros de query alternativos diretamente na API de pesquisa
+          (numUtente, numeroUtente, utente, numUtenteSNS, numeroUtenteSns,
+          codUtente)
+        - Se o identificador de utente está pelo menos disponível nos resultados
+          da pesquisa, mesmo sem ser critério de filtro
+      onde:
+        - "http://localhost:4174/hemodialise/prestacao — formulário 'Pesquisa
+          Prestações' (campos existentes: Número da Factura, Data da Factura,
+          NIF Prestador, Código da Convenção, Número do Lote, Número de
+          Beneficiário)"
+        - DOM do formulário, pesquisa textual por 'utente' em labels/inputs —
+          sem correspondências
+        - GET /ccmsns/api/hemodialise/prestacoes com numBeneficiario=171121219 →
+          URL de query gerada confirma o parâmetro é 'numBeneficiario', não
+          'numUtente'
+        - GET direto (via fetch no browser, leitura pura) a
+          /ccmsns/api/hemodialise/prestacoes com numUtente, numeroUtente,
+          utente, numUtenteSNS, numeroUtenteSns e codUtente=171121219 — todos
+          devolveram 422 'É necessário preencher pelo menos um dos campos de
+          pesquisa'
+        - Tabela de resultados da pesquisa por Número da Factura 10FTV2025-1772
+          — coluna 'Número de Utente' aparece preenchida (171121219, 171141351,
+          174189384), mas apenas como informação, não como filtro
+      resultado: nao_existe
+      accao: null
+      nota: Não existe nenhum campo de pesquisa por Número de Utente, nem sob outro
+        rótulo nem reaproveitado dentro de 'Número de Beneficiário' (mapeia para
+        numBeneficiario, campo distinto). Testei 6 nomes de parâmetro plausíveis
+        diretamente contra a API real (ambiente tem dados reais da factura
+        10FTV2025-1772) e nenhum foi aceite como filtro válido — a resposta 422
+        é a mesma que se obtém sem preencher nada, confirmando que o backend não
+        reconhece esses parâmetros. O número de utente só fica visível depois de
+        se chegar à prestação por outro caminho (ex. Número da Factura), nunca
+        como ponto de entrada da pesquisa.
+    - alvo: CT-09
+      procurei:
+        - Botão/link 'Detalhe do processamento' no ecrã de detalhe da prestação
+          de Hemodiálise
+        - Sinónimos (Ver execução, Ver processamento, Auditoria, Detalhe da
+          conferência, Ver conferência)
+        - Ícones sem rótulo / menus de contexto ('Mais ações', 'Abrir menu')
+          presentes no DOM da página
+        - A mesma navegação a partir do ecrã irmão desta secção — detalhe da
+          Factura de Hemodiálise
+        - "Rota indireta: localizar a execução de conferência que processou esta
+          prestação através de 'Logs de Conferência', filtrando pela Área
+          'Hemodiálise' e, se possível, por Nº da Prestação"
+      onde:
+        - "http://localhost:4174/hemodialise/prestacao/1879948 — detalhe da
+          prestação real (factura 10FTV2025-1772, utente 171121219); secções
+          presentes: 'Detalhe Prestação Hemodialise', 'Dados da Prestação do
+          GID', 'Erros', 'Movimentos'; única ação é o botão 'Voltar'"
+        - DOM completo da página (todos os <button> e <a>) — os únicos elementos
+          sem texto são 'Colapsar menu', 'Abrir menu mobile', 'Sair', ordenação
+          de colunas e paginação; os botões 'Abrir menu'/'Mais ações' existem no
+          markup mas com bounding box 0x0 (não renderizados nesta página —
+          pertencem a um componente de menu do avatar, não à prestação)
+        - http://localhost:4174/hemodialise/factura/28101 — detalhe da factura
+          correspondente; existe um botão 'Ver Factura' (ícone de visualização),
+          mas abre o documento da factura, não uma execução de conferência
+        - http://localhost:4174/motor-regras/execucoes (Logs de Conferência) —
+          'Hemodiálise' existe como opção no combobox 'Área de Conferência', mas
+          ao selecioná-la os 'Filtros de negócio' (Nº da Fatura, Prestador NIF,
+          Nº do Lote, Nº da Prestação) continuam desativados, com a mensagem
+          'Selecione a Área (Medicamentos, MCDT ou CRD) para usar estes
+          filtros'; pesquisa apenas com Área=Hemodiálise devolveu 'Nenhum
+          resultado encontrado para os filtros aplicados'
+      resultado: nao_existe
+      accao: null
+      nota: "Não há, em nenhum ponto do detalhe da prestação ou do detalhe da factura
+        de Hemodiálise, uma ação (com ou sem texto) que leve à execução de
+        conferência. O botão 'Ver Factura' na factura trata de outro assunto
+        (documento da factura) e fica marcado apenas como observação, não como
+        equivalente. Em Logs de Conferência, a área Hemodiálise está listada mas
+        os filtros de negócio que permitiriam cruzar por Nº da Prestação estão
+        explicitamente restritos a Medicamentos/MCDT/CRD; mesmo pesquisando sem
+        esse filtro (só por Área) não há execuções devolvidas neste ambiente.
+        Isto é consistente com a conclusão da primeira passagem: a navegação
+        'Detalhe do processamento' não existe nesta build para Hemodiálise, nem
+        por rota direta nem por caminho alternativo dentro da mesma secção de
+        menu."
+    - alvo: "[insumo] Execução de conferência associada a uma prestação, para validar
+        navegação para 'Detalhe do processamento'"
+      procurei:
+        - Existência de execuções de conferência de Área='Hemodiálise'
+          disponíveis para consulta em Logs de Conferência
+        - Ativação do filtro 'Nº da Prestação' (secção 'Filtros de negócio') com
+          a Área 'Hemodiálise' selecionada
+        - Qualquer outro filtro dessa tela (Workflow, Resultado, Código de erro,
+          datas de processamento) que permitisse chegar a uma execução ligada à
+          prestação 1879948 / factura 10FTV2025-1772
+        - Ligação inversa a partir de uma execução genérica (sem filtro de
+          prestação) para ver se listava prestações associadas nas colunas de
+          resultado
+      onde:
+        - http://localhost:4174/motor-regras/execucoes — 'Pesquisa de
+          Execuções'; combobox 'Área de Conferência' lista Hemodiálise entre as
+          opções
+        - Secção 'Filtros de negócio' com Área=Hemodiálise selecionada — campos
+          Nº da Fatura, Prestador (NIF), Nº do Lote e Nº da Prestação continuam
+          todos 'disabled'
+        - Pesquisa executada com Área=Hemodiálise e nenhum outro filtro —
+          resultado 'Nenhum resultado encontrado para os filtros aplicados', 0
+          resultados
+      resultado: nao_existe
+      accao: null
+      nota: "A massa pedida (uma execução de conferência ligada a uma prestação de
+        Hemodiálise concreta) não é obtível pela tela: o único ecrã que lista
+        execuções de conferência restringe o filtro por Nº da Prestação a
+        Medicamentos, MCDT e CRD — a mensagem do próprio ecrã confirma isto
+        textualmente. Mesmo pesquisando de forma ampla, apenas por
+        Área=Hemodiálise, não existe nenhuma execução devolvida neste ambiente
+        para inspecionar manualmente. Não recorri a SQL para confirmar se
+        existem execuções na BD, por estar fora do âmbito desta verificação
+        (validação de navegação na UI); fica como hipótese em aberto se alguém
+        quiser confirmar por BD se a tabela de execuções tem registos de Área
+        Hemodiálise apesar de a UI não os expor."

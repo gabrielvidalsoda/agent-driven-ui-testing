@@ -1,0 +1,512 @@
+documento: consulta-area-prestacao/tratamentos-termais-prestacoes.md
+rota: /tratamentos-termais/prestacao
+mapeado_em: corridas/consulta-area-prestacao__tratamentos-termais-prestacoes__mapa
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: A1
+    tipo: filtro
+    nome: Pesquisa prescrição/prestação termas
+    como: Preencher um ou mais dos 6 campos do formulário "Pesquisa
+      prescrição/prestação termas" e clicar "Pesquisar"
+    promessa: 'Mensagem de validação do próprio ecrã ao pesquisar sem nenhum campo
+      preenchido: "É necessário preencher pelo menos um dos campos de
+      pesquisa."'
+    rota: /tratamentos-termais/prestacao
+    entradas:
+      - campo: N. Factura
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Data Factura
+        obrigatorio: false
+        origem_valores: datepicker, placeholder DD/MM/YYYY
+      - campo: N. Lote
+        obrigatorio: false
+        origem_valores: texto livre; sozinho passa a validação mas raramente devolve
+          resultados úteis (ver ressalva)
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Cód. Convenção
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: N. Requisição
+        obrigatorio: false
+        origem_valores: texto livre; aceita 19 dígitos sem truncar (confirmado via URL
+          preservando o valor completo)
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-11
+    equivalente_aproximado: true
+    ressalva: 'Confirmado exato: N. Requisição sozinho (1001000017211958905) devolve
+      exatamente a prestação 96665 do lote 38314 (99,86 de comparticipação,
+      N.Factura 25E1-76); N. Factura, NIF Prestador e Cód. Convenção também
+      funcionam sozinhos. CT-11 confirmado exato: alterar o último dígito de uma
+      requisição real devolve "Nenhuma prestação encontrada com os filtros
+      aplicados.", sem erro. Divergência central em N. Lote: sozinho (ex. 38314,
+      a chave real do lote) devolve sempre 0 resultados — não é rejeitado pela
+      validação (ao contrário do ecrã de Lotes), mas o campo "N. Lote"
+      pesquisável aqui é um número sequencial por factura (sempre "1" na maioria
+      dos casos observados), não a chave interna do lote. Combinando N. Lote=1
+      com N. Factura=25E1-76 devolve exatamente as 2 prestações esperadas do
+      lote 38314 (96665 e 96664, CT-01 exato nos valores).'
+  - id: A2
+    tipo: filtro
+    nome: Limpar pesquisa
+    como: Clicar "Limpar" junto ao botão Pesquisar
+    promessa: Repõe os 6 campos vazios, remove os parâmetros da pesquisa da URL e
+      volta ao estado inicial "Sem resultados"
+    rota: /tratamentos-termais/prestacao
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: 'Confirmado: URL volta a /tratamentos-termais/prestacao sem query
+      string e a grelha volta ao estado "Sem resultados / Utilize os filtros
+      acima e clique em pesquisar."'
+  - id: A3
+    tipo: consulta
+    nome: Grelha "Resultado da pesquisa"
+    como: Resultado exibido automaticamente após uma pesquisa válida
+    promessa: "Cabeçalho de uma única linha: (ícone Ver detalhe), Cód. Convenção,
+      NIF, Denominação Convenção, N. Factura, Data Factura, N. Lote, N.
+      Requisição, Comunicado (Tot. Comp.), Apurado (Tot. Comp.), Estado"
+    rota: /tratamentos-termais/prestacao
+    casos_documento:
+      - CT-01
+      - CT-03
+    equivalente_aproximado: true
+    ressalva: 'Documento descreve cabeçalho de duas linhas com grupos
+      Comunicado/Apurado, cada um com Tot. Prestações, Total Utente e Tot.
+      Compart. (3 colunas); o ecrã real só mostra uma coluna por grupo (Tot.
+      Comp. = Total Comparticipação) e adiciona uma coluna "Estado" não
+      mencionada no documento. Coluna "Denominação Convenção" corresponde ao
+      "Desc. Convenção" do documento. Divergências reais entre Comunicado e
+      Apurado confirmadas em várias linhas da amostra (NIF 504134353): ex.
+      requisição 1001000016953655300 (87,20 vs 87,19), 1001000016548948302 e
+      1001000016378311703 (95,0x vs 95,00). Coluna "Estado" mostrou "—" na
+      maioria das linhas e "Recepcionado" numa linha com Apurado 0,00
+      (requisição 2001000015551361003).'
+  - id: A4
+    tipo: filtro
+    nome: Ordenação das colunas da grelha de resultados
+    como: Clicar no cabeçalho de qualquer coluna da grelha (ex. "Ordenar por N.
+      Factura")
+    promessa: Cabeçalho anuncia-se como "Ordenar por <coluna>" (role columnheader,
+      cursor pointer) em 9 das 10 colunas visíveis
+    rota: /tratamentos-termais/prestacao
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: 'Testado em duas colunas diferentes ("Ordenar por N. Factura" e
+      "Ordenar por Apurado (Tot. Comp.)") sobre a mesma pesquisa com 6421
+      resultados: nenhum clique alterou a ordem das linhas nem gerou um novo
+      pedido de rede visível — a afordance está presente mas parece não
+      funcional nesta build.'
+  - id: A5
+    tipo: navegacao
+    nome: Paginação e resultados por página
+    como: Clicar nos números de página / "Go to next/last page" ou escolher
+      10/20/25/50/100 em "Resultados por página"
+    promessa: Pagina a grelha via API (pagina=N&tamanho=N); opções de tamanho de
+      página 10, 20, 25, 50, 100 (10 por omissão)
+    rota: /tratamentos-termais/prestacao
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: 'Confirmado com a pesquisa por NIF 504134353 (6421 resultados, 643
+      páginas a 10/página): mudar para 100/página recalculou corretamente para
+      65 páginas. Contagem total ("X resultados") estável entre tamanhos de
+      página.'
+  - id: A6
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Clicar "Exportar XLSX" acima da grelha de resultados (desativado quando
+      não há resultados)
+    promessa: Rótulo "Exportar XLSX"
+    rota: /tratamentos-termais/prestacao
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: "Confirmado: POST
+      .../ccmsns/api/tratamentos-termais/prestacoes/exportar?nifPrestador=50413\
+      4353 devolveu 200 e descarregou prestacoes-termas.xlsx contendo o conjunto
+      completo da pesquisa (6421 linhas), não apenas a página visível. Ação não
+      mencionada em nenhum CT do documento."
+  - id: A7
+    tipo: navegacao
+    nome: Ver detalhe da prestação
+    como: Clicar no ícone "Ver detalhe da prestação <N.Requisição>" na primeira
+      coluna de cada linha da grelha
+    promessa: Abre /tratamentos-termais/prestacao/{id}, uma página "Detalhe
+      prescrição/prestação termas"
+    rota: /tratamentos-termais/prestacao/{id}
+    casos_documento:
+      - CT-04
+      - CT-05
+      - CT-06
+      - CT-07
+      - CT-09
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: 'Divergência central desta exploração: o destino é uma única página
+      "Detalhe prescrição/prestação termas", sem as tabs "Prescrição" e
+      "Prestação" que o documento assume em todo o seu roteiro (charter 2,
+      CT-04, CT-05). Toda a informação de prescrição e de prestação aparece
+      junta, verticalmente, na mesma página (ver A8-A12).'
+  - id: A8
+    tipo: consulta
+    nome: Bloco superior de dados da prestação (cabeçalho do detalhe)
+    como: Topo da página de detalhe, visível sem qualquer clique adicional
+    promessa: N. Requisição, Data Prestação, Data Início Tratamento, Data Fim
+      Tratamento, Nº Dias Tratamento, Cód. Méd. Prestador, Ind. Eletrónico,
+      Estado, N. Factura, N. Lote, Convenção
+    rota: /tratamentos-termais/prestacao/{id}
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: 'A tríade "período de tratamento" (Data Início/Fim Tratamento, Nº Dias
+      Tratamento) está presente e é aritmeticamente coerente: confirmado na
+      prestação 96665 (24/10/2025 a 04/11/2025 = 12 dias, batendo com "Nº Dias
+      Tratamento: 12"). Porém não existem as duas tabs "Prescrição"/"Prestação"
+      que o CT-05 assume — é este mesmo bloco, na única página de detalhe, que
+      reúne os dados. "Estado" apareceu vazio ("—") na maioria das prestações
+      testadas, mas mostrou "Recepcionado" na prestação 78522 (requisição
+      2001000015551361003, N.Factura 25E1-1).'
+  - id: A9
+    tipo: consulta
+    nome: Secção "Dados de prescrição"
+    como: Secção "Dados de prescrição" na mesma página de detalhe (não é uma tab
+      separada, aparece sempre visível abaixo do cabeçalho)
+    promessa: Médico Prescritor, Local Prescrição, Subsistema, Nº Beneficiário, Nº
+      Doente Prof., Data Prescrição, Ind. Eletrónico, Ind. BDNP, Tipo Doc.
+      Direito, Nº Doc. Direito, Validade Doc. Direito
+    rota: /tratamentos-termais/prestacao/{id}
+    casos_documento:
+      - CT-04
+    equivalente_aproximado: true
+    ressalva: 'RGPD aparentemente respeitado: não há campo de nome de utente em lado
+      nenhum, apenas "Nº Beneficiário" numérico. Não existe a tab "Prescrição"
+      que o CT-04 pede para percorrer — é uma secção fixa da mesma página de
+      detalhe (ver A7).'
+  - id: A10
+    tipo: consulta
+    nome: Tabela "Técnicas / informação comunicada"
+    como: Tabela na página de detalhe, abaixo da secção "Dados de prescrição"
+    promessa: Colunas N., Cod. SNS, Nomenclatura, Data Realização, Qtdd, Valor
+      Prestação; estado vazio "Sem técnicas para esta prestação." quando não há
+      linhas
+    rota: /tratamentos-termais/prestacao/{id}
+    casos_documento:
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: Documento espera uma tabela "Consulta prestações" com colunas
+      separadas para o lado Prescrição e o lado Prestação (Cod. SNS (Presc.),
+      Nomenclatura (Prescrição), ...); a tabela real tem um único conjunto de
+      colunas, chama-se "Técnicas / informação comunicada", e a coluna
+      "Nomenclatura" veio vazia ("—") no registo testado (prestação 96665, Cod.
+      SNS "000.7", Qtdd 17, Valor Prestação 285,30).
+  - id: A11
+    tipo: consulta
+    nome: Bloco "Totais"
+    como: Secção "Totais" no fim da página de detalhe
+    promessa: Total Prestações (Comunicado), Total Utente (Comunicado), Total
+      Comparticipação (Comunicado), Total Prestações (Apurado), Total Utente
+      (Apurado), Total Comparticipação (Apurado), Total Dias Tratamento
+    rota: /tratamentos-termais/prestacao/{id}
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: Documento espera dois quadros separados, "Informação Comunicada" e
+      "Informação Conferida"; o ecrã real junta tudo num único bloco "Totais"
+      com sufixos (Comunicado)/(Apurado) em cada linha. Identidade Total
+      Prestações = Total Utente + Total Comparticipação confirmada no lado
+      Comunicado da prestação 96665 (285,30 = 185,44 + 99,86), mas falha em 1
+      cêntimo no lado Apurado da mesma prestação (285,30 ≠ 185,45 + 99,86 =
+      285,31) — é uma divergência comunicado-vs-apurado real, do tipo que o
+      CT-06 pede para procurar, encontrada já na própria prestação-âncora do
+      documento.
+  - id: A12
+    tipo: consulta
+    nome: Bloco "Erros"
+    como: Secção "Erros" no fim da página de detalhe
+    promessa: Lista erros de conferência associados à prestação; estado vazio "Sem
+      erros associados." quando não há nenhum
+    rota: /tratamentos-termais/prestacao/{id}
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: Nas prestações abertas nesta sessão (96665 e 78522) mostrou sempre o
+      estado vazio "Sem erros associados."; secção não referida no documento.
+  - id: A13
+    tipo: consulta
+    nome: Ver Prestação (visualizador de documento digitalizado)
+    como: Clicar "Ver Prestação" no cabeçalho da página de detalhe
+    promessa: Abre um modal titulado "Prestação" com controlos de zoom
+      (diminuir/repor/aumentar), rotação (90º esquerda/direita) e "Guardar
+      imagem"
+    rota: /tratamentos-termais/prestacao/{id}
+    casos_documento:
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: 'Documento espera dois botões/modais separados, "Ver Prescrição" e
+      "Ver Prestação"; o ecrã real só tem "Ver Prestação" — não existe nenhum
+      botão "Ver Prescrição" em lado nenhum da página. O modal abre com toda a
+      estrutura de controlos, mas a imagem nunca carrega: erro de consola 502
+      Bad Gateway em GET .../ccmsns/api/documentos/{guid} (confirmado com o guid
+      da prestação 96665), o mesmo padrão de falha de infraestrutura já
+      confirmado no mapeamento de tratamentos-termais-lotes.'
+  - id: A14
+    tipo: navegacao
+    nome: Botão "Voltar"
+    como: Clicar "Voltar" no rodapé da página de detalhe
+    promessa: Regressa à lista de pesquisa
+    rota: /tratamentos-termais/prestacao
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: "Confirmado que preserva os filtros e a página da pesquisa de origem:
+      a partir de uma pesquisa por NIF 504134353 com tamanho=10 na página 2,
+      abrir o detalhe da prestação 91187 e voltar restaura exatamente a URL
+      ?nifPrestador=504134353&pagina=1&tamanho=10."
+  - id: A15
+    tipo: navegacao
+    nome: Menu lateral — ecrãs irmãos de Tratamentos Termais e outras áreas de
+      prestação
+    como: Submenu "Consulta por Área de Prestação > Tratamentos Termais" com itens
+      Facturas / Lotes / Prestações, e submenus equivalentes para Medicamentos,
+      MCDT, Cuidados Respiratórios Domiciliários, Cuidados Continuados,
+      Hemodiálise, Unidades Terapêuticas de Sangue, Saúde Oral, Vacinas,
+      Dispensa em Proximidade, Programa Troca de Seringas
+    promessa: Rótulos dos itens de menu (Facturas, Lotes, Prestações)
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: Apenas navegação de menu observada, não abertos em detalhe; "Faturação
+      de Migrantes" aparece como "(em breve)", não clicável.
+  - id: loc-arquivos-lote-termas
+    tipo: consulta
+    nome: Secção 'Localização dos arquivos' no detalhe do Lote de Tratamentos Termais
+    como: "Tratamentos Termais > Lotes > pesquisar por N. factura (ex.: 25E1-76) >
+      'Ver detalhe' do lote 38314 > tab 'Detalhe do Lote' > secção 'Localização
+      dos arquivos' (Caixa, Pasta, Lugar, Estado da Caixa)"
+    promessa: Mostra onde está fisicamente arquivado o lote de requisições termais
+      associado à prestação (Caixa C24193, Pasta 3 287 976, Lugar —, Estado da
+      Caixa 'Em Digitalização' no lote 38314, que contém a prestação 96665), com
+      dados vindos da Gestão de Armazém
+    rota: /tratamentos-termais/lote/{idLote}
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "A secção existe na aplicação e vem da Gestão de Armazém como o
+      documento previa, mas está deslocada: fica no detalhe do Lote (tela irmã
+      desta mesma área), não no detalhe da Prestação nem nas tabs
+      Prescrição/Prestação que o documento descrevia (essas tabs não existem em
+      nenhuma tela de prestação visitada). Continua por confirmar com
+      negócio/design se a intenção é mesmo centralizar esta informação ao nível
+      do lote em vez de a repetir por prestação."
+  - id: botao-factura-lote-termas
+    tipo: navegacao
+    nome: Botão 'Factura' no detalhe do Lote de Tratamentos Termais
+    como: Tratamentos Termais > Lotes > 'Ver detalhe' do lote 38314 > botão
+      'Factura' no rodapé da página
+    promessa: Navega para o detalhe da factura associada ao lote (lote 38314 →
+      factura 8333), cobrindo o mesmo destino final que 'Ir para Fatura'
+      prometia a partir do detalhe da prestação
+    rota: /tratamentos-termais/factura/{idFactura}
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: "'Ir para Fatura' tem equivalente aproximado (botão 'Factura' no
+      detalhe do Lote, não da Prestação). 'Detalhe do processamento' não foi
+      encontrado em lado nenhum desta área — nem como botão, nem como ícone, nem
+      como efeito de outra ação (ex.: não há link a partir dos 'Erros' do
+      detalhe da prestação nem da secção 'Erros' da factura)."
+insumos_necessarios:
+  - descricao: Prestação real localizável por NIF/Factura/Requisição, para exercer a
+      pesquisa sem percorrer os 55 mil registos por tentativa
+    obtivel: tela
+    razao: NIF 504134353 devolveu 6421 resultados cobrindo várias
+      facturas/lotes/requisições reais, incluindo exatamente as âncoras do
+      documento (prestação 96665 do lote 38314, prestação do lote 37212/factura
+      25E1-68).
+  - descricao: Prestação com Estado diferente de vazio (ex. "Recepcionado"), para
+      ver o campo Estado preenchido tanto na grelha como no detalhe
+    obtivel: tela
+    razao: Encontrado na prestação 78522 / requisição 2001000015551361003 (N.Factura
+      25E1-1), dentro da mesma amostra do NIF 504134353.
+  - descricao: Prestação com divergência entre valores comunicados e apurados, para
+      exercer CT-03/CT-06
+    obtivel: tela
+    razao: "Encontradas várias na amostra do NIF 504134353 (ex. requisição
+      1001000016953655300: 87,20 vs 87,19; 1001000016548948302 e
+      1001000016378311703: 95,0x vs 95,00); e uma divergência de 1 cêntimo já na
+      própria prestação-âncora 96665, no lado Apurado do bloco Totais."
+  - descricao: Prestação com erro de conferência registado, para ver a secção
+      "Erros" do detalhe preenchida
+    obtivel: bd
+    razao: Todas as prestações abertas nesta sessão (96665, 78522) mostraram "Sem
+      erros associados."; seria necessária uma query dirigida à tabela de erros
+      de conferência de Termas para achar um caso real, tabela essa ainda não
+      identificada nesta sessão.
+  - descricao: Ficheiro/imagem digitalizada real da prestação, para o visualizador
+      "Ver Prestação" carregar sem erro
+    obtivel: nao
+    razao: Erro 502 Bad Gateway consistente em GET .../ccmsns/api/documentos/{guid}
+      (confirmado com o guid da prestação 96665), o mesmo padrão já encontrado
+      no mapeamento de tratamentos-termais-lotes — aponta para falha de
+      infraestrutura/serviço de documentos no ambiente, não para ausência de
+      massa.
+  - descricao: Confirmação de negócio/design sobre a ausência das tabs
+      Prescrição/Prestação, da secção "Localização do arquivo"
+      (Caixa/Pasta/Lugar/Estado da Caixa) e da navegação "Ir para
+      Fatura"/"Detalhe do processamento" no detalhe da prestação — todas
+      presentes no documento e no protótipo, nenhuma encontrada na implementação
+      real
+    obtivel: nao
+    razao: Depende de esclarecimento do dono do produto/design sobre se é omissão a
+      corrigir ou decisão consciente de simplificar o ecrã; não é algo que se
+      obtenha só com dados de BD ou com outro ecrã da aplicação.
+  - descricao: Acesso a SQLcl/dicionário de dados para confirmar se o campo "N.
+      Lote" pesquisável neste ecrã corresponde a um número sequencial por
+      factura (e não à chave interna do lote, ex. FIIDLOTE)
+    obtivel: bd
+    razao: "Observado apenas por comportamento no browser: N.Lote=38314 (a chave
+      real do lote 38314) sozinho devolve 0 resultados, mas N.Lote=1 combinado
+      com N.Factura=25E1-76 devolve exatamente as 2 prestações desse lote; sem
+      SQLcl não é possível confirmar o nome/definição exata da coluna subjacente
+      em GESTCONFER.TDCFPRESTACAOTERMAS."
+casos_sem_accao:
+  - CT-08
+  - CT-09
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: "CT-08: Localização do arquivo físico (Caixa/Pasta/Lugar/Estado da Caixa)
+        nas duas tabs do detalhe da prestação"
+      procurei:
+        - Secção 'Localização do arquivo' com Caixa/Pasta/Lugar/Estado da Caixa
+          dentro do detalhe da prestação 96665 (o ecrã não tem tabs
+          Prescrição/Prestação — é uma página única com secções 'Detalhe
+          prescrição/prestação termas', 'Dados de prescrição',
+          'Técnicas/informação comunicada', 'Totais', 'Erros')
+        - A mesma secção, com rótulo igual ou aproximado (Arquivo, Caixa,
+          Localização, Pasta), no detalhe da factura 25E1-76 (ID 8333) da mesma
+          área — não encontrada; a factura tem antes uma secção 'Expedição'
+          ('Não existem expedições para esta factura')
+        - A mesma secção no detalhe do lote 38314 da mesma área (tela irmã
+          'Lotes' de Tratamentos Termais)
+        - "Convenção geral da aplicação: se outras telas de Prestações da mesma
+          secção de menu (MCDT Prestações, Saúde Oral Prestações, Medicamentos
+          Prestações) usam tabs Prescrição/Prestação ou uma secção de
+          localização de arquivo equivalente — as telas de Saúde Oral e
+          Medicamentos seguem um modelo de dados diferente (cheque/pedido de
+          pagamento, receita/embalagens), sem conceito de requisição nem secção
+          de arquivo visível nos formulários de pesquisa"
+      onde:
+        - http://localhost:4174/tratamentos-termais/prestacao/96665
+        - http://localhost:4174/tratamentos-termais/factura/8333
+        - http://localhost:4174/tratamentos-termais/lote/38314 (tab 'Detalhe do
+          Lote')
+        - http://localhost:4174/mcdts/prescricao (formulário de pesquisa, sem
+          abrir detalhe por falta de resultados)
+        - http://localhost:4174/saude-oral/prestacoes (formulário de pesquisa,
+          sem abrir detalhe por falta de resultados)
+        - http://localhost:4174/medicamentos/prestacoes (formulário de pesquisa,
+          sem abrir detalhe por falta de resultados)
+      resultado: encontrado
+      accao: loc-arquivos-lote-termas
+      equivalente_aproximado: true
+      captura: ct08-localizacao-arquivos-tela-lote.png
+      nota: "A secção existe na aplicação e vem da Gestão de Armazém como o documento
+        previa, mas está deslocada: fica no detalhe do Lote (tela irmã desta
+        mesma área), não no detalhe da Prestação nem nas tabs
+        Prescrição/Prestação que o documento descrevia (essas tabs não existem
+        em nenhuma tela de prestação visitada). Continua por confirmar com
+        negócio/design se a intenção é mesmo centralizar esta informação ao
+        nível do lote em vez de a repetir por prestação."
+    - alvo: "CT-09: Ir para Fatura e Detalhe do processamento a partir do detalhe da
+        prestação"
+      procurei:
+        - Botões 'Ir para Fatura' e 'Detalhe do processamento' no detalhe da
+          prestação 96665 (só existem os botões 'Ver Prestação' e 'Voltar')
+        - Rótulos alternativos (Ver Factura, Ver Processamento, Ir para Lote,
+          Detalhe da Conferência) no detalhe da prestação, da factura
+          25E1-76/8333 e do lote 38314
+        - Navegação de volta prestação→factura ou prestação→lote em qualquer uma
+          das telas irmãs desta área (Facturas, Lotes) — no detalhe da factura
+          só há 'Voltar'; no detalhe do lote há um botão 'Factura' no rodapé e
+          uma tab 'Prestações' com link 'Ver detalhe da prestação' por linha
+        - "Cliquei no botão 'Factura' do detalhe do lote 38314 para confirmar o
+          destino: navega para /tratamentos-termais/factura/8333, a mesma
+          factura 8333 referida no cenário"
+        - "'Detalhe do processamento' (execução de conferência) em qualquer uma
+          das três telas da área (prestação, factura, lote) — não encontrado sob
+          nenhum rótulo"
+      onde:
+        - http://localhost:4174/tratamentos-termais/prestacao/96665
+        - http://localhost:4174/tratamentos-termais/factura/8333
+        - http://localhost:4174/tratamentos-termais/lote/38314
+      resultado: encontrado
+      accao: botao-factura-lote-termas
+      equivalente_aproximado: true
+      captura: ct09-botao-factura-footer.png
+      nota: "'Ir para Fatura' tem equivalente aproximado (botão 'Factura' no detalhe
+        do Lote, não da Prestação). 'Detalhe do processamento' não foi
+        encontrado em lado nenhum desta área — nem como botão, nem como ícone,
+        nem como efeito de outra ação (ex.: não há link a partir dos 'Erros' do
+        detalhe da prestação nem da secção 'Erros' da factura)."
+    - alvo: Ficheiro/imagem digitalizada real da prestação, para o visualizador 'Ver
+        Prestação' carregar sem erro
+      procurei:
+        - Reabri o modal 'Ver Prestação' no detalhe da prestação 96665 e
+          inspecionei o pedido de rede feito pelo visualizador
+        - Confirmei se o erro 502 persiste com um GUID diferente do documentado
+          anteriormente (o guid muda por sessão/ficheiro)
+      onde:
+        - http://localhost:4174/tratamentos-termais/prestacao/96665 (modal 'Ver
+          Prestação')
+      resultado: nao_existe
+      accao: null
+      captura: insumo-imagem-prestacao-96665.png
+      nota: "Confirma-se o mesmo padrão: GET
+        http://localhost:4174/ccmsns/api/documentos/%7BF633A13E-6BF7-4C13-AE17-\
+        11A032005E4F%7D_020126_I devolveu 502 Bad Gateway; o modal mostra o
+        ícone de imagem partida. É consistente com falha de
+        infraestrutura/serviço de documentos no ambiente (mesmo padrão já visto
+        no guid da prestação 96665 e no mapeamento de
+        tratamentos-termais-lotes), não falta de massa — o detalhe do lote 38314
+        mostra um 'ID Imagem' válido preenchido
+        ({4B29F373-BC23-4891-BA60-192E603356DB}_020126_H), confirmando que a
+        massa/metadado existe, só o serviço que serve o binário está a falhar.
+        Não tentei aceder à BD diretamente (sem ferramenta SQL disponível nesta
+        sessão) para verificar se o binário está acessível por essa via
+        alternativa."
+    - alvo: Confirmação de negócio/design sobre a ausência das tabs
+        Prescrição/Prestação, da secção 'Localização do arquivo' e da navegação
+        'Ir para Fatura'/'Detalhe do processamento' no detalhe da prestação
+      procurei:
+        - Se as tabs Prescrição/Prestação (com esse nome ou nomes próximos)
+          existem em alguma tela irmã desta secção de menu — encontrei tabs no
+          detalhe do Lote, mas chamam-se 'Detalhe do Lote'/'Prestações', não
+          'Prescrição'/'Prestação', e organizam outro conteúdo (dados do lote
+          vs. lista de prestações do lote, não dados de prescrição vs. dados de
+          prestação de uma única requisição)
+        - Se a secção 'Localização do arquivo' e a navegação 'Ir para Fatura'
+          estão de facto ausentes da aplicação ou apenas deslocadas — confirmei
+          que ambas existem, mas no detalhe do Lote (ver CT-08 e CT-09 acima),
+          não no detalhe da Prestação
+        - Se 'Detalhe do processamento' existe nalguma tela irmã (Facturas,
+          Lotes) desta área — não encontrado em nenhuma
+      onde:
+        - http://localhost:4174/tratamentos-termais/prestacao/96665
+        - http://localhost:4174/tratamentos-termais/factura/8333
+        - http://localhost:4174/tratamentos-termais/lote/38314
+      resultado: nao_existe
+      accao: null
+      nota: "Este alvo pede uma confirmação de negócio/design, não um elemento de UI,
+        por isso mantém-se 'nao_existe' nesta passagem também — mas a descoberta
+        de que 'Localização do arquivo' e 'Ir para Fatura' EXISTEM (só que
+        centralizados no detalhe do Lote, e não repetidos por prestação) muda a
+        natureza da pergunta a fazer ao dono do produto: já não é 'porque é que
+        isto falta', mas sim 'foi decisão consciente centralizar estes dados ao
+        nível do lote em vez de os duplicar em cada prestação, e as tabs
+        Prescrição/Prestação e o botão Detalhe do processamento foram
+        propositadamente simplificados/omitidos nesta primeira entrega'.
+        Continua a não ser algo que se resolva só com mais navegação — precisa
+        de confirmação do dono do produto/design."

@@ -1,0 +1,401 @@
+documento: consulta-area-prestacao/saude-oral-prestacoes.md
+rota: /saude-oral/prestacoes
+mapeado_em: 2026-08-27
+mapeado_contra:
+  ui: origin/develop 2c7a89e, build de 2026-08-27
+  api: jar de origin/develop 99d79ef, construido a 2026-08-27
+accoes:
+  - id: A01
+    tipo: consulta
+    nome: Pesquisar prestações
+    como: Preencher um ou mais campos do bloco 'Pesquisa Prestações' e clicar
+      'Pesquisar'; o estado da pesquisa fica refletido nos parâmetros da URL
+      (?numeroCheque=..., ?numeroUtente=..., ?numeroFactura=..., etc.),
+      tornando-a partilhável/bookmark-ável.
+    promessa: Cabeçalho 'Resultado da Pesquisa' com grelha de Cod. Convenção, NIF
+      Prestador, Descrição Convenção, N. Factura, Data Facturação, N. Ped.
+      Pagamento, N. de Cheque, N. Utente, Valor (Comunicado), Valor (Apurado) e
+      linha de Total.
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-11
+    ressalva: "Clicar 'Pesquisar' com todos os campos vazios NÃO dispara chamada à
+      API (sem pedido de rede, 0 resultados imediato). Uma chamada direta à API
+      sem nenhum filtro reconhecido devolve 422 (Unprocessable Entity) —
+      confirma proteção contra scan total dos 451 mil registos mencionado no
+      documento. Já um único filtro amplo (ex.: só NIF Prestador) É aceite sem
+      exigir filtro adicional e devolve resultados paginados (125 resultados
+      observados)."
+  - id: A02
+    tipo: filtro
+    nome: Filtrar por Número da Factura
+    como: "Preencher o campo 'Número da Factura' (texto livre, ex.: FT2026-8) e
+      pesquisar."
+    promessa: Devolve todas as prestações da fatura indicada, com totais somados na
+      linha 'Total:'.
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre digitado pelo utilizador
+    casos_documento:
+      - CT-03
+  - id: A03
+    tipo: filtro
+    nome: Filtrar por Data da Factura
+    como: Preencher a data manualmente (DD/MM/YYYY) ou abrir o calendário pelo botão
+      'Abrir/fechar calendário' e escolher uma data.
+    promessa: Restringe a pesquisa a prestações cuja fatura tem a data indicada.
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: seletor de calendário ou digitação DD/MM/YYYY
+    casos_documento: []
+  - id: A04
+    tipo: filtro
+    nome: Filtrar por Data da Facturação
+    como: Preencher a data manualmente ou via calendário.
+    promessa: Restringe a pesquisa a prestações com a data de faturação indicada.
+    entradas:
+      - campo: Data da Facturação
+        obrigatorio: false
+        origem_valores: seletor de calendário ou digitação DD/MM/YYYY
+    casos_documento: []
+  - id: A05
+    tipo: filtro
+    nome: Filtrar por NIF Prestador
+    como: Preencher o campo 'NIF Prestador' e pesquisar.
+    promessa: Devolve todas as prestações do prestador com esse NIF, mesmo de
+      faturas e cheques diferentes.
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre digitado pelo utilizador
+    casos_documento: []
+    ressalva: Corresponde ao 'Tour de coerência ecrã vs BD e volume' (secção 3, tour
+      5) do documento, que não tem CT-nn dedicado; usado sozinho devolveu 125
+      resultados paginados sem exigir filtro adicional.
+  - id: A06
+    tipo: filtro
+    nome: Filtrar por Cod. Convenção
+    como: "Preencher o campo 'Cod. Convenção' e pesquisar (parâmetro de URL
+      observado: codigoPrestador)."
+    promessa: Devolve as prestações associadas à convenção indicada.
+    entradas:
+      - campo: Cod. Convenção
+        obrigatorio: false
+        origem_valores: texto livre digitado pelo utilizador
+    casos_documento: []
+  - id: A07
+    tipo: filtro
+    nome: Filtrar por Número de Pedido Pagamento
+    como: Preencher o campo 'Número de Pedido Pagamento' e pesquisar.
+    promessa: Devolve as prestações associadas ao pedido de pagamento indicado.
+    entradas:
+      - campo: Número de Pedido Pagamento
+        obrigatorio: false
+        origem_valores: texto livre digitado pelo utilizador
+    casos_documento: []
+    ressalva: Citado no 'Tour dos filtros específicos' (secção 3, tour 1) sem CT-nn
+      próprio; testado isoladamente com o valor 460807, devolveu os 4 registos
+      da fatura FT2026-8 corretamente.
+  - id: A08
+    tipo: filtro
+    nome: Filtrar por Número do Cheque
+    como: Preencher o campo 'Número do Cheque' e pesquisar.
+    promessa: Devolve a prestação (cheque-dentista) exata correspondente,
+      independentemente da fatura a que pertence.
+    entradas:
+      - campo: Número do Cheque
+        obrigatorio: false
+        origem_valores: texto livre digitado pelo utilizador, sem type=number nem
+          maxlength — testado com letras/símbolos ('ABC123xyz!'), foi aceite e
+          devolveu 'Nenhum resultado encontrado...' sem erro
+    casos_documento:
+      - CT-01
+      - CT-04
+      - CT-11
+  - id: A09
+    tipo: filtro
+    nome: Filtrar por Número do Utente
+    como: Preencher o campo 'Número do Utente' e pesquisar.
+    promessa: Devolve as prestações do utente indicado; a grelha mostra apenas o
+      número do utente, nunca o nome.
+    entradas:
+      - campo: Número do Utente
+        obrigatorio: false
+        origem_valores: texto livre digitado pelo utilizador
+    casos_documento:
+      - CT-02
+  - id: A10
+    tipo: consulta
+    nome: Limpar filtros
+    como: Clicar no botão 'Limpar' no bloco de pesquisa.
+    promessa: Rótulo 'Limpar' promete esvaziar os campos de filtro preenchidos.
+    casos_documento: []
+    ressalva: "Confirmado: esvazia os campos e remove os parâmetros da URL, voltando
+      ao estado inicial sem resultados."
+  - id: A11
+    tipo: consulta
+    nome: Ordenar resultados por coluna
+    como: Clicar em qualquer cabeçalho de coluna com rótulo 'Ordenar por ...' (Cod.
+      Convenção, NIF Prestador, Descrição Convenção, N. Factura, Data
+      Facturação, N. Ped. Pagamento, N. de Cheque, N. Utente, Valor Comunicado,
+      Valor Apurado).
+    promessa: Cabeçalho clicável promete reordenar as linhas da grelha pela coluna
+      escolhida.
+    casos_documento: []
+    ressalva: "Testado em 'Ordenar por N. de Cheque': reordenou os 4 registos da
+      fatura FT2026-8 corretamente por ordem crescente."
+  - id: A12
+    tipo: consulta
+    nome: Alterar número de resultados por página
+    como: Abrir o combobox 'Resultados por página' e escolher entre 10, 15, 20 ou 50.
+    promessa: "Rótulo 'Resultados por página: 10' promete controlar quantas linhas a
+      grelha mostra por página."
+    entradas:
+      - campo: Resultados por página
+        obrigatorio: false
+        origem_valores: "combobox com opções fixas: 10, 15, 20, 50"
+    casos_documento: []
+  - id: A13
+    tipo: navegacao
+    nome: Paginar resultados
+    como: Usar os controlos de paginação (primeira página, anterior, número de
+      página, próxima, última) sob a grelha.
+    promessa: Navegação por páginas quando o resultado excede o tamanho de página
+      escolhido; observado com 125 resultados para o filtro de NIF Prestador (13
+      páginas a 10 por página).
+    casos_documento: []
+  - id: A14
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Clicar no botão 'Exportar XLSX' junto ao cabeçalho 'Resultado da
+      Pesquisa', com um filtro já pesquisado.
+    promessa: Rótulo 'Exportar XLSX' promete descarregar os resultados da pesquisa
+      atual em ficheiro Excel.
+    casos_documento: []
+    ressalva: "Ação não descrita no documento de cenários. Confirmado: dispara
+      download de 'prestacoes-saude-oral.xlsx' refletindo o filtro ativo
+      (testado com numeroFactura=FT2026-8, 4 linhas)."
+  - id: A15
+    tipo: navegacao
+    nome: Ver detalhe da prestação
+    como: Na grelha de resultados, clicar no botão da primeira coluna (rótulo 'Ver
+      detalhe da prestação <N.Factura>') de qualquer linha; navega para
+      /saude-oral/prestacoes/{piid}.
+    promessa: Abre uma página de detalhe com secções 'Detalhe Prescrição' (nº
+      cheque, datas de emissão/validade, nº utente, nome utente, data
+      nascimento, centro de saúde, médico prescritor, Localização do arquivo) e
+      'Detalhe Prestação' (NIF prestador, convenção, fatura, datas, guid,
+      Valores, Linhas Prestação, Erros); botão 'Voltar' no rodapé.
+    rota: /saude-oral/prestacoes/{piid}
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-06
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: "Divergência do documento: NÃO existe separação em duas abas
+      'Prescrição'/'Prestação' — é uma única página com todas as secções
+      visíveis em sequência (scroll), pelo que a verificação de CT-07 sobre
+      'persistência da aba ao alternar' não se aplica. Nome do utente (ex.:
+      'RODRIGO MARTINS SANDE') É exibido no detalhe, confirmando o risco RGPD já
+      sinalizado no documento (secção 6/CT-05). 'Localização do arquivo'
+      (Caixa/Pasta/Lugar) apareceu sempre preenchida nas 3 prestações reais
+      exploradas (2402079, 2402015, 2385826) — não foi possível observar o
+      estado vazio/não-arquivado previsto em CT-06. Campo 'Médico Prestador' e
+      'Tratamento Concluído' apareceram sempre como '—' nas amostras. Botão
+      'Voltar' confirmado: regressa à lista preservando o filtro/página
+      pesquisados (URL mantida)."
+  - id: A16
+    tipo: consulta
+    nome: Ver Documento (imagem digitalizada)
+    como: Na página de detalhe, clicar no único botão 'Ver Documento' junto ao
+      cabeçalho 'Detalhe Prescrição'.
+    promessa: Abre um modal com visualizador de imagem (zoom +/-, 'Repor vista',
+      rodar 90° esquerda/direita, 'Guardar imagem', fechar), título do modal
+      'Prestação'.
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "Divergência do documento: existe apenas UM botão ('Ver Documento'),
+      não os dois botões distintos 'Ver Prescrição' / 'Ver Prestação' descritos
+      no plano de teste. No registo testado (PIID 2402079), a chamada à imagem
+      (/ccmsns/api/documentos/{guid}) devolveu 502 (Bad Gateway) no ambiente
+      atual — o modal abriu mas a imagem não carregou; não foi possível
+      confirmar o comportamento com imagem válida nem a mensagem para 'sem
+      imagem associada'."
+  - id: A17
+    tipo: navegacao
+    nome: Voltar para a lista
+    como: Na página de detalhe, clicar no botão 'Voltar' no rodapé.
+    promessa: Rótulo 'Voltar' promete regressar à pesquisa anterior.
+    casos_documento: []
+    ressalva: Confirmado que preserva o filtro e a página da pesquisa anterior (URL
+      com numeroFactura=FT2026-8 mantida, resultados ainda presentes).
+  - id: ir-para-factura-medicamentos-prestacoes
+    tipo: navegacao
+    nome: Ir para Factura
+    como: No detalhe de uma prestação de Medicamentos
+      (/medicamentos/prestacoes/{id}), em qualquer uma das abas 'Detalhe
+      Prescrição' ou 'Prestação', clicar no botão 'Ir para Factura' no canto
+      superior direito do cartão.
+    promessa: Navega para o detalhe da fatura correspondente à prestação
+      selecionada, mantendo o contexto de origem para o utilizador regressar.
+    rota: /medicamentos/prestacoes/{id}
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: Achado é do ecrã irmão (Medicamentos > Prestações), não do próprio
+      ecrã de Saúde Oral testado; a ação em si (botão 'Ir para Fatura' a partir
+      do detalhe de uma prestação) falta especificamente na área Saúde Oral.
+insumos_necessarios:
+  - descricao: Prestação (cheque-dentista) já existente na BD, identificável por nº
+      de cheque, nº de utente ou nº de fatura — o ecrã é 100% read-only e não
+      cria massa
+    obtivel: bd
+    razao: Não há nenhuma ação de criação nesta tela; os registos vêm de
+      processamento de faturação externo (TDCFPRESTACAOPNPSO). O testador só
+      consegue 'obter' um registo específico se já souber o identificador (via
+      massa do documento ou consulta SQL prévia).
+  - descricao: Prestação com linhas na secção 'Erros' preenchidas (erro de
+      conferência real)
+    obtivel: bd
+    razao: As 3 prestações reais exploradas (2402079, 2402015, 2385826) mostraram
+      sempre 'Sem erros'; é preciso localizar por SQL um registo com erro de
+      conferência associado para testar essa secção com dados reais.
+  - descricao: Prestação sem 'Localização do arquivo' preenchida (Caixa/Pasta/Lugar
+      vazios, não arquivada)
+    obtivel: bd
+    razao: As 3 prestações reais exploradas tinham sempre Caixa/Pasta/Lugar
+      preenchidos; não foi possível observar nesta exploração o estado 'não
+      arquivada' que o CT-06 pede para verificar.
+  - descricao: Acesso funcional ao repositório de imagens digitalizadas (endpoint
+      /ccmsns/api/documentos/{guid})
+    obtivel: nao
+    razao: No ambiente de build atual o endpoint devolveu 502 (Bad Gateway) ao
+      carregar a imagem do documento; depende de infraestrutura fora do alcance
+      da própria tela.
+  - descricao: Acesso SQLcl à BD QUA (db/conexao-qua.local.md) para verificação
+      cruzada dos valores apresentados
+    obtivel: nao
+    razao: Requer ficheiro de credenciais local não disponível neste ambiente de
+      exploração via browser; sem ele não é possível confirmar contagens/valores
+      diretamente na tabela TDCFPRESTACAOPNPSO.
+  - descricao: Prestação com 'Médico Prestador' e 'Tratamento Concluído' preenchidos
+      (não '—')
+    obtivel: bd
+    razao: Todas as amostras exploradas mostraram estes dois campos vazios ('—'); é
+      preciso localizar por SQL um registo onde estejam preenchidos para
+      confirmar o formato exibido.
+casos_sem_accao:
+  - CT-09
+  - CT-10
+repescagem:
+  feita_em: 2026-08-27
+  alvos:
+    - alvo: CT-09
+      procurei:
+        - Botão 'Ir para Fatura' com esse rótulo exato no detalhe da prestação
+          de Saúde Oral
+        - Rótulos alternativos (Ver Fatura, Fatura associada, Ir para Factura) e
+          ícones sem texto no cabeçalho do cartão de detalhe
+        - Lista completa de botões renderizados na página via inspeção do DOM
+          (document.querySelectorAll('button'), incluindo aria-label e title)
+        - O mesmo botão no ecrã irmão Medicamentos > Prestações (mesma secção de
+          menu 'Consulta por Área de Prestação'), abas 'Detalhe Prescrição' e
+          'Prestação'
+      onde:
+        - http://localhost:4174/saude-oral/prestacoes/2402079 (detalhe da
+          prestação/cheque real 190000000110882417, fatura FT2026-8)
+        - http://localhost:4174/medicamentos/prestacoes/7956833439 (detalhe da
+          prestação de medicamentos real, receita 8010000006351578902, fatura
+          E017-1)
+      resultado: encontrado
+      accao: ir-para-factura-medicamentos-prestacoes
+      equivalente_aproximado: true
+      captura: ct09-ir-para-factura-medicamentos.png
+      nota: Achado é do ecrã irmão (Medicamentos > Prestações), não do próprio ecrã de
+        Saúde Oral testado; a ação em si (botão 'Ir para Fatura' a partir do
+        detalhe de uma prestação) falta especificamente na área Saúde Oral.
+    - alvo: CT-10
+      procurei:
+        - Botão 'Detalhe do processamento' com esse rótulo exato na secção de
+          Prestação do detalhe de Saúde Oral
+        - Rótulos alternativos (Ver processamento, Detalhe da execução, Ver
+          conferência, Ver execução) e ícones sem texto
+        - Lista completa de botões renderizados via DOM na página de detalhe de
+          Saúde Oral (incluindo aria-label e title, para apanhar ícones sem
+          rótulo visível)
+        - O mesmo botão no ecrã irmão Medicamentos > Prestações, abas 'Detalhe
+          Prescrição' e 'Prestação'
+        - Ecrã 'Execuções' do Motor de Regras (/motor-regras/execucoes, menu
+          Conferência > Logs de Conferência) como hipótese de rota direta para
+          um detalhe de execução de conferência, pesquisando pelo número de
+          cheque real 190000000110882417
+      onde:
+        - http://localhost:4174/saude-oral/prestacoes/2402079 (secções 'Detalhe
+          Prescrição' e 'Detalhe Prestação', que neste ecrã aparecem juntas na
+          mesma página, sem abas separadas)
+        - http://localhost:4174/medicamentos/prestacoes/7956833439 (abas
+          'Detalhe Prescrição' e 'Prestação')
+        - http://localhost:4174/motor-regras/execucoes?_q=1 (pesquisa por
+          ID/código)
+      resultado: nao_existe
+      accao: null
+      nota: Nem no ecrã de Saúde Oral nem no irmão de Medicamentos existe um botão
+        equivalente a 'Detalhe do processamento' (confirmado pela lista completa
+        de botões do DOM em ambos). O ecrã 'Execuções' do Motor de Regras existe
+        e é pesquisável, mas ao filtrar pelo número de cheque devolveu execuções
+        de LOTE (ex. 'MED_LOTE97', 'Medicamentos', 'CONCLUIDO'), não uma
+        execução da prestação individual — é outra granularidade (conferência de
+        lote, não de prestação), pelo que não confirma a hipótese de rota
+        direta; fica por comprovar que exista um 'detalhe de processamento' por
+        prestação de Saúde Oral nesta versão do produto.
+    - alvo: Acesso funcional ao repositório de imagens digitalizadas (endpoint
+        /ccmsns/api/documentos/{guid})
+      procurei:
+        - Repetir o pedido real ao endpoint clicando em 'Ver Documento' na
+          prestação 2402079, para confirmar se o 502 reportado pela primeira
+          passagem persiste ou foi pontual
+        - Caminho alternativo na tela (miniatura, pré-visualização inline na
+          tabela, outro botão) que devolvesse a imagem sem passar por
+          /ccmsns/api/documentos/{guid}
+      onde:
+        - http://localhost:4174/saude-oral/prestacoes/2402079, botão 'Ver
+          Documento' — pedido de rede GET
+          http://localhost:4174/ccmsns/api/documentos/%7B470C4945-2269-44A4-9337-B4C56C66522B%7D_260126_E
+          devolveu 502 Bad Gateway; modal do visualizador abriu com ícone de
+          imagem partida
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma a conclusão da primeira passagem com um registo diferente (guid
+        {470C4945-2269-44A4-9337-B4C56C66522B}_260126_E): o endpoint continua a
+        devolver 502 neste ambiente. Não encontrei via alternativa na tela para
+        obter a imagem; mantenho como hipótese de infraestrutura fora do alcance
+        da tela, agora com prova adicional (novo request confirmado)."
+    - alvo: Acesso SQLcl à BD QUA (db/conexao-qua.local.md) para verificação cruzada
+        dos valores apresentados
+      procurei:
+        - Ficheiro db/conexao-qua.local.md em toda a árvore do repositório
+          ccmsns-automated-tests
+        - Qualquer ficheiro ou pasta com nome semelhante (*conexao*, *qua*.md,
+          pasta db/) em todo o diretório do projeto mptec
+        - Presença de um executável sql/sqlcl disponível no ambiente
+      onde:
+        - C:\Users\ThinkPad\projetos\mptec\insumos\ccmsns-automated-tests
+          (pesquisa recursiva por nome de ficheiro)
+        - C:\Users\ThinkPad\projetos\mptec (pesquisa mais ampla por variações do
+          nome, até profundidade 4)
+        - comando 'which sql' / 'which sqlcl' no ambiente de execução
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma a conclusão da primeira passagem: nem o ficheiro de credenciais
+        db/conexao-qua.local.md nem um executável SQLcl estão disponíveis neste
+        ambiente de exploração via browser/agente."

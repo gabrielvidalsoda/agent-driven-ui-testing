@@ -1,0 +1,555 @@
+documento: gestao-armazem/associacao-caixa.md
+rota: /armazem/associacao-caixa
+mapeado_em: 2026-08-19
+mapeado_contra:
+  ui: origin/develop 30446d5, build de 2026-08-16
+  api: jar de feature/cockpit-disparar 25a869e, construido a 2026-08-12
+notas_metodologicas: Esta passagem é de inventário (sem submissões que alterem
+  estado). O botão 'Abrir caixa' está marcado no documento como '(altera estado
+  no ambiente)' e não foi premido; por isso toda a UI que só existe DENTRO de
+  uma sessão de caixa aberta (localizar prestador, navegação por setas, destaque
+  de incidência, completar pasta/lotes/observação, registar com Enter, tabela de
+  registadas, Encerrar caixa) não foi observável nesta passagem — não é uma
+  afirmação de que a tela não a tenha, apenas que fica atrás de uma ação de
+  escrita que esta passagem não pode acionar. Uma passagem de execução dedicada,
+  com massa de teste própria, é necessária para mapear essa parte.
+accoes:
+  - id: abrir-caixa
+    tipo: criacao
+    nome: Abrir caixa por pistolagem
+    como: "No ecrã /armazem/associacao-caixa, escolher a Área (combobox) e
+      preencher/pistolar o Código da Caixa; o botão 'Abrir caixa' fica
+      desativado até ambos os campos estarem preenchidos. Não foi premido
+      (altera estado: abre sessão e bloqueia a área)."
+    promessa: "Rótulo 'Abrir caixa' promete abrir uma caixa e iniciar uma sessão de
+      associação, bloqueando a área da sessão até a caixa ser encerrada
+      (conforme secção 1 do documento e comportamento do botão observado: só
+      ativa com Área + Código preenchidos)."
+    rota: /armazem/associacao-caixa
+    entradas:
+      - campo: Área
+        obrigatorio: true
+        origem_valores: "combobox fixo com 5 opções: Medicamentos, MCDT, CRD, Cuidados
+          Termais, Saúde Oral (SISO)"
+      - campo: Código da Caixa
+        obrigatorio: true
+        origem_valores: texto livre, placeholder 'Pistolar / introduzir…'
+    casos_documento:
+      - CT-01
+  - id: ver-listagem
+    tipo: navegacao
+    nome: Ver listagem (do ecrã de execução)
+    como: Clicar no botão 'Ver listagem' no cabeçalho do ecrã
+      /armazem/associacao-caixa.
+    promessa: "Rótulo 'Ver listagem' promete levar à página associada 'Associação à
+      Caixa — Listagem'. Confirmado: navega para
+      /armazem/associacao-caixa/listagem sem qualquer aviso de perda de dados
+      (porque não havia sessão aberta)."
+    rota: /armazem/associacao-caixa/listagem
+  - id: ir-para-execucao
+    tipo: navegacao
+    nome: Ir para execução (da listagem)
+    como: Na página de listagem, clicar no botão 'Ir para execução'.
+    promessa: "Rótulo 'Ir para execução' promete voltar ao ecrã de sessão.
+      Confirmado: navega para /armazem/associacao-caixa."
+    rota: /armazem/associacao-caixa
+  - id: pesquisar-listagem
+    tipo: consulta
+    nome: Pesquisar faturas associadas/por associar
+    como: "Na listagem, clicar 'Pesquisar' sem escolher Área — surge alerta; depois
+      escolher Área (ex.: Medicamentos) e voltar a clicar 'Pesquisar'."
+    promessa: "Cabeçalho 'Resultados' promete devolver uma tabela paginada de
+      faturas por área, com colunas IdFactura, Prestador, Factura, Data Receção,
+      Caixa, Pasta, Nº Lotes, Lugar da Caixa, Estado da Caixa, Observações. A
+      mensagem de validação exibida foi exatamente 'Selecione a área para
+      pesquisar.' Testado com área Medicamentos: devolveu 46675 resultados
+      paginados (10/página); coluna 'Estado da Caixa' mostrou valores reais como
+      'Pendente de associação à caixa', 'No Armazém Temporário' e 'Expedido' —
+      não literalmente 'Concluída'/'Por fazer' (esses são os rótulos do filtro
+      Estado, não da coluna)."
+    rota: /armazem/associacao-caixa/listagem
+    entradas:
+      - campo: Área
+        obrigatorio: true
+        origem_valores: "combobox fixo com 5 opções: Medicamentos, MCDT, CRD, Cuidados
+          Termais, Saúde Oral (SISO)"
+    casos_documento:
+      - CT-09
+  - id: filtrar-prestador
+    tipo: filtro
+    nome: Filtrar por Prestador (código)
+    como: Com Área = Medicamentos, escrever '21180' no campo 'Prestador (código)' e
+      clicar 'Pesquisar'.
+    promessa: "Placeholder 'Ex.: 9423' promete filtrar a listagem por código de
+      prestador. Confirmado: com '21180', a tabela devolveu só faturas desse
+      prestador."
+    rota: /armazem/associacao-caixa/listagem
+    entradas:
+      - campo: Prestador (código)
+        obrigatorio: false
+        origem_valores: texto livre numérico
+  - id: filtrar-estado-associacao
+    tipo: filtro
+    nome: Filtrar por estado de associação
+    como: Abrir o combobox 'Estado' na listagem.
+    promessa: "Combobox 'Estado' promete 3 opções: Todas (default), Concluída, Por
+      fazer — conforme CT-10. Opções confirmadas por abertura do combobox;
+      comportamento de cada opção sobre a contagem de resultados não foi
+      executado nesta passagem."
+    rota: /armazem/associacao-caixa/listagem
+    entradas:
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: "combobox fixo: Todas, Concluída, Por fazer"
+    casos_documento:
+      - CT-10
+  - id: filtrar-pedido-pagamento
+    tipo: filtro
+    nome: Filtrar por Pedido Pag (PP) — só em SISO
+    como: Selecionar Área = Saúde Oral (SISO); surge o campo extra 'Pedido Pag
+      (PP)'. Pesquisado com o campo vazio para observar a grelha.
+    promessa: "Rótulo 'Pedido Pag (PP)' promete filtrar faturas SISO por número de
+      pedido de pagamento. Divergência face ao documento: CT-11 espera 'colunas
+      extra Pedido Pag e Nº Cheques' na grelha ao usar a área SISO; nesta build
+      a grelha manteve exatamente as mesmas 10 colunas (IdFactura…Observações)
+      independentemente da área — só o filtro PP aparece, não colunas
+      adicionais."
+    rota: /armazem/associacao-caixa/listagem
+    entradas:
+      - campo: Pedido Pag (PP)
+        obrigatorio: false
+        origem_valores: texto livre, placeholder 'Nº do pedido'; campo só visível com
+          Área = Saúde Oral (SISO)
+    casos_documento:
+      - CT-11
+  - id: limpar-filtros-listagem
+    tipo: edicao
+    nome: Limpar filtros da listagem
+    como: Com Área, Prestador e resultados preenchidos, clicar 'Limpar'.
+    promessa: "Rótulo 'Limpar' promete repor o formulário. Confirmado: Área volta a
+      'Selecione…', Prestador fica vazio, Estado volta a 'Todas' e a tabela de
+      resultados desaparece."
+  - id: exportar-xlsx-listagem
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Com Área = Saúde Oral (SISO) pesquisada, clicar no botão/ícone 'Exportar
+      XLSX'.
+    promessa: "Tooltip/rótulo 'Exportar XLSX' promete descarregar os resultados
+      atuais em ficheiro Excel. Confirmado: dispara POST para
+      /ccmsns/api/armazem/associacoes-caixa/exportar?area=SISO, botão mostra
+      progressbar e desativa-se durante o pedido, e o browser descarregou
+      'associacao-caixa.xlsx'."
+    rota: /armazem/associacao-caixa/listagem
+  - id: paginar-resultados-listagem
+    tipo: navegacao
+    nome: Paginação dos resultados
+    como: Observados os controlos de paginação
+      (primeira/anterior/números/seguinte/última) e o seletor 'Resultados por
+      página' (default 10) no rodapé da grelha.
+    promessa: "Controlo de paginação promete navegar por milhares de páginas de
+      resultados (ex.: 46675 resultados / 4668 páginas para Medicamentos); não
+      foi acionado para não gerar tráfego desnecessário, apenas confirmada a
+      presença e os valores."
+    rota: /armazem/associacao-caixa/listagem
+  - id: corrigir-factura-lotes-observacoes
+    tipo: edicao
+    nome: Corrigir factura — Nº de lotes / Observações
+    como: Em 'Localizar / Corrigir' (rota /arquivo), escolher Tipo = Factura,
+      introduzir o código/nº da fatura e clicar 'Localizar'. No painel 'Corrigir
+      factura', preencher o campo 'Nº de lotes' (e opcionalmente 'Observações')
+      em 'Para (destino)' e clicar 'Guardar correção'.
+    promessa: Sobrepõe o nº de lotes físicos de uma fatura já associada a uma
+      pasta/caixa, documentando uma divergência face ao valor anterior. Neste
+      ecrã o botão de gravar fica ativo apenas com o Nº de lotes preenchido — a
+      Observação não é tecnicamente obrigatória para gravar (não confirmei o
+      comportamento do servidor por não ter submetido).
+    rota: /arquivo
+    entradas:
+      - campo: Tipo
+        obrigatorio: true
+        origem_valores: "combobox: Factura / Pasta / Caixa"
+      - campo: Código
+        obrigatorio: true
+        origem_valores: código/nº da fatura a corrigir
+      - campo: Nº de lotes (destino)
+        obrigatorio: false
+        origem_valores: numérico
+      - campo: Observações (destino)
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: Esta é uma correção a posteriori (sobre uma fatura já registada em
+      pasta/caixa), feita noutra tela da secção — não é o passo de registo
+      inicial dentro da sessão de Associação à Caixa que CT-07 descreve.
+      Reporto-a como o mecanismo funcionalmente equivalente disponível na
+      aplicação para tratar/documentar divergências de lotes, com a ressalva de
+      que não é o mesmo momento do fluxo.
+  - id: corrigir-caixa-estado-aguardando-preparacao
+    tipo: edicao
+    nome: Corrigir caixa — definir Localização (estado) = Aguardando preparação
+    como: Em 'Localizar / Corrigir' (rota /arquivo), escolher Tipo = Caixa,
+      introduzir o código da caixa e clicar 'Localizar'. No painel 'Corrigir
+      caixa', escolher no combobox 'Localização (estado)' a opção 'Aguardando
+      preparação' e clicar 'Guardar correção'.
+    promessa: Força o estado da caixa diretamente para 'Aguardando preparação' — o
+      mesmo estado final que CT-08 espera obter ao clicar 'Encerrar caixa'
+      dentro da sessão — mas por correção manual direta, sem passar pelo fluxo
+      de encerramento, sem validar se há 2+ faturas registadas e sem o modal de
+      confirmação descritos em CT-08.
+    rota: /arquivo
+    entradas:
+      - campo: Tipo
+        obrigatorio: true
+        origem_valores: "combobox: Factura / Pasta / Caixa"
+      - campo: Código
+        obrigatorio: true
+        origem_valores: código da caixa
+      - campo: Localização (estado) (destino)
+        obrigatorio: true
+        origem_valores: "combobox: Recepcionada / Aguardando preparação"
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "Reporto isto como o efeito equivalente ao encerramento da caixa (rule
+      4: consequência de outra ação), com a ressalva clara de que é uma correção
+      manual de estado, não a ação 'Encerrar caixa' com validação de faturas e
+      modal de confirmação testada em CT-08."
+insumos_necessarios:
+  - descricao: Caixa pistolável na área do teste, num estado que permita abrir
+      sessão de associação
+    obtivel: bd
+    razao: "Existe massa real em GESTARMAZEM.TDCAIXA (read-only) e referências no
+      documento (ex.: 102516, C24035); nesta tela e nas suas vizinhas de Gestão
+      de Armazém não foi encontrada nenhuma ação de 'criar caixa' — o código de
+      caixa é pistolado, presumindo-se originado por processo/impressora
+      externos à aplicação."
+  - descricao: Fatura por associar (sem incidência), localizável pelo código de
+      prestador/convenção, na área do teste
+    obtivel: tela
+    razao: "Pré-condição do próprio documento (§5.2): registar previamente via ecrã
+      Registo de Entrada, disponível no mesmo menu Gestão de Armazém."
+  - descricao: Um prestador com exatamente 1 fatura por associar (CT-02) e outro com
+      2 ou mais (CT-03)
+    obtivel: tela
+    razao: Controlável ao registar entradas no ecrã Registo de Entrada, conforme
+      §5.2 do documento.
+  - descricao: Fatura marcada com incidência (XSINDERRO='S') na área do teste
+    obtivel: tela
+    razao: O menu Gestão de Armazém tem 'Faturas com Incidência', ecrã indicado no
+      documento para registar a incidência antes da sessão.
+  - descricao: Faturas SISO com Pedido Pag (PP) associado, por associar
+    obtivel: bd
+    razao: "Massa real existe em GESTCONFER.TDCFFACTURAPNPSO (ex.: PP 124192);
+      nenhuma tela neste fluxo cria um Pedido Pag — teria de se confirmar
+      disponibilidade por SQL antes da sessão."
+  - descricao: Código de pasta físico para pistolar ao completar o registo de uma
+      fatura na caixa
+    obtivel: nao
+    razao: É um código físico associado à pasta, gerado fora desta aplicação (não há
+      tela neste fluxo para o emitir); só observável dentro de uma sessão de
+      caixa aberta, que esta passagem não abriu.
+  - descricao: Segundo operador e segundo posto de trabalho com leitor de código de
+      barras, para o tour de concorrência (CT-13)
+    obtivel: nao
+    razao: Depende de um segundo operador humano e hardware físico simultâneo; nada
+      disto é fornecido pela aplicação.
+  - descricao: Leitor de código de barras físico
+    obtivel: tela
+    razao: O campo 'Código da Caixa' aceita introdução manual seguida de Enter como
+      alternativa à pistolagem (confirmado pelo placeholder 'Pistolar /
+      introduzir…'), pelo que o leitor físico não é estritamente necessário para
+      operar a tela.
+casos_sem_accao:
+  - CT-02
+  - CT-03
+  - CT-04
+  - CT-05
+  - CT-06
+  - CT-07
+  - CT-08
+  - CT-12
+  - CT-13
+repescagem:
+  feita_em: 2026-08-19
+  alvos:
+    - alvo: "CT-02: Localizar prestador com uma única fatura sem incidência"
+      procurei:
+        - "No ecrã /armazem/associacao-caixa, escolhi Área = Medicamentos e
+          verifiquei os campos disponíveis antes de qualquer sessão: só existem
+          'Área' e 'Código da Caixa' + botão 'Abrir caixa' (desativado até haver
+          código). O passo de localizar prestador só aparece depois de abrir uma
+          caixa por pistolagem, e essa ação grava estado na BD (bloqueia a
+          área/caixa) — por instrução desta repescagem não posso submetê-la."
+        - Procurei uma rota direta (query string / sub-rota) que mostrasse a
+          sessão sem passar por 'Abrir caixa'; não existe nenhum link, botão sem
+          rótulo ou item de menu de contexto que leve lá.
+        - "Verifiquei se alguma das outras telas da secção Gestão de Armazém
+          reproduz 'localizar prestador → auto-seleção de fatura única': em
+          Registo de Entrada (/armazem/registo-entrada/detalhe) existe uma
+          'Captura de facturas' por código de farmácia, mas é um formulário de
+          criação de registos de entrada, não uma seleção de faturas já
+          existentes por associar."
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/armazem/registo-entrada
+        - http://localhost:4174/armazem/registo-entrada/detalhe?ano=2026&mes=9&area=MEDICAMENTOS
+      resultado: nao_existe
+      accao: null
+      nota: O campo de localização de prestador só existe dentro de uma sessão de
+        caixa aberta; abrir a caixa é uma ação que altera estado (bloqueia a
+        área), pelo que esta passagem, que não pode submeter nada, não consegue
+        alcançá-lo nem confirmar nem refutar o comportamento de auto-seleção
+        descrito em CT-02.
+    - alvo: "CT-03: Localizar prestador com várias faturas (navegação com setas)"
+      procurei:
+        - "Mesma tentativa que em CT-02: sem abrir caixa não há campo de
+          localização de prestador nem lista de faturas para navegar com setas."
+        - Verifiquei em Registo de Entrada (/armazem/registo-entrada/detalhe) se
+          a tabela de faturas capturadas tinha algum mecanismo de navegação por
+          setas entre registos do mesmo prestador — a tabela é uma listagem
+          paginada normal, sem navegação por setas nem seleção de fatura.
+        - Procurei um ícone ou menu de três pontos junto ao campo 'Código da
+          Caixa' no ecrã principal que desse acesso a uma pré-visualização de
+          faturas por prestador sem abrir a caixa; não existe.
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/armazem/registo-entrada/detalhe?ano=2026&mes=9&area=MEDICAMENTOS
+      resultado: nao_existe
+      accao: null
+      nota: "Mesma dependência de CT-02: a navegação com setas entre faturas de um
+        prestador só existe depois de abrir uma sessão de caixa, ação de estado
+        que esta passagem não executa."
+    - alvo: "CT-04: Fatura com incidência não é completável"
+      procurei:
+        - Sem sessão de caixa aberta, não há como tentar selecionar/completar
+          uma fatura com incidência dentro de Associação à Caixa.
+        - Fui a 'Faturas com Incidência' (/gestao-armazem/faturas-incidencia) e
+          pesquisei a única incidência histórica em QUA (Nº Factura 24100806); a
+          pesquisa exige pelo menos um filtro preenchido e devolveu 'Sem
+          facturas com incidência para os filtros selecionados' (o filtro Área
+          nem sequer lista Cuidados Continuados, que é a área desta fatura — só
+          Medicamentos [pelo combo geral], MCDT, CRD, Cuidados Termais e Saúde
+          Oral/SISO).
+        - "Abri o botão 'Atribuir localização' desse ecrã (rota
+          /gestao-armazem/faturas-incidencia/atribuir): é o formulário para dar
+          uma localização física a faturas que ficaram sem local ao capturar — é
+          a ação de SETUP referida pela primeira passagem, não a verificação de
+          que a fatura fica 'destacada e não completável' dentro da sessão de
+          caixa."
+        - "Fui a Localizar / Corrigir (/arquivo), Tipo=Factura, código 24100806:
+          mostra a fatura já associada a Pasta 2885006 / Caixa C20809 / Armazém
+          de entrada, sem qualquer indicador visual de incidência nesse painel
+          de correção."
+        - "Verifiquei o filtro 'Estado' da listagem de Associação à Caixa
+          (/armazem/associacao-caixa/listagem): só tem Todas / Concluída / Por
+          fazer, sem opção de incidência."
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/gestao-armazem/faturas-incidencia
+        - http://localhost:4174/gestao-armazem/faturas-incidencia/atribuir
+        - http://localhost:4174/arquivo
+        - http://localhost:4174/armazem/associacao-caixa/listagem
+      resultado: nao_existe
+      accao: null
+      nota: Não encontrei, em nenhuma tela acessível sem abrir uma sessão de caixa, o
+        comportamento de 'fatura com incidência aparece destacada e não pode ser
+        completada' descrito em CT-04. A única ação relacionada com incidência
+        que existe fora da sessão (Atribuir localização) é a marcação/atribuição
+        de local à fatura, não a validação de bloqueio dentro da Associação à
+        Caixa.
+    - alvo: "CT-05: Validações do código de localização"
+      procurei:
+        - Testei os únicos campos disponíveis antes de abrir caixa (Área, Código
+          da Caixa) — não são o 'código de localização do prestador' que CT-05
+          descreve; esse campo só surge dentro da sessão.
+        - Procurei se o campo 'Código da Caixa' tem validação inline
+          (vazio/inexistente) sem clicar em 'Abrir caixa' — não digitei nada
+          nele fora do necessário para não arriscar submissão acidental, e mesmo
+          que tivesse validação, não é o mesmo campo/cenário do documento (que
+          fala em prestador, não em caixa).
+        - "Procurei um padrão de validação equivalente (vazio / inexistente /
+          área errada) noutras telas da secção: em Localizar / Corrigir
+          (/arquivo) o campo 'Código' aceita qualquer tipo e devolve mensagens
+          como 'Pasta não encontrado(a) com id: ...', mas é uma validação de
+          outro campo/ação (localizar item de arquivo), não do código de
+          localização de prestador dentro de uma caixa aberta."
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo
+      resultado: nao_existe
+      accao: null
+      nota: As três validações descritas (vazio, inexistente, área errada) aplicam-se
+        ao campo de localização de prestador que só existe dentro de uma sessão
+        de caixa aberta; sem abrir a caixa (ação que altera estado) não há como
+        as observar.
+    - alvo: "CT-06: Completar e registar na caixa com Enter"
+      procurei:
+        - Sem sessão de caixa aberta não existe pasta pistolada, campo Nº Lotes
+          físicos nem tabela de 'registadas' para confirmar o Enter.
+        - "Procurei um padrão de 'Enter para adicionar/registar' equivalente
+          noutra tela da secção: em Registo de Entrada
+          (/armazem/registo-entrada/detalhe) existe mesmo um botão 'Adicionar
+          (Enter)' que grava uma linha (código da farmácia + Nº Fatura + Nº
+          Lotes + Observação) e mantém o foco para o próximo registo — mas é a
+          ação de capturar uma NOVA entrada de fatura no ciclo de registo de
+          entrada, não de registar uma fatura já existente dentro de uma caixa."
+        - Confirmei que este botão de Registo de Entrada não referencia pasta
+          nem caixa (não tem esses campos), pelo que não substitui a ação de
+          CT-06.
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/armazem/registo-entrada/detalhe?ano=2026&mes=9&area=MEDICAMENTOS
+      resultado: nao_existe
+      accao: null
+      nota: Existe um padrão de UI parecido ('Enter para gravar e passar ao seguinte')
+        em Registo de Entrada, mas é uma ação diferente (captura de fatura no
+        ciclo de entrada), sem pasta nem caixa envolvidas — não é o mesmo alvo.
+        A ação de CT-06 propriamente dita só existe dentro da sessão de caixa
+        aberta.
+    - alvo: "CT-07: Divergência de lotes físicos"
+      procurei:
+        - Sem sessão de caixa aberta não há como registar uma fatura com Nº
+          Lotes físicos diferente do declarado, no momento da associação.
+        - Fui a Localizar / Corrigir (/arquivo), Tipo = Factura, procurei a
+          fatura 24100806 (já associada a Pasta 2885006 / Caixa C20809).
+          Apareceu um painel 'Corrigir factura 24100806' com 'De (atual)'
+          (Pasta, Caixa, Localização, Nº de lotes = '—', Observações) e 'Para
+          (destino)' com os campos Nº de lotes e Observações + botão 'Guardar
+          correção'.
+        - "Preenchi Nº de lotes = 19 (sem tocar em Observações) para verificar
+          as regras de ativação do botão, sem clicar em Guardar: o botão
+          'Guardar correção' ficou ativo só com o Nº de lotes preenchido — ou
+          seja, Observações não é campo obrigatório para ativar a gravação neste
+          formulário."
+        - Não cliquei 'Guardar correção' (ação não foi submetida).
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo (Localizar / Corrigir, Tipo = Factura,
+          código 24100806)
+      resultado: encontrado
+      accao: corrigir-factura-lotes-observacoes
+      nota: Esta é uma correção a posteriori (sobre uma fatura já registada em
+        pasta/caixa), feita noutra tela da secção — não é o passo de registo
+        inicial dentro da sessão de Associação à Caixa que CT-07 descreve.
+        Reporto-a como o mecanismo funcionalmente equivalente disponível na
+        aplicação para tratar/documentar divergências de lotes, com a ressalva
+        de que não é o mesmo momento do fluxo.
+      equivalente_aproximado: true
+    - alvo: "CT-08: Encerrar caixa"
+      procurei:
+        - Sem sessão de caixa aberta (com 2+ faturas registadas) não existe o
+          botão 'Encerrar caixa' nem o modal de confirmação.
+        - "Fui a Localizar / Corrigir (/arquivo), Tipo = Caixa, procurei a caixa
+          de referência C24035 (doc: PIID 4146342). Apareceu 'Corrigir caixa
+          C24035' com 'De (atual)': Localização = Armazém de entrada, Nº de
+          pastas (automático) = 1; e 'Para (destino)': combobox 'Localização
+          (estado)'."
+        - Abri o combobox 'Localização (estado)' e as opções são exatamente
+          'Recepcionada' e 'Aguardando preparação' — este último é o estado
+          final que CT-08 espera obter ao encerrar a caixa.
+        - Selecionei 'Aguardando preparação' (sem gravar) para confirmar que o
+          botão 'Guardar correção' fica ativo com essa escolha; capturei
+          evidência em ecrã. Não cliquei 'Guardar correção'.
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo (Localizar / Corrigir, Tipo = Caixa,
+          código C24035)
+      resultado: encontrado
+      accao: corrigir-caixa-estado-aguardando-preparacao
+      nota: "Reporto isto como o efeito equivalente ao encerramento da caixa (rule 4:
+        consequência de outra ação), com a ressalva clara de que é uma correção
+        manual de estado, não a ação 'Encerrar caixa' com validação de faturas e
+        modal de confirmação testada em CT-08."
+      equivalente_aproximado: true
+    - alvo: "CT-12: Continuidade após erro a meio da sessão"
+      procurei:
+        - Sem sessão de caixa aberta não há tabela de 'registadas' nem sequência
+          de registos para provocar um erro a meio e verificar se os anteriores
+          sobrevivem.
+        - "Procurei se algum outro ecrã reproduz esse comportamento de
+          acumulação tolerante a erro (ex.: Registo de Entrada, onde já há
+          registos acumulados nos ciclos existentes) — a tabela de faturas
+          capturadas em Registo de Entrada acumula normalmente entre registos,
+          mas não há forma de provocar ali o mesmo tipo de erro (código de
+          localização inexistente) que CT-12 descreve, porque esse campo
+          específico não existe nesse ecrã."
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/armazem/registo-entrada/detalhe?ano=2026&mes=9&area=MEDICAMENTOS
+      resultado: nao_existe
+      accao: null
+      nota: Depende inteiramente da sessão de caixa aberta (mesma limitação de
+        CT-02/03/05/06).
+    - alvo: "CT-13: Concorrência sobre a mesma caixa e a mesma fatura"
+      procurei:
+        - Confirmei que abrir uma caixa exige pistolagem/submissão que altera
+          estado — não posso sequer criar a primeira metade do cenário (operador
+          A) sem violar a regra de não submeter nada.
+        - "Procurei algum indicador de 'bloqueado por outro utilizador' visível
+          em modo consulta: em Localizar / Corrigir (/arquivo), Tipo = Caixa, o
+          painel 'Corrigir caixa' mostra apenas Localização e Nº de pastas — não
+          mostra utilizador/sessão que tenha a caixa aberta."
+        - "Confirmei que este é o mesmo insumo em falta já identificado pela
+          primeira passagem (segundo operador + segundo posto com leitor de
+          código de barras): sem esse recurso humano/físico simultâneo, não há
+          forma de testar a concorrência a partir de uma única sessão de
+          browser."
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo (Localizar / Corrigir, Tipo = Caixa,
+          código C24035)
+      resultado: nao_existe
+      accao: null
+      nota: "Mesma barreira já documentada pela primeira passagem para o insumo de
+        concorrência: precisa de dois operadores e dois postos físicos
+        simultâneos, que esta aplicação/navegador não fornece."
+    - alvo: Código de pasta físico para pistolar ao completar o registo de uma fatura
+        na caixa
+      procurei:
+        - "Procurei qualquer ecrã que gere ou mostre um código de pasta no
+          formato de etiqueta física (código de barras) pistolável: em Localizar
+          / Corrigir (/arquivo), Tipo = Pasta, tentei localizar a pasta de
+          referência do documento (id 4177085) — a aplicação devolveu 'Pasta não
+          encontrado(a) com id: 4177085'."
+        - Em Localizar / Corrigir, Tipo = Factura (fatura 24100806, já
+          associada), o campo 'Pasta' no painel 'De (atual)' mostra apenas um
+          identificador numérico interno ('2885006'), sem indicação de que seja
+          o código físico impresso na pasta — é consistente com ser o PIID da
+          tabela GESTARMAZEM.TDPASTA, não uma etiqueta a pistolar.
+        - Não encontrei nenhum botão, ecrã ou ação (em Registo de Entrada,
+          Faturas com Incidência, Localizar/Corrigir, Preparação, Transferência,
+          Picking, Libertar Arquivo Temporário) que emita/gere este código.
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo (Localizar / Corrigir, Tipo = Pasta e
+          Tipo = Factura)
+        - http://localhost:4174/gestao-armazem/faturas-incidencia
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma a conclusão da primeira passagem: o código de pasta físico é
+        gerado fora da aplicação (etiqueta física); os identificadores de pasta
+        visíveis no ecrã (ex.: 'Pasta 2885006' em Localizar/Corrigir) são o id
+        interno da BD, não o código a pistolar."
+    - alvo: Segundo operador e segundo posto de trabalho com leitor de código de
+        barras, para o tour de concorrência (CT-13)
+      procurei:
+        - "Procurei se a aplicação simula ou disponibiliza um segundo 'operador
+          virtual' (ex.: sessão demo, endpoint de teste) que permitisse simular
+          concorrência a partir de um único posto — não encontrei nenhuma opção
+          deste tipo em nenhum dos ecrãs da secção Gestão de Armazém."
+        - Verifiquei se algum ecrã mostra quem tem uma caixa aberta neste
+          momento (o que ao menos permitiria confirmar o mecanismo de bloqueio
+          sem precisar de um segundo operador real) — não encontrei essa
+          informação em Localizar/Corrigir nem na listagem de Associação à
+          Caixa.
+      onde:
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma a conclusão da primeira passagem: depende de um segundo operador
+        humano e hardware físico simultâneo (leitor de código de barras num
+        segundo posto), que não são fornecidos pela aplicação nem simuláveis a
+        partir desta sessão de browser única."

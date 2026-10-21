@@ -1,0 +1,167 @@
+# Fontes de insumo: onde vivem os .md com os requisitos tÃ©cnicos das telas.
+#
+# O documento de cenÃ¡rios diz o que se testa; o insumo diz o que a tela devia fazer. Entram os
+# dois no enunciado, com o documento a mandar no esperado e o insumo a mandar onde ele se cala
+# (a ordem de precedÃªncia estÃ¡ escrita no prÃ³prio enunciado, em src/enunciado.mjs).
+#
+# `npm run insumos` sincroniza as fontes e lista, documento a documento, o que vai entrar e o
+# que falta. Custa zero e evita descobrir um insumo em falta a meio de uma noite paga.
+
+# Onde os clones ficam. NÃ£o entra no git.
+cache: .insumos
+
+# Verdadeiro vai Ã  rede antes de cada corrida (clone raso, depois fetch + reset --hard). PÃ´r a
+# falso corre com o que jÃ¡ estÃ¡ em cache â€” Ã© a saÃ­da quando nÃ£o hÃ¡ rede ou credenciais.
+atualizar: true
+
+fontes:
+  UI-docs-code:
+    tipo: git
+    url: https://danielschutlz@bitbucket.org/morpheustecnologia/UI-docs-code.git
+    ramo: main
+  # O campo `tipo` existe para o Confluence entrar aqui sem mudar o formato. Enquanto nÃ£o
+  # entrar, uma fonte que nÃ£o seja `git` Ã© recusada em voz alta ao sincronizar.
+  #
+  # confluence-UI:
+  #   tipo: confluence
+  #   url: https://.../wiki/spaces/UI
+
+# Insumos que entram no enunciado de TODOS os documentos. A conta paga-se por tela e por
+# corrida, por isso sÃ³ aqui o que se observa no ecrÃ£ em qualquer tela: o formato das datas e as
+# regras de validaÃ§Ã£o dos filtros de pesquisa.
+comuns:
+  - UI-docs-code:docs/FORMATO_DATAS.md
+  - UI-docs-code:docs/FILTROS_PESQUISA_RESUMO.md
+
+# Insumos por documento. A chave Ã© a mesma do alvos.yaml.
+#
+# Um documento sem entrada recebe sÃ³ os comuns â€” nÃ£o Ã© erro. Um insumo declarado que nÃ£o esteja
+# na cache, esse, bloqueia o documento: julgar uma tela com o requisito a faltar dÃ¡ veredictos
+# que se pagam na mesma.
+por_documento:
+  gestao-armazem/registo-entrada.md:
+    - UI-docs-code:docs/superpowers/specs/2026-06-16-armazem-registo-entrada-design.md
+  gestao-armazem/registo-entrada-anf.md:
+    - UI-docs-code:docs/superpowers/specs/2026-06-22-armazem-registo-entrada-anf-design.md
+  # Esta tela nÃ£o tem spec de desenho no repo de docs; o plano Ã© o que hÃ¡ de mais prÃ³ximo de um
+  # requisito escrito.
+  gestao-armazem/associacao-caixa.md:
+    - UI-docs-code:docs/superpowers/plans/2026-07-06-armazem-associacao-caixa.md
+  # O cockpit Ã© uma tela sÃ³ no alvos.yaml mas trÃªs no produto â€” a consulta, o detalhe de Ã¡rea e
+  # o disparo â€” e o documento de cenÃ¡rios atravessa as trÃªs (o CT-03 navega para o detalhe, o
+  # CT-05 dispara). Por isso levam as trÃªs specs de desenho.
+  conferencia/cockpit.md:
+    - UI-docs-code:docs/superpowers/specs/2026-08-03-cockpit-tela-principal-design.md
+    - UI-docs-code:docs/superpowers/specs/2026-08-05-cockpit-detalhe-area-design.md
+    - UI-docs-code:docs/superpowers/specs/2026-08-07-cockpit-disparar-design.md
+  gestao-armazem/transferencia-arquivo-temporario.md:
+    - UI-docs-code:docs/superpowers/specs/2026-06-29-armazem-transferencia-arquivo-temporario-design.md
+    - UI-docs-code:docs/gestao-armazem-transferencia-arquivo-temporario-status.md
+
+  # --- Dados de ReferÃªncia ---------------------------------------------------------------
+  # A tela de Exames MCDT vive no menu de Dados de ReferÃªncia mas a rota Ã© /mcdts/exames.
+  dados-referencia/exames-mcdt.md:
+    - UI-docs-code:UI-ui/docs/specs/2026-05-13-pesquisa-exames-mcdt-frontend-design.md
+
+  # --- Consulta por Ãrea de PrestaÃ§Ã£o -----------------------------------------------------
+  # As 25 telas desta sessÃ£o sÃ£o a mesma pesquisa repetida por Ã¡rea, e dois documentos
+  # descrevem-nas todas: o de ajustes fixa o padrÃ£o transversal (voltar, url-state, mÃ¡scaras
+  # de data, lista de estados vinda da BD) e o guia de validaÃ§Ã£o dÃ¡, tela a tela, o
+  # comportamento esperado com massa real de dev. VÃ£o declarados um a um, sem globs.
+  consulta-area-prestacao/cuidados-continuados-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/cuidados-respiratorios-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+    - UI-docs-code:UI-ui/docs/specs/2026-05-17-consulta-area-prestacao-crd-fase1-design.md
+    - UI-docs-code:UI-ui/docs/specs/2026-05-17-consulta-area-prestacao-crd-fase2-design.md
+  consulta-area-prestacao/cuidados-respiratorios-lotes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+    - UI-docs-code:UI-ui/docs/specs/2026-05-18-consulta-area-prestacao-crd-fase3-fase4-design.md
+  consulta-area-prestacao/cuidados-respiratorios-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+    - UI-docs-code:UI-ui/docs/specs/2026-05-18-consulta-area-prestacao-crd-fase3-fase4-design.md
+  consulta-area-prestacao/dispensa-proximidade-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/dispensa-proximidade-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/hemodialise-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/hemodialise-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+    - UI-docs-code:docs/superpowers/specs/2026-06-02-hemodialise-prescricao-prestacao-design.md
+  consulta-area-prestacao/mcdt-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/mcdt-lotes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/mcdt-prestacao-ipatimup.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/mcdt-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/medicamentos-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/medicamentos-lotes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/medicamentos-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/saude-oral-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/saude-oral-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/tratamentos-termais-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+    - UI-docs-code:docs/superpowers/specs/2026-06-08-tratamentos-termais-factura-design.md
+    - UI-docs-code:docs/superpowers/HANDOFF-2026-06-08-tratamentos-termais-factura.md
+  consulta-area-prestacao/tratamentos-termais-lotes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/tratamentos-termais-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+    - UI-docs-code:docs/superpowers/specs/2026-06-09-tratamentos-termais-prestacao-design.md
+  consulta-area-prestacao/troca-seringas-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+    - UI-docs-code:docs/superpowers/plans/2026-06-11-troca-seringas-factura.md
+  consulta-area-prestacao/uts-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/uts-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/vacinas-facturas.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+  consulta-area-prestacao/vacinas-prestacoes.md:
+    - UI-docs-code:docs/ajustes-telas-estado-status-2026-07-01.md
+    - UI-docs-code:docs/guia-validacao-telas-2026-07-02.md
+
+# SEM INSUMO NO REPO DE DOCS, a 2026-08-31 â€” procurado por nome e por palavra-chave:
+#   gestao-armazem/faturas-incidencia.md
+#   gestao-armazem/libertar-arquivo-temporario.md
+#   gestao-armazem/localizar-corrigir.md
+#   gestao-armazem/picking-expedicao.md
+#   gestao-armazem/preparacao.md
+# Estas correm sÃ³ com o documento de cenÃ¡rios, como corriam antes. Quando o requisito aparecer
+# â€” no repo de docs ou no Confluence â€” declara-se aqui.
+#
+# As outras sessÃµes ainda nÃ£o estÃ£o preenchidas. O que existe e Ã© candidato:
+#   consulta-area-prestacao/*-crd  -> UI-ui/docs/specs/2026-05-17-consulta-area-prestacao-crd-fase{1,2}-design.md
+#   consulta-area-prestacao/mcdt   -> UI-ui/docs/specs/2026-05-13-pesquisa-exames-mcdt-frontend-design.md

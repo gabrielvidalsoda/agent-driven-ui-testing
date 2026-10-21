@@ -1,0 +1,506 @@
+documento: consulta-area-prestacao/medicamentos-facturas.md
+rota: /medicamentos/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Filtrar por Número da Factura
+    como: Preencher o campo texto "Número da Factura" e clicar Pesquisar
+    promessa: 'Devolve as faturas cujo número coincide, mas o campo não é chave
+      única global: pesquisar só "E017-1" sem NIF devolveu 262 resultados de
+      prestadores diferentes com o mesmo número de sequência'
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+    casos_documento:
+      - CT-01
+    ressalva: Sem NIF Prestador o número da factura por si só não isola o registo;
+      confirma a necessidade de combinar filtros indicada no documento.
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Filtrar por Data da Factura
+    como: Abrir o calendário (botão "Abrir/fechar calendário") junto ao campo Data
+      da Factura e escolher um dia, ou escrever DD/MM/YYYY
+    promessa: 'Calendário oferece seleção ao nível do dia (grid com todos os dias do
+      mês, navegação por mês/ano), mas a data guardada nas faturas só tem
+      granularidade de mês/ano (ex.: "12/2025")'
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+    casos_documento:
+      - CT-04
+    ressalva: Não testado o resultado efetivo de uma pesquisa por dia específico
+      (apenas a abertura do calendário); o descasamento entre granularidade do
+      picker (dia) e do dado (mês) fica registado para teste dedicado.
+  - id: filtro-numero-processo
+    tipo: filtro
+    nome: Filtrar por Número do Processo
+    como: 'Preencher "Número do Processo" (ex.: 1924545) e Pesquisar'
+    promessa: Restringe a lista ao processo indicado
+    entradas:
+      - campo: Número do Processo
+        obrigatorio: false
+    casos_documento:
+      - CT-01
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: Filtrar por NIF Prestador
+    como: Preencher "NIF Prestador" e Pesquisar
+    promessa: Devolve todas as faturas do prestador; testado com 501137688 (7
+      faturas, incl. E017-1, E016-143, E016-126) e 517993694 (faturas incl.
+      E015-181, E015-147), ambos batendo com a massa do documento
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+    casos_documento:
+      - CT-01
+      - CT-02
+  - id: filtro-codigo-farmacia
+    tipo: filtro
+    nome: Filtrar por Código da Farmácia
+    como: 'Preencher "Código da Farmácia" (ex.: 396) e Pesquisar'
+    promessa: Devolve as faturas da farmácia indicada; testado com 396 (14 resultados)
+    entradas:
+      - campo: Código da Farmácia
+        obrigatorio: false
+    casos_documento: []
+  - id: filtro-estado
+    tipo: filtro
+    nome: Filtrar por Estado
+    como: Abrir o combobox "Estado" e escolher uma opção da lista
+    promessa: Lista 11 opções (Aguarda Comunicação de Correcções, Aguarda
+      Regularização, Anulada, Comunicada Informação Não Conferida, Conferida Com
+      Erros, Conferida Sem Erros, Em Reconferência, Processamento Concluído,
+      Recepcionada, Recepcionada com Erros, Verificada), cobrindo o catálogo
+      completo de 11 estados de TRCFESTADO (tipo doc 1) referido no documento
+    entradas:
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: combobox estático com 11 opções, correspondentes ao catálogo
+          TRCFESTADO tipo doc 1
+    casos_documento:
+      - CT-03
+    ressalva: O documento levantava o risco de o filtro não cobrir todo o catálogo
+      real (11 estados); nesta build o combobox já expõe as 11 opções, sem
+      estado em falta aparente.
+  - id: accao-limpar-filtros
+    tipo: filtro
+    nome: Limpar filtros de pesquisa
+    como: Clicar no botão "Limpar"
+    promessa: Rótulo "Limpar"; esvazia os campos do formulário e a URL (remove query
+      params)
+    casos_documento: []
+    ressalva: "Limpar não repete a pesquisa: a grelha de resultados manteve o
+      conjunto da pesquisa anterior até o utilizador clicar Pesquisar de novo —
+      comportamento a validar com o negócio."
+  - id: accao-pesquisar
+    tipo: consulta
+    nome: Pesquisar Facturas
+    como: Clicar no botão "Pesquisar" com qualquer combinação de filtros preenchida
+    promessa: 'Executa a pesquisa e atualiza a grelha "Resultados da Pesquisa";
+      estado fica refletido na URL (ex.:
+      ?pagina=1&tamanho=10&nifPrestador=...&idEstado=15), tornando o resultado
+      partilhável/bookmarkable'
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-11
+      - CT-12
+  - id: accao-pesquisa-sem-resultados
+    tipo: consulta
+    nome: Pesquisa sem resultados
+    como: "Pesquisar um Número da Factura inexistente (testado: ZZZ-INEXISTENTE-999)"
+    promessa: Célula única "Nenhum resultado encontrado..."; sem erro técnico; os
+      campos de filtro permanecem preenchidos após a pesquisa
+    casos_documento:
+      - CT-11
+  - id: accao-ordenar-coluna
+    tipo: consulta
+    nome: Ordenar resultados por coluna
+    como: 'Clicar no cabeçalho de uma coluna ordenável (ex.: "Ordenar por Data
+      Factura")'
+    promessa: 'Cabeçalho "Ordenar por X"; reordena a grelha e regista o critério na
+      URL (ex.: &ordenar=dataFactura,asc). Confirmado: sem parâmetro de
+      ordenação, a ordem por omissão é Data Factura descendente (mais recente
+      primeiro), como o documento espera'
+    casos_documento:
+      - CT-02
+  - id: accao-escolher-colunas
+    tipo: consulta
+    nome: Escolher colunas visíveis
+    como: 'Clicar em "Escolher colunas" e marcar/desmarcar caixas de verificação por
+      coluna (ex.: Farmácia)'
+    promessa: Rótulo "Escolher colunas" / texto do popover "Visualizar colunas na
+      tabela"; oculta/mostra colunas da grelha sem alterar os dados
+    casos_documento: []
+  - id: accao-exportar-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Clicar em "Exportar XLSX" (botão fica desativado sem resultados e ativo
+      assim que a pesquisa devolve linhas)
+    promessa: Rótulo "Exportar XLSX"
+    casos_documento:
+      - CT-12
+    ressalva: Botão confirmado como disponível/indisponível conforme existência de
+      resultados; o download em si não foi disparado nesta passagem (ação
+      classificada como não destrutiva mas não exercida até ao ficheiro final).
+  - id: accao-paginacao
+    tipo: consulta
+    nome: Paginação dos resultados
+    como: Navegar entre páginas (botões primeira/anterior/seguinte/última ou número
+      de página) e ajustar "Resultados por página"
+    promessa: 'Rodapé "X resultados" + navegação; confirmado paginação server-side
+      real: pesquisa ampla por número "E017-1" (sem NIF) devolveu 262 resultados
+      em 27 páginas de 10'
+    casos_documento:
+      - CT-12
+  - id: accao-ver-detalhe-factura
+    tipo: navegacao
+    nome: Ver detalhes da factura
+    como: Clicar no botão de ação da linha "Ver detalhes da factura {número}" na
+      coluna Ações
+    promessa: Navega para /medicamentos/factura/{PIID} (confirmado PIID 603530 para
+      E017-1, batendo com o documento)
+    casos_documento:
+      - CT-05
+  - id: consulta-cabecalho-detalhe
+    tipo: consulta
+    nome: Cabeçalho do Detalhe da Factura
+    como: Abrir o detalhe de uma factura e ler o bloco superior
+    promessa: Mostra NIF Prestador, Código/Nome da Farmácia, Número/Data da Factura,
+      Estado, NIF/Nome da Ent. Adquirente, Totais Comunicados e Apurados (PVP,
+      PVU, Comp., Fee), Guid Factura/Resumo, Localização dos Arquivos
+      (Caixa/Pasta/Lugar/Estado da Caixa), Datas Operacionais e Utilizadores
+      Responsáveis
+    casos_documento:
+      - CT-05
+      - CT-09
+    ressalva: 'Para E017-1 (PIID 603530): Total PVP comunicado=apurado (42268,88),
+      mas Total Comp. comunicado (26707,02) difere do apurado (26616,81) — o
+      documento só regista um valor "Comp. 26.707,02" sem distinguir
+      comunicado/apurado; ecrã expõe os dois separadamente e mostra divergência
+      real.'
+  - id: consulta-tab-informacoes-comunicada-conferida
+    tipo: consulta
+    nome: Tab Informações — Informação Comunicada e Informação Conferida
+    como: No detalhe da factura, tab "Informações", ler as duas tabelas por tipo de
+      lote
+    promessa: Tabelas com Nº Lotes, Nº Lotes Indexados, Nº Total de Receitas, Total
+      PVP/PVU/Comp./Fee por tipo de lote, com linha Total; confirmados os 3
+      tipos de lote de E017-1 e os totais batendo com o cabeçalho e com CT-07
+    casos_documento:
+      - CT-06
+  - id: consulta-tab-diferencas
+    tipo: consulta
+    nome: Tab Informações — Diferenças
+    como: No detalhe da factura, tab "Informações", secção "Diferenças"
+    promessa: Tabela com o delta por tipo de lote entre Comunicado e Conferido; para
+      E017-1 (CCE) mostra Total Comp. com diferença de -90,21/90,21, coerente
+      com o delta entre os totais do cabeçalho
+    casos_documento:
+      - CT-06
+    ressalva: "Não foi verificado o caso CSE (ex.: E016-143) para confirmar que a
+      tabela fica vazia/sem destaque quando não há divergências."
+  - id: consulta-tab-erros
+    tipo: consulta
+    nome: Tab Informações — Erros
+    como: No detalhe da factura, tab "Informações", secção "Erros"
+    promessa: Tabela com colunas Cód. Erro, Descrição Erro, Origem, Nº Lote; para
+      E017-1 mostrou "Não existem erros para esta factura" apesar de o estado
+      ser Conferida Com Erros
+    casos_documento:
+      - CT-06
+    ressalva: Fatura em estado CCE sem linhas na secção Erros — divergência a
+      esclarecer com o negócio (erro pode estar refletido só na tabela
+      Diferenças, não na tabela Erros).
+  - id: consulta-tab-notas-credito-debito
+    tipo: consulta
+    nome: Tab Informações — Notas Crédito/Débito
+    como: No detalhe da factura, tab "Informações", secção "Notas Crédito/Débito"
+    promessa: Tabela com Nº Nota, Data Nota, Tipo Nota, Valor Nota; para E017-1
+      mostrou "Não existem Notas de Crédito/Débito para esta factura"
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "O documento aponta a nota E018-1 (90,21) como associada a E017-1 via
+      TDCFLINHASNOTACREDDEB; o ecrã não mostrou essa nota para a mesma factura
+      (mesmo PIID 603530 usado no drill). É a divergência mais relevante
+      encontrada: a ação/secção existe na tela mas os dados esperados pelo
+      documento não aparecem — precisa de confirmação por SQL direto (Q5) para
+      saber se a ligação está a falhar no ecrã ou se a massa mudou."
+  - id: consulta-tab-expedicao
+    tipo: consulta
+    nome: Tab Informações — Expedição
+    como: No detalhe da factura, tab "Informações", secção "Expedição"
+    promessa: Tabela com Nº Factura, Data Expedição, Ind. Expedido, Nº Documentos;
+      para E017-1 mostrou 2 linhas com o mesmo Nº Documentos
+      (8010000005882918502), Ind. Expedido = Não
+    casos_documento: []
+  - id: consulta-tab-lotes-detalhe
+    tipo: consulta
+    nome: Tab Lotes (no detalhe da factura)
+    como: No detalhe da factura, clicar na tab "Lotes"
+    promessa: Lista Nº Lote, Tipo Lote, Nº Receitas, Nº Etiquetas, Total
+      PVP/PVU/Comp./Fee e Digitalização por lote; para E017-1 confirmados 3
+      lotes (Normal, Lúpus/Hemofilia/Talassemia/Depranocitose, Receitas sem
+      papel) com 14+1+1393=1408 receitas, batendo com o cabeçalho
+    casos_documento:
+      - CT-07
+  - id: navegacao-ver-detalhe-lote
+    tipo: navegacao
+    nome: Ver detalhe do lote
+    como: Na tab Lotes do detalhe da factura, clicar no botão de ação "Ver detalhe
+      do lote {n}" de uma linha
+    promessa: Navega para o ecrã Lotes de Medicamentos (/medicamentos/lote/{PIID}),
+      com botão "Ir para Factura" para o percurso inverso e tab "Prestações"
+      para novo drill
+    casos_documento:
+      - CT-04
+  - id: navegacao-erros-e-diferencas
+    tipo: navegacao
+    nome: Erros e diferenças
+    como: No detalhe da factura, clicar no botão "Erros e diferenças"
+    promessa: Navega para /medicamentos/factura/{PIID}/erros-diferencas, um ecrã
+      dedicado com tabela Código/Descrição/Origem/Nº Lote/Justificação; para
+      E017-1 devolveu "Nenhum resultado encontrado..."
+    casos_documento:
+      - CT-06
+  - id: navegacao-voltar
+    tipo: navegacao
+    nome: Voltar
+    como: Clicar no botão "Voltar" no detalhe da factura ou no ecrã Erros e
+      diferenças
+    promessa: Regressa ao ecrã anterior sem perda de contexto (testado a partir de
+      Erros e diferenças e confirmado regresso ao detalhe da mesma factura)
+    casos_documento:
+      - CT-10
+  - id: consulta-visualizador-documento-embutido
+    tipo: consulta
+    nome: Visualizador de imagem digitalizada (Factura/Resumo)
+    como: No detalhe da factura, painel lateral direito já aberto por omissão, com
+      tabs "Factura"/"Resumo", controlos de zoom, rotação e "Guardar imagem", e
+      botão "Fechar visualizador de documento"
+    promessa: Mostra a imagem digitalizada da factura (alt "Factura E017-1"); não
+      existe um botão separado "Ver Factura" — a imagem já vem embutida na
+      página de detalhe, não em modal
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: O documento descreve a ação como "clicar em Ver Factura" para abrir um
+      modal; nesta build o comportamento é diferente — o visualizador já aparece
+      aberto lado a lado com o detalhe, com botão para fechar em vez de abrir.
+  - id: ct10-pesquisa-execucoes-por-fatura
+    tipo: navegacao
+    nome: Pesquisa de Execuções (Logs de Conferência) filtrada por Nº da Fatura
+    como: Menu Conferência > Logs de Conferência (rota /motor-regras/execucoes) >
+      selecionar Área de Conferência = Medicamentos (ativa os filtros de
+      negócio) > preencher Nº da Fatura com o número da fatura (ex. E017-1) >
+      Pesquisar > abrir uma linha com 'Ver execução <id>'
+    promessa: Lista e permite abrir as execuções do motor de regras associadas à
+      fatura pesquisada (estado, regras avaliadas/erros, duração, e detalhe
+      passo a passo por regra)
+    rota: /motor-regras/execucoes
+    casos_documento:
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: Não existe nenhum botão/link 'Detalhe conferência' no detalhe da
+      fatura E017-1 nem no ecrã Erros e diferenças (confirma a primeira
+      passagem). Existe, contudo, um ecrã genuíno de 'execuções de conferência'
+      — Conferência > Logs de Conferência (/motor-regras/execucoes) — com um
+      filtro Nº da Fatura que devolve execuções ligadas à fatura pesquisada. Não
+      é a mesma navegação (implica ir a outra secção do menu e preencher o
+      filtro à mão) nem o mesmo nível de detalhe (log técnico por prestação/lote
+      em vez de um resumo de conferência da fatura). O CT-10 tal como descrito
+      continua por cumprir; fica registado o caminho aproximado.
+  - id: insumo-execucao-conferencia-por-fatura
+    tipo: consulta
+    nome: Detalhe de execução do motor de regras filtrada por Nº da Fatura
+    como: Menu Conferência > Logs de Conferência (rota /motor-regras/execucoes) >
+      Área de Conferência = Medicamentos > Nº da Fatura = número da fatura >
+      Pesquisar > 'Ver execução <id>' numa das linhas devolvidas
+    promessa: Mostra, por execução, o estado (CONCLUIDO/erro), regras avaliadas/não
+      elegíveis/com erro, duração total e o detalhe passo a passo de cada regra
+      do motor, para a entidade (prestação) ligada à fatura pesquisada
+    rota: /motor-regras/execucoes
+    casos_documento:
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: Confirma-se a conclusão da primeira passagem quanto à ausência do
+      botão/link 'Detalhe conferência'. Como massa/mecanismo aproximado, a
+      execução de conferência de uma fatura é obtível pela tela, mas só por
+      navegação manual a outra secção do menu (Conferência > Logs de
+      Conferência) e preenchimento do filtro Nº da Fatura — não é o mesmo
+      percurso nem o mesmo grão de informação que o documento descreve.
+insumos_necessarios:
+  - descricao: Factura MED em estado Conferida Com Erros (CCE), com divergências
+      entre Comunicado e Apurado
+    obtivel: tela
+    razao: "Encontrada via filtro Estado=Conferida Com Erros + NIF Prestador (ex.:
+      E017-1/501137688)"
+  - descricao: Factura MED em estado Conferida Sem Erros (CSE), sem divergências
+    obtivel: tela
+    razao: Encontrável via filtro Estado=Conferida Sem Erros; não drilhada em
+      detalhe nesta passagem, mas a pesquisa devolve resultados
+  - descricao: Factura MED com nota de Crédito/Débito efetivamente visível na secção
+      Notas Crédito/Débito do detalhe
+    obtivel: bd
+    razao: A fatura de referência do documento (E017-1/603530) não mostrou a nota
+      E018-1 nesta secção; é preciso localizar por SQL outra fatura onde a
+      ligação apareça no ecrã, ou confirmar via TDCFLINHASNOTACREDDEB se a nota
+      ainda está associada
+  - descricao: Factura MED com caixa/pasta/lugar associados em Localização dos Arquivos
+    obtivel: tela
+    razao: Confirmado diretamente em E017-1 (Caixa C08194, Pasta 3294878, Lugar 711)
+  - descricao: Factura MED sem caixa associada, para validar o estado "vazio" da
+      Localização dos Arquivos
+    obtivel: bd
+    razao: Não testada nesta passagem; requer identificar por SQL uma factura sem
+      caixa em GESTARMAZEM
+  - descricao: Execução de conferência associada a uma factura, acessível a partir
+      do detalhe ("Detalhe conferência")
+    obtivel: nao
+    razao: Não existe nenhum botão ou link "Detalhe conferência" no detalhe da
+      factura nem no ecrã Erros e diferenças desta build; ver casos_sem_accao
+  - descricao: "Filtro/critério de pesquisa por mês ou ciclo de conferência (ex.:
+      202512) para a pesquisa ampla de volume"
+    obtivel: nao
+    razao: O formulário de pesquisa não tem campo para mês de conferência nem
+      PIIDCICLOCONF; só é possível aproximar por Data da Factura
+  - descricao: Acesso a SQLcl/BD QUA (GESTCONFER/GESTARMAZEM) em modo read-only para
+      verificação cruzada ecrã↔BD
+    obtivel: bd
+    razao: Necessário para os cenários de coerência ecrã↔BD do documento; fora do
+      alcance do ecrã em si
+casos_sem_accao:
+  - CT-10
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-10
+      procurei:
+        - Botão ou link 'Detalhe conferência' no cabeçalho e na área de ações do
+          detalhe da fatura E017-1 (PIID 603530), incluindo junto ao botão
+          'Voltar'
+        - Ecrã 'Erros e diferenças — Factura 603530' (aberto pelo botão 'Erros e
+          diferenças' do detalhe), à procura de uma ligação para a execução de
+          conferência
+        - "Submenu 'Conferência' (Cockpit, Conferência Manual: Worklist,
+          Conferência Manual: Supervisão, Workflows de Conferência, Regras de
+          Conferência, Logs de Conferência), à procura de um ecrã de execuções
+          de conferência acessível a partir da fatura"
+        - Ecrã 'Pesquisa de Execuções' (menu Conferência > Logs de Conferência,
+          rota real /motor-regras/execucoes) filtrando por Área de Conferência =
+          Medicamentos e Nº da Fatura = E017-1, para confirmar se devolve a
+          execução de conferência da fatura de origem
+        - "Abertura de uma execução devolvida por esse filtro (execução #197485)
+          para ver se corresponde ao contexto da fatura E017-1 e se tem 'Voltar'
+          sem perda de contexto"
+      onde:
+        - http://localhost:4174/medicamentos/factura/603530
+        - http://localhost:4174/medicamentos/factura/603530/erros-diferencas
+        - http://localhost:4174/conferencia/cockpit
+        - http://localhost:4174/conferencia/worklist
+        - http://localhost:4174/motor-regras/execucoes
+        - http://localhost:4174/motor-regras/execucoes/197485
+      resultado: encontrado
+      accao: ct10-pesquisa-execucoes-por-fatura
+      equivalente_aproximado: true
+      captura: ct10-execucoes-detalhe-197485.png
+      nota: Não existe nenhum botão/link 'Detalhe conferência' no detalhe da fatura
+        E017-1 nem no ecrã Erros e diferenças (confirma a primeira passagem).
+        Existe, contudo, um ecrã genuíno de 'execuções de conferência' —
+        Conferência > Logs de Conferência (/motor-regras/execucoes) — com um
+        filtro Nº da Fatura que devolve execuções ligadas à fatura pesquisada.
+        Não é a mesma navegação (implica ir a outra secção do menu e preencher o
+        filtro à mão) nem o mesmo nível de detalhe (log técnico por
+        prestação/lote em vez de um resumo de conferência da fatura). O CT-10
+        tal como descrito continua por cumprir; fica registado o caminho
+        aproximado.
+    - alvo: Execução de conferência associada a uma factura, acessível a partir do
+        detalhe ("Detalhe conferência")
+      procurei:
+        - Botão ou link 'Detalhe conferência' no cabeçalho e na área de ações do
+          detalhe da fatura E017-1 (PIID 603530)
+        - Ecrã 'Erros e diferenças — Factura 603530', acessível pelo botão
+          'Erros e diferenças' do detalhe, à procura de uma ligação para a
+          execução de conferência
+        - "Submenu 'Conferência' (Cockpit, Conferência Manual: Worklist,
+          Conferência Manual: Supervisão, Workflows de Conferência, Regras de
+          Conferência, Logs de Conferência) à procura de um ecrã de execuções
+          por fatura"
+        - "Ecrã 'Pesquisa de Execuções' (Conferência > Logs de Conferência, rota
+          /motor-regras/execucoes): campo 'Nº da Fatura' nos 'Filtros de
+          negócio', ativado ao escolher Área de Conferência = Medicamentos"
+        - Pesquisa nesse ecrã com Área = Medicamentos e Nº da Fatura = E017-1
+          (comparada com a pesquisa sem esse filtro, 197.411 vs 3.427
+          resultados, para confirmar que o filtro reduz o conjunto)
+        - "Detalhe de uma execução devolvida (execução #197485, workflow
+          MED_LOTE96) para ver o nível de detalhe e a relação com a fatura de
+          origem"
+      onde:
+        - http://localhost:4174/medicamentos/factura/603530
+        - http://localhost:4174/medicamentos/factura/603530/erros-diferencas
+        - http://localhost:4174/conferencia/cockpit
+        - http://localhost:4174/conferencia/worklist
+        - http://localhost:4174/motor-regras/execucoes
+        - http://localhost:4174/motor-regras/execucoes/197485
+      resultado: encontrado
+      accao: insumo-execucao-conferencia-por-fatura
+      equivalente_aproximado: true
+      captura: ct10-execucoes-detalhe-197485.png
+      nota: Confirma-se a conclusão da primeira passagem quanto à ausência do
+        botão/link 'Detalhe conferência'. Como massa/mecanismo aproximado, a
+        execução de conferência de uma fatura é obtível pela tela, mas só por
+        navegação manual a outra secção do menu (Conferência > Logs de
+        Conferência) e preenchimento do filtro Nº da Fatura — não é o mesmo
+        percurso nem o mesmo grão de informação que o documento descreve.
+    - alvo: "Filtro/critério de pesquisa por mês ou ciclo de conferência (ex.: 202512)
+        para a pesquisa ampla de volume"
+      procurei:
+        - "Campo de filtro por mês de conferência ou PIIDCICLOCONF no formulário
+          'Pesquisa Facturas' de /medicamentos/factura (campos existentes:
+          Número da Factura, Data da Factura, Número do Processo, NIF Prestador,
+          Código da Farmácia, Estado)"
+        - "O mesmo tipo de campo nos formulários irmãos da secção Medicamentos:
+          'Pesquisa Lotes' (/medicamentos/lote — campos: Número da Factura, Data
+          da Factura, NIF Prestador, Código da Farmácia, Tipo de Lote, Número de
+          Lote) e 'Pesquisa Prestações' (/medicamentos/prestacoes — campos:
+          Número da Factura, Data da Factura, NIF Prestador, Código Convenção,
+          Tipo de Lote, Número do Lote, Número de Receita, Valor SNS, Nº Linha
+          RSP)"
+        - Modal 'Escolher colunas' da lista de faturas, à procura de uma coluna
+          'Mês Conferência' ou 'Ciclo' que pudesse servir de proxy de
+          filtro/ordenação
+        - "Formulário 'Pesquisa de Execuções' em /motor-regras/execucoes
+          (Conferência > Logs de Conferência): tem 'Data de processamento (de)'
+          / '(até)', inspecionado à procura de um campo de mês/ciclo de
+          conferência"
+        - Seletor 'Ciclo' do Cockpit de Conferência (/conferencia/cockpit), para
+          perceber se serve como pesquisa de faturas por ciclo e se cobre o
+          ciclo 202512
+        - "Formulário de pesquisa do ecrã 'Conferência Manual: Worklist'
+          (/conferencia/worklist — campos: Nº Processo, Nº Prestação, Nº
+          Fatura), à procura de um filtro de ciclo de conferência"
+      onde:
+        - http://localhost:4174/medicamentos/factura
+        - http://localhost:4174/medicamentos/lote
+        - http://localhost:4174/medicamentos/prestacoes
+        - http://localhost:4174/motor-regras/execucoes
+        - http://localhost:4174/conferencia/cockpit
+        - http://localhost:4174/conferencia/worklist
+      resultado: nao_existe
+      accao: null
+      nota: "Nenhum ecrã visitado tem um campo de pesquisa por mês/ciclo de
+        conferência (PIIDCICLOCONF) aplicável à listagem de faturas. O único
+        seletor de 'Ciclo' encontrado é o do Cockpit de Conferência
+        (/conferencia/cockpit): é um seletor de dashboard agregado por área de
+        conferência (não uma pesquisa de faturas) e só lista os 3 ciclos mais
+        recentes (Abril 2026, Março 2026, Fevereiro 2026) — não chega a dezembro
+        de 2025 (202512), o ciclo da massa de referência do plano. Confirma-se a
+        conclusão da primeira passagem: só é possível aproximar por Data da
+        Factura."

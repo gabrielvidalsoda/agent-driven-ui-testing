@@ -1,0 +1,455 @@
+documento: consulta-area-prestacao/hemodialise-facturas.md
+rota: /hemodialise/factura
+mapeado_em: corridas/consulta-area-prestacao__hemodialise-facturas__mapa (2026-09-03)
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Pesquisar por Número da Factura
+    como: preencher o campo de texto 'Número da Factura' e clicar em 'Pesquisar'
+    promessa: "campo de texto livre (placeholder 'Insira o número da factura'); ao
+      pesquisar '10FTV2025-1772' devolveu exatamente 1 resultado: prestador
+      422187280, NIF 511154097, data 31/12/2025, total 6245,51, estado Conferida
+      Sem Erros"
+    rota: /hemodialise/factura?numFactura=...
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-01
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Pesquisar por Data da Factura
+    como: abrir o calendário (botão 'Abrir/fechar calendário') e clicar no dia;
+      digitar diretamente no campo (mesmo carácter a carácter) não preencheu o
+      valor nesta passagem, apenas a seleção via calendário funcionou
+    promessa: datepicker com máscara DD/MM/YYYY; pesquisa por 31/12/2025 devolveu 1
+      resultado (a factura 28101/10FTV2025-1772)
+    rota: /hemodialise/factura?dataFactura=YYYY-MM-DD
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: calendário (grid de dias, com seletor de ano)
+    casos_documento:
+      - CT-03
+    ressalva: o campo é um datepicker mascarado que não aceitou entrada de teclado
+      (fill nem type sequencial mudaram o valor); só a seleção de um dia no grid
+      do calendário registou o valor. Relevante para quem for automatizar este
+      filtro.
+  - id: filtro-data-facturacao
+    tipo: filtro
+    nome: Pesquisar por Data da Facturação
+    como: mesmo componente de calendário do campo 'Data da Factura'
+    promessa: campo 'Data da Facturação' com datepicker DD/MM/YYYY; presente no
+      formulário, não foi exercido isoladamente nesta passagem
+    entradas:
+      - campo: Data da Facturação
+        obrigatorio: false
+        origem_valores: calendário
+    casos_documento: []
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: Pesquisar por NIF do Prestador
+    como: preencher o campo 'NIF do Prestador' e clicar em 'Pesquisar'
+    promessa: campo de texto livre; pesquisa por 509393799 (sem filtro de estado)
+      devolveu 136 resultados, incluindo FT2025A1-49 (PIID 27198, Conferida Com
+      Erros, 70 513,80) e FT2025A1-41 (PIID 26749, Conferida Sem Erros, 67
+      156,00); a listagem vem ordenada por Data Factura descendente por omissão
+    rota: /hemodialise/factura?nifPrestador=...
+    entradas:
+      - campo: NIF do Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-02
+  - id: filtro-codigo-prestador
+    tipo: filtro
+    nome: Pesquisar por Código do Prestador
+    como: preencher o campo 'Código do Prestador' e clicar em 'Pesquisar'
+    promessa: campo de texto livre (placeholder 'Insira o código do prestador');
+      presente no formulário, não foi exercido isoladamente nesta passagem
+    entradas:
+      - campo: Código do Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento: []
+  - id: filtro-estado
+    tipo: filtro
+    nome: Filtrar por Estado
+    como: abrir o combobox 'Estado' e escolher uma opção da lista
+    promessa: "combobox com 11 opções, todas com descrição traduzida: Recepcionada,
+      Verificada, Recepcionada com Erros, Aguarda Regularização, Aguarda
+      Comunicação de Correcções, Processamento Concluído, Comunicada Informação
+      Não Conferida, Conferida Sem Erros, Conferida Com Erros, Em Reconferência,
+      Anulada — correspondem exatamente aos 11 códigos do catálogo TRCFESTADO
+      citado no documento (RECP, V, ER, AR, ACC, PC, CINC, CSE, CCE, RE, AN);
+      não encontrei as opções órfãs 'Validada/Paga/Rejeitada' que o desenho de
+      referência chegou a mostrar"
+    entradas:
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: combobox com 11 opções fixas (catálogo TRCFESTADO)
+    casos_documento:
+      - CT-02
+      - CT-04
+  - id: limpar-filtros
+    tipo: filtro
+    nome: Limpar filtros
+    como: clicar no botão 'Limpar'
+    promessa: repõe todos os campos de pesquisa e a grelha volta ao estado inicial
+      'Sem resultados / Utilize os filtros acima e clique em pesquisar'
+    casos_documento: []
+  - id: ordenacao-resultados
+    tipo: consulta
+    nome: Ordenar a lista de resultados
+    como: clicar nos cabeçalhos clicáveis 'Ordenar por Cód. Prestador / Nº Factura /
+      Data Factura / Data Facturação'
+    promessa: cabeçalhos com ação de ordenação (cursor pointer, aria-label 'Ordenar
+      por ...'); por omissão a lista já vem ordenada por Data Factura
+      descendente; a interação de clique nos cabeçalhos não foi exercida nesta
+      passagem
+    casos_documento:
+      - CT-02
+    equivalente_aproximado: true
+    ressalva: observei apenas a ordenação por omissão (Data Factura desc), coerente
+      com CT-02; não cliquei nos cabeçalhos para confirmar ordenação manual
+      noutras colunas.
+  - id: paginacao-resultados
+    tipo: navegacao
+    nome: Paginar a lista de resultados
+    como: usar os controlos de página (primeira/anterior/números/seguinte/última) e
+      o seletor 'Resultados por página'
+    promessa: paginação da grelha de resultados; com 136 resultados mostrou 14
+      páginas de 10; o seletor 'Resultados por página' oferece 10, 20, 25, 50,
+      100
+    casos_documento:
+      - CT-03
+  - id: exportacao-lista-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: com resultados na grelha, clicar no botão 'Exportar XLSX' (fica desativado
+      quando a pesquisa devolve 0 resultados)
+    promessa: descarrega um ficheiro com os registos da grelha; testado com o filtro
+      NIF=509393799 (136 registos), gerou o download 'facturas-hemodialise.xlsx'
+      sem qualquer submissão de dados; as colunas exportadas são as mesmas da
+      grelha (prestador, EFR, adquirente, nº/data de factura, total, estado,
+      receção de ficheiro eletrónico), sem qualquer dado nominativo de utente
+    casos_documento:
+      - CT-11
+  - id: navegacao-detalhe-factura
+    tipo: navegacao
+    nome: Ver detalhe da factura
+    como: clicar no botão 'Ver detalhe da factura <número>' na primeira coluna de
+      cada linha da grelha de resultados
+    promessa: navega para /hemodialise/factura/{PIID} e mostra o detalhe completo da
+      factura selecionada
+    rota: /hemodialise/factura/{piid}
+    casos_documento:
+      - CT-01
+      - CT-05
+      - CT-06
+      - CT-07
+      - CT-08
+      - CT-09
+  - id: consulta-cabecalho-detalhe
+    tipo: consulta
+    nome: Cabeçalho da factura no detalhe
+    como: ler os campos do cabeçalho do detalhe da factura
+    promessa: "mostra Número da Factura, Data da Factura, Estado, NIF Prestador,
+      Desc. Prestador, Código Prestador, Total Factura, Valor Factura Apurado,
+      Desc. Adquirente, NIF Adquirente; na CSE (28101) Total Factura = Valor
+      Factura Apurado = 6245,51; na CCE (27198/FT2025A1-49) há divergência
+      clara: Total Factura 70 513,80 vs Valor Factura Apurado 66 685,90"
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: o rótulo implementado é 'Valor Factura Apurado', não 'Total Factura
+      Apurado' como o documento escreve; conteúdo e comportamento (par
+      comunicado/apurado) batem certo.
+  - id: consulta-erros-factura
+    tipo: consulta
+    nome: Secção Erros
+    como: ler a secção 'Erros' no detalhe da factura
+    promessa: secção dedicada a listar erros de conferência da factura
+    casos_documento:
+      - CT-07
+    ressalva: nas duas facturas âncora inspecionadas (28101 CSE e 27198/FT2025A1-49
+      CCE) a secção mostrou sempre 'Sem erros para esta factura.', mesmo na CCE
+      com divergência total/apurado; não consegui confirmar nesta passagem o
+      formato código+descrição do catálogo de erros que o documento espera,
+      porque não encontrei uma factura com a secção efetivamente preenchida.
+  - id: consulta-linhas-factura
+    tipo: consulta
+    nome: Secção Linhas da Factura
+    como: ler a tabela 'Linhas da Factura' no detalhe
+    promessa: tabela com colunas Subsistema, Nº Utente, Nº Dias, Preço Unitário,
+      Valor, Valor Apurado
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: "cada linha representa um subsistema (SNS, ADSE, IASFA, SAD GNR, SAD
+      PSP), não um utente individual como o documento descreve; a coluna 'Nº
+      Utente' mostra sempre '-'; há linhas duplicadas por subsistema (ex.: duas
+      linhas 'SNS'), a maioria a zero; a soma das linhas com valor bate com o
+      Total Factura (6245,51 na 28101; 62 186,46+8327,34=70 513,80 na 27198 —
+      soma o Total Factura, não o Valor Factura Apurado)."
+  - id: consulta-notas-credito-debito
+    tipo: consulta
+    nome: Secção Notas de Crédito/Débito
+    como: ler a secção 'Notas de Crédito/Débito' no detalhe
+    promessa: secção dedicada a notas de crédito/débito associadas à factura, com
+      estado vazio tratado ('Sem notas de crédito/débito para esta factura.')
+    casos_documento:
+      - CT-07
+  - id: consulta-expedicoes
+    tipo: consulta
+    nome: Secção Expedições
+    como: ler a secção 'Expedições' no detalhe
+    promessa: tabela com Número Processo, Número Factura, Data Expedição, Ind.
+      Expedido, Número Docs.; em ambas as facturas inspecionadas (28101 e 27198)
+      havia exatamente 1 registo de expedição com Ind. Expedido = Sim e Número
+      Docs. = 0
+    casos_documento:
+      - CT-07
+    ressalva: o rótulo da secção é 'Expedições' (plural); o documento fala em
+      'Expedição' no singular — divergência apenas de rótulo.
+  - id: ver-factura-imagem
+    tipo: consulta
+    nome: Ver Factura (imagem digitalizada)
+    como: clicar no botão 'Ver Factura' junto ao cabeçalho do detalhe
+    promessa: "abre um modal 'Factura' com visualizador de imagem: diminuir/aumentar
+      zoom, repor vista, rodar 90° à esquerda/direita, guardar imagem, fechar"
+    casos_documento:
+      - CT-08
+    ressalva: ao testar na factura 28101, o pedido da imagem devolveu 502 Bad
+      Gateway (http://localhost:4174/ccmsns/api/documentos/...) e o modal
+      mostrou apenas o ícone de imagem quebrada, sem nenhuma mensagem de erro
+      tratada ('mensagem clara quando não existe digitalização' do CT-08 não se
+      verificou aqui). Além disso, não encontrei em nenhuma das páginas de
+      detalhe (procurei pelo texto 'Prestação' e 'XML' em toda a árvore de
+      acessibilidade) nenhum botão equivalente a 'Ver Prestação' nem a 'Obter
+      XML' — só 'Ver Factura' existe.
+  - id: voltar-detalhe
+    tipo: navegacao
+    nome: Voltar do detalhe
+    como: clicar no botão 'Voltar' no fundo da página de detalhe
+    promessa: regressa à página de resultados anterior preservando o filtro/estado
+      de pesquisa; testado a partir do detalhe da 27198, regressou à pesquisa
+      por Data da Factura=2025-12-31 (a pesquisa efetuada antes de abrir o
+      detalhe)
+    casos_documento: []
+  - id: hemodialise-prestacao-por-numero-factura
+    tipo: consulta
+    nome: Pesquisa de Prestações de Hemodiálise por Número da Factura
+    como: Na tela /hemodialise/prestacao, preencher o filtro 'Número da Factura' com
+      o número da factura (ex. 10FTV2025-1772) e pesquisar; cada linha devolvida
+      tem um botão 'Ver detalhe da prestação' que abre o detalhe completo
+      (subsistema, prestador, nº utente, datas/nº de dias de tratamento, sessões
+      comunicadas/apuradas, dados do GID, movimentos), com os campos 'Nº
+      Factura' e 'Data Factura' a confirmar a associação.
+    promessa: Obter a(s) prestação(ões) de Hemodiálise associada(s) a uma factura —
+      a mesma massa que a ação 'Ver Prestação' prometia a partir do detalhe da
+      factura.
+    rota: /hemodialise/prestacao
+    equivalente_aproximado: true
+    ressalva: "A pesquisa por 10FTV2025-1772 devolveu as 3 prestações da factura
+      28101 (utentes 171121219, 171141351, 174189384), cada uma com 31
+      dias/sessões comunicados e apurados; o detalhe da prestação 1879948
+      confirma 'Nº Factura: 10FTV2025-1772' e 'Data Factura: 31/12/2025',
+      batendo com o cabeçalho da factura. Captura adicional de apoio (lista
+      filtrada): prestacoes-filtro-numfactura.png."
+insumos_necessarios:
+  - descricao: Factura de Hemodiálise em estado Conferida Sem Erros (CSE), com
+      apurado igual ao comunicado
+    obtivel: tela
+    razao: encontrável via filtro Estado='Conferida Sem Erros' combinado com
+      Número/NIF; já confirmado com a âncora 28101/10FTV2025-1772.
+  - descricao: Factura de Hemodiálise em estado Conferida Com Erros (CCE), com
+      divergência entre Total Factura e Valor Factura Apurado
+    obtivel: tela
+    razao: encontrável via filtro Estado='Conferida Com Erros'; já confirmado com a
+      âncora 27198/FT2025A1-49.
+  - descricao: Factura cuja secção 'Erros' apresente efetivamente erros de
+      conferência (código+descrição)
+    obtivel: bd
+    razao: as duas âncoras CCE/CSE inspecionadas mostraram sempre 'Sem erros para
+      esta factura'; seria preciso localizar por SQL um PIID cuja secção Erros
+      esteja de facto populada antes de a explorar na tela.
+  - descricao: Factura com Notas de Crédito/Débito associadas
+    obtivel: bd
+    razao: não encontrei nenhuma nas facturas âncora inspecionadas; requer localizar
+      por SQL um PIID com registos nessa tabela.
+  - descricao: Documento digitalizado da factura acessível ao backend de documentos
+      (para 'Ver Factura' devolver imagem em vez de erro)
+    obtivel: nao
+    razao: depende de infraestrutura de documentos fora do alcance desta tela/BD de
+      consulta; nesta passagem o pedido devolveu 502 Bad Gateway.
+  - descricao: Execução de conferência acessível a partir do detalhe da factura
+      (para 'Detalhe conferência')
+    obtivel: nao
+    razao: a ação 'Detalhe conferência' promissa pelo documento não existe em lado
+      nenhum desta tela (procurada por texto em toda a árvore de acessibilidade
+      do detalhe e da lista); só existe o menu lateral genérico de Conferência,
+      sem ligação contextual à factura.
+  - descricao: Prestação de Hemodiálise associada à factura (para 'Ver Prestação')
+    obtivel: nao
+    razao: ação inexistente nesta tela.
+  - descricao: Ficheiro XML eletrónico da factura (para 'Obter XML')
+    obtivel: nao
+    razao: ação inexistente nesta tela.
+  - descricao: Utilizador com perfil de consulta à área de Hemodiálise
+    obtivel: tela
+    razao: sessão já ativa (utilizador Manta / PRRmanta_dev) permitiu todo o
+      percurso sem qualquer bloqueio de permissão.
+casos_sem_accao:
+  - CT-09
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: "CT-09: Navegação para o detalhe de conferência ('Detalhe conferência')"
+      procurei:
+        - Botão ou link com texto 'Detalhe conferência' no detalhe da factura
+          28101 (10FTV2025-1772)
+        - Busca de texto 'conferência'/'conferencia' em toda a árvore de
+          acessibilidade do detalhe e da lista de resultados
+          (document.body.innerText) — 8 ocorrências, todas do menu lateral
+          genérico
+        - Ícones sem rótulo ou menus de contexto nas linhas de 'Linhas da
+          Factura' e 'Expedições'
+        - Filtro de negócio 'Nº da Fatura' na tela 'Logs de Conferência'
+          (/motor-regras/execucoes) com Área de Conferência = Hemodiálise
+        - Pesquisa de execuções em 'Logs de Conferência' filtrando apenas por
+          Área = Hemodiálise (o filtro de fatura ficou desativado)
+        - "Filtro 'Nº Fatura' = 10FTV2025-1772 em 'Conferência Manual: Worklist'
+          (/conferencia/worklist)"
+        - "Opção 'Hemodiálise' no combobox 'Área de Prestação' de 'Conferência
+          Manual: Supervisão' (/conferencia/supervisao)"
+        - Cartão 'Hemodiálise' no Cockpit de Conferência (/conferencia/cockpit)
+          — verificado se é clicável e se tem execução associada
+      onde:
+        - http://localhost:4174/hemodialise/factura/28101
+        - http://localhost:4174/motor-regras/execucoes (Logs de Conferência)
+        - "http://localhost:4174/conferencia/worklist (Conferência Manual:
+          Worklist)"
+        - "http://localhost:4174/conferencia/supervisao (Conferência Manual:
+          Supervisão)"
+        - http://localhost:4174/conferencia/cockpit (Cockpit de Conferência)
+      resultado: nao_existe
+      accao: null
+      nota: "No detalhe da factura só existem os botões 'Ver Factura' e 'Voltar'. Em
+        Logs de Conferência o filtro 'Nº da Fatura' fica desativado mesmo com
+        Área='Hemodiálise' selecionada (mensagem 'Selecione a Área
+        (Medicamentos, MCDT ou CRD) para usar estes filtros'), e pesquisar só
+        por Área=Hemodiálise devolve 'Nenhum resultado encontrado para os
+        filtros aplicados' (captura
+        logs-conferencia-hemodialise-sem-resultados.png). Em Conferência Manual:
+        Worklist, pesquisar por Nº Fatura=10FTV2025-1772 devolve 'Nenhum
+        resultado encontrado'. Em Conferência Manual: Supervisão o combobox
+        'Área de Prestação' só lista Medicamentos/MCDT/CRD/IPATIMUP —
+        Hemodiálise nem é opção. No Cockpit (captura
+        cockpit-hemodialise-nosistemaatual.png), o cartão 'Hemodiálise' está
+        marcado 'No sistema atual' e não é um botão clicável (ao contrário de
+        Medicamentos/MCDT/CRD/CRD), com 0 faturas/0 prestações. Conjunto de
+        evidências aponta para a conferência de Hemodiálise ainda correr no
+        sistema legado, fora desta plataforma — não é uma ação nomeada de outra
+        forma."
+    - alvo: "[insumo] Documento digitalizado da factura acessível ao backend de
+        documentos (para 'Ver Factura' devolver imagem em vez de erro)"
+      procurei:
+        - Clique no botão 'Ver Factura' no detalhe da factura 28101
+          (10FTV2025-1772) para abrir o visualizador de documento
+        - Inspeção do pedido de rede disparado pelo visualizador (GET
+          /ccmsns/api/documentos/...)
+      onde:
+        - http://localhost:4174/hemodialise/factura/28101 — modal 'Ver Factura'
+      resultado: nao_existe
+      accao: null
+      nota: "O modal abre e mostra os controlos do visualizador (zoom, rodar,
+        guardar), mas a imagem não carrega — ícone de imagem quebrada (captura
+        de apoio ver-factura-modal-28101.png, não conta como 'encontrado' porque
+        mostra precisamente a falha). O pedido GET
+        /ccmsns/api/documentos/%7B87272CB4-C080-48FB-8613-7B31B0ACB9A9%7D_13012\
+        6_E devolveu 502 Bad Gateway, confirmando a conclusão da primeira
+        passagem: o backend de documentos está fora de alcance nesta
+        tela/ambiente."
+    - alvo: "[insumo] Execução de conferência acessível a partir do detalhe da factura
+        (para 'Detalhe conferência')"
+      procurei:
+        - Execuções de conferência para a factura 28101/10FTV2025-1772 em 'Logs
+          de Conferência' (/motor-regras/execucoes) com Área de Conferência =
+          Hemodiálise
+        - Filtro de negócio 'Nº da Fatura' nessa mesma tela (permaneceu
+          desativado)
+        - "Tarefas de conferência manual para a fatura 10FTV2025-1772 em
+          'Conferência Manual: Worklist'"
+        - "Opção Hemodiálise no filtro 'Área de Prestação' de 'Conferência
+          Manual: Supervisão'"
+        - Indicador de execução/progresso de conferência para Hemodiálise no
+          Cockpit
+      onde:
+        - http://localhost:4174/motor-regras/execucoes (Logs de Conferência)
+        - "http://localhost:4174/conferencia/worklist (Conferência Manual:
+          Worklist)"
+        - "http://localhost:4174/conferencia/supervisao (Conferência Manual:
+          Supervisão)"
+        - http://localhost:4174/conferencia/cockpit (Cockpit de Conferência)
+      resultado: nao_existe
+      accao: null
+      nota: "Em nenhuma das 4 telas da secção Conferência existe uma execução, tarefa
+        ou indicador de progresso associado à área Hemodiálise: Logs de
+        Conferência devolve 0 resultados para Área=Hemodiálise e bloqueia o
+        filtro de fatura para essa área; Worklist devolve 0 resultados para a
+        fatura âncora; Supervisão nem lista Hemodiálise como área possível; e no
+        Cockpit o cartão Hemodiálise está identificado como 'No sistema atual',
+        não clicável, com 0/0 (mesmas evidências e capturas do alvo CT-09). Não
+        encontrei forma de obter esta massa nem pela tela nem indício de
+        endpoint próprio a explorar por BD (fora do âmbito desta consulta, que é
+        sobre TDCFFACTURAHEMODIALISE)."
+    - alvo: "[insumo] Prestação de Hemodiálise associada à factura (para 'Ver
+        Prestação')"
+      procurei:
+        - Filtro 'Número da Factura' na tela de Prestações de Hemodiálise
+          (/hemodialise/prestacao), preenchido com 10FTV2025-1772
+        - Botão 'Ver detalhe da prestação' nas linhas devolvidas por essa
+          pesquisa
+        - Campo 'Nº Factura' no detalhe de uma dessas prestações, para confirmar
+          a associação com a factura 28101
+      onde:
+        - http://localhost:4174/hemodialise/prestacao?numFactura=10FTV2025-1772
+        - http://localhost:4174/hemodialise/prestacao/1879948
+      resultado: encontrado
+      accao: hemodialise-prestacao-por-numero-factura
+      equivalente_aproximado: true
+      captura: prestacao-detalhe-1879948.png
+      nota: "A pesquisa por 10FTV2025-1772 devolveu as 3 prestações da factura 28101
+        (utentes 171121219, 171141351, 174189384), cada uma com 31 dias/sessões
+        comunicados e apurados; o detalhe da prestação 1879948 confirma 'Nº
+        Factura: 10FTV2025-1772' e 'Data Factura: 31/12/2025', batendo com o
+        cabeçalho da factura. Captura adicional de apoio (lista filtrada):
+        prestacoes-filtro-numfactura.png."
+    - alvo: "[insumo] Ficheiro XML eletrónico da factura (para 'Obter XML')"
+      procurei:
+        - Botão ou ícone 'Obter XML' no detalhe da factura 28101 (10FTV2025-1772)
+        - Controlos do modal 'Ver Factura' (zoom, rodar, guardar imagem) —
+          nenhum exporta XML
+        - Pedidos de rede da sessão (lista e detalhe da factura, modal do
+          documento) filtrando por 'xml'
+        - Botão 'Exportar XLSX' da lista de resultados, para confirmar que
+          exporta apenas a listagem tabular e não o ficheiro eletrónico da
+          factura
+      onde:
+        - http://localhost:4174/hemodialise/factura/28101
+        - modal 'Ver Factura' aberto a partir dessa página
+        - http://localhost:4174/hemodialise/factura?numFactura=10FTV2025-1772
+          (lista de resultados)
+      resultado: nao_existe
+      accao: null
+      nota: Nenhum controlo do detalhe da factura ou do visualizador de documento
+        produz um ficheiro XML; a captura de pedidos de rede da sessão inteira
+        não mostra nenhum pedido com 'xml' na URL. O único export disponível na
+        tela é 'Exportar XLSX' da lista de resultados, que é uma listagem
+        tabular multi-factura e não o ficheiro eletrónico de uma factura
+        específica.

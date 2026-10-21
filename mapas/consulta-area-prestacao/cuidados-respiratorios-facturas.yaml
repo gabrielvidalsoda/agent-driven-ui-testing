@@ -1,0 +1,458 @@
+documento: consulta-area-prestacao/cuidados-respiratorios-facturas.md
+rota: /cuidados-respiratorios/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: A01
+    tipo: filtro
+    nome: Filtro Número da Factura
+    como: Textbox 'Número da Factura' no formulário 'Pesquisa Facturas'; aceita
+      correspondência parcial (LIKE), não exige número completo.
+    promessa: Encontrar facturas pelo número, incluindo casos em que o mesmo número
+      está associado a múltiplos registos internos.
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+    casos_documento:
+      - CT-01
+      - CT-08
+      - CT-10
+  - id: A02
+    tipo: filtro
+    nome: Filtro Data da Facturação
+    como: Campo de texto com placeholder DD/MM/YYYY + botão 'Abrir/fechar
+      calendário' que abre um datepicker (mês/ano navegáveis).
+    promessa: Restringir os resultados à data de facturação indicada.
+    entradas:
+      - campo: Data da Facturação
+        obrigatorio: false
+        origem_valores: datepicker livre, sem limite mínimo/máximo percebido
+    casos_documento:
+      - CT-04
+  - id: A03
+    tipo: filtro
+    nome: Filtro NIF do Prestador
+    como: Textbox 'NIF do Prestador'.
+    promessa: Listar todas as facturas de um prestador identificado pelo NIF.
+    entradas:
+      - campo: NIF do Prestador
+        obrigatorio: false
+    casos_documento:
+      - CT-02
+  - id: A04
+    tipo: filtro
+    nome: Filtro Código do Prestador
+    como: Textbox 'Código do Prestador'.
+    promessa: Listar as facturas de um prestador identificado pelo código de convenção.
+    entradas:
+      - campo: Código do Prestador
+        obrigatorio: false
+    casos_documento: []
+  - id: A05
+    tipo: filtro
+    nome: Filtro Estado
+    como: Combobox 'Estado' com lista fixa de opções.
+    promessa: "Restringir os resultados ao estado de conferência escolhido. As 11
+      opções observadas (Aguarda Comunicação de Correcções, Aguarda
+      Regularização, Anulada, Comunicada Informação Não Conferida, Conferida Com
+      Erros, Conferida Sem Erros, Em Reconferência, Processamento Concluído,
+      Recepcionada, Recepcionada com Erros, Verificada) correspondem 1‑para‑1
+      aos 11 códigos de `TRCFESTADO` (tipo doc 1) citados no documento —
+      confirmado pelo parâmetro `idEstado` na URL (ex.: Recepcionada →
+      idEstado=1, Conferida Com Erros → idEstado=15), que bate com os códigos
+      RECP=1 e CCE=15 do documento."
+    entradas:
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: combobox com 11 opções fixas, alinhadas ao catálogo TRCFESTADO
+    casos_documento:
+      - CT-02
+      - CT-03
+  - id: A06
+    tipo: filtro
+    nome: Limpar filtros
+    como: Botão 'Limpar' junto ao botão Pesquisar.
+    promessa: Repor todos os campos de pesquisa ao estado inicial ('Selecione' /
+      vazio), sem executar pesquisa.
+    casos_documento: []
+  - id: A07
+    tipo: consulta
+    nome: Executar pesquisa (Pesquisar)
+    como: "Botão 'Pesquisar'; combina todos os filtros preenchidos (testado: só
+      número, só NIF, NIF+Estado, só data, só código do prestador, número
+      parcial, número inexistente)."
+    promessa: Devolver a lista de facturas que respeitam todos os critérios
+      preenchidos; se nenhuma corresponder, mostra 'Nenhuma factura corresponde
+      aos filtros aplicados.' sem erro técnico, com os filtros preservados no
+      formulário.
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-08
+      - CT-10
+  - id: A08
+    tipo: consulta
+    nome: Grelha de resultados da pesquisa
+    como: "Tabela 'Resultados da Pesquisa' com colunas: Cód. Prestador, NIF
+      Prestador, Descrição, Nº da Factura, Data Factura, Data Facturação,
+      Estado, Recep. Fich. Eletr, Recep. Factura, NIF Adquirente, Total
+      factura."
+    promessa: Mostrar, para cada factura devolvida, as duas datas de receção
+      (ficheiro eletrónico e factura em papel, como indicadores Sim/Não), o NIF
+      Adquirente (distinto do NIF do prestador) e o Total factura formatado com
+      separador de milhares.
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-04
+      - CT-08
+  - id: A09
+    tipo: filtro
+    nome: Ordenação da grelha de resultados
+    como: Cabeçalhos clicáveis 'Ordenar por Cód. Prestador', 'Ordenar por Nº da
+      Factura', 'Ordenar por Data Factura', 'Ordenar por Data Facturação'.
+    promessa: Reordenar a lista de resultados pela coluna escolhida.
+    casos_documento:
+      - CT-02
+    ressalva: Não foi possível confirmar visualmente a mudança de ordem numa lista
+      de 4 registos idênticos (2026A15-44); o clique foi aceite sem erro mas o
+      efeito não é distinguível nesse conjunto de dados.
+  - id: A10
+    tipo: navegacao
+    nome: Paginação e resultados por página
+    como: Combobox 'Resultados por página' (10 por omissão) + navegação de páginas
+      (primeira/anterior/número/seguinte/última) por baixo da grelha.
+    promessa: Percorrer conjuntos de resultados grandes (observado até 1897 e 10645
+      resultados, 1065 páginas) sem carregar tudo de uma vez.
+    casos_documento: []
+  - id: A11
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Botão 'Exportar XLSX' por cima da grelha de resultados; desabilitado
+      quando a pesquisa devolve 0 resultados.
+    promessa: Descarregar os resultados da pesquisa atual num ficheiro Excel.
+    casos_documento: []
+    ressalva: "Confirmado funcional: gerou e descarregou 'facturas-crd.xlsx' para os
+      1897 resultados do filtro NIF=508274087."
+  - id: A12
+    tipo: navegacao
+    nome: Ver detalhe da factura
+    como: Botão 'Ver detalhe da factura {número}' na primeira coluna de cada linha
+      da grelha; navega para /cuidados-respiratorios/factura/{PIID}.
+    promessa: Abrir o ecrã de detalhe da factura selecionada, usando o identificador
+      interno (PIID) na URL — não o número da factura — o que permite
+      desambiguar registos com o mesmo número.
+    casos_documento:
+      - CT-01
+      - CT-08
+      - CT-09
+  - id: A13
+    tipo: consulta
+    nome: Tab Informações do detalhe da factura
+    como: "Tab 'Informações' (selecionada por omissão) dentro do detalhe da factura;
+      mostra cabeçalho (Número, Data, Estado, NIF Prestador, Código Prestador,
+      Desc. Prestador, Valor Total Factura, Entidade Adquirente) e as secções:
+      Informação Não Conferida, Informação Conferida, Diferenças, Erros,
+      Expedição."
+    promessa: Detalhar, por Tipo de Beneficiário/Código Artigo, os valores
+      comunicados, conferidos e as diferenças entre eles; listar erros de
+      conferência e dados de expedição quando existirem.
+    casos_documento:
+      - CT-05
+      - CT-07
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: O documento descreve 6 secções nesta tab (Informação Comunicada,
+      Informação Não Conferida, Informação Conferida, Diferenças, Erros,
+      Expedição); a tela real só tem 5 — não existe nenhuma secção ou rótulo
+      'Informação Comunicada' (confirmado por busca textual na página). A secção
+      Erros voltou vazia ('A pesquisa não retornou resultados') em todas as
+      facturas percorridas, incluindo uma explicitamente no estado 'Conferida
+      Com Erros' (PIID 67252), o que impossibilita validar o CT-09
+      (código/descrição do erro) com a massa encontrada nesta sessão. A secção
+      Expedição também voltou sempre vazia nas amostras percorridas. Não foi
+      encontrada em lado nenhum da cadeia Factura→Lote→Prestação uma secção ou
+      dado rotulado 'Conta Corrente' (busca textual sem resultados), nem as
+      vistas nomeadas 'Informação da factura' e 'Lista de erros e diferenças'
+      citadas no documento.
+  - id: A14
+    tipo: consulta
+    nome: Tab Lotes do detalhe da factura
+    como: Tab 'Lotes' dentro do detalhe da factura; mostra uma única tabela 'Lotes'
+      com colunas Tipo de Beneficiário, Nº Lote, Nº Prescrições Comunicado,
+      Valor Comunicado, Nº Prescrições Apurado, Valor Apurado, e uma linha
+      'Total'.
+    promessa: Listar os lotes da factura com os totais comunicados e apurados.
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento descreve sub-tabs 'Detalhes' e 'Prestações' dentro da tab
+      Lotes, com Totais Comunicados/Apurados, Conta Corrente e Reclamações; a
+      tela real não tem essas sub-tabs — é uma tabela plana. Na factura 67269
+      cada lote (992, 993, 994) aparece duplicado na tabela (mesma linha duas
+      vezes) e a linha 'Total' soma 100 prescrições em vez das 50 esperadas pelo
+      documento (26+22+2) — descrito aqui apenas como o que a grelha mostra, sem
+      julgar a causa.
+  - id: A15
+    tipo: navegacao
+    nome: Ver lotes desta factura (a partir das secções de Informações)
+    como: Botão 'Ver lotes desta factura' presente em cada linha das tabelas
+      Informação Não Conferida, Informação Conferida e Diferenças (dentro da tab
+      Informações).
+    promessa: Levar o utilizador da linha de artigo/lote para a tab Lotes da mesma
+      factura, mantendo o contexto da factura selecionada.
+    casos_documento:
+      - CT-06
+  - id: A16
+    tipo: consulta
+    nome: Ver Factura (documento digitalizado)
+    como: Botão 'Ver Factura' no cabeçalho do detalhe; ativo apenas quando 'Recep.
+      Factura' = Sim (desabilitado na factura 2026A15-44/67269, ativo na factura
+      9700035757/67252).
+    promessa: Abrir um modal visualizador de imagem da factura em papel
+      digitalizada, com controlos de zoom, rotação (90º esquerda/direita) e
+      'Guardar imagem'.
+    casos_documento: []
+    ressalva: Ao clicar, o pedido a /ccmsns/api/documentos/{guid} devolveu 502 Bad
+      Gateway (confirmado na consola do browser); o modal abriu mas sem imagem
+      carregada. Parece depender de um serviço de repositório de documentos
+      indisponível/não configurado neste ambiente, não de um erro de UI.
+  - id: A17
+    tipo: navegacao
+    nome: Ver detalhe do lote
+    como: Botão 'Ver detalhe do lote' em cada linha da tabela Lotes (tab Lotes);
+      navega para /cuidados-respiratorios/lote/{id}, um ecrã relacionado e
+      distinto (Lotes CRD).
+    promessa: Fazer drill descendente da factura para o lote, mostrando ali (já fora
+      deste ecrã) as sub-tabs 'Detalhe do Lote' e 'Prestações', com Totais
+      Comunicados/Apurados — a estrutura que o documento descrevia dentro da
+      própria tab Lotes da factura.
+    casos_documento:
+      - CT-06
+      - CT-07
+    ressalva: "Confirma o percurso de 'Ecrãs relacionados: Lotes CRD e Prestações
+      CRD (drill descendente)' citado no documento. A partir daqui é possível
+      chegar a 'Ver prestação' e ao detalhe de uma prestação individual; em
+      nenhum desses três níveis (factura, lote, prestação) foi encontrada uma
+      secção 'Conta Corrente'."
+  - id: A18
+    tipo: navegacao
+    nome: Voltar
+    como: Botão 'Voltar' no rodapé dos ecrãs de detalhe (factura, lote, prestação).
+    promessa: Regressar ao ecrã anterior na cadeia de navegação.
+    casos_documento: []
+insumos_necessarios:
+  - descricao: Factura CRD cujo número está associado a múltiplos registos internos
+      (número duplicado)
+    obtivel: tela
+    razao: Localizável diretamente pela pesquisa por Número da Factura nesta tela;
+      confirmado nesta sessão com '2026A15-44' (4 registos, mesmos dados de
+      cabeçalho).
+  - descricao: Factura CRD num estado específico do catálogo TRCFESTADO (ex.
+      Conferida Com Erros / CCE) para testar as secções Diferenças e Erros
+    obtivel: tela
+    razao: O filtro Estado devolve milhares de registos nesse estado (10645 para
+      Conferida Com Erros nesta sessão).
+  - descricao: Registos de teste sintéticos (números tipo TEST-CRD-*) para validar
+      tratamento de dados fora do padrão
+    obtivel: tela
+    razao: Localizáveis por pesquisa parcial do número ('TEST-CRD'); confirmados
+      nesta sessão (TEST-CRD-FINAL-001, TEST-CRD-99999).
+  - descricao: Factura CRD com Recep. Factura = Sim e documento digitalizado
+      efetivamente acessível no repositório de documentos
+    obtivel: nao
+    razao: O botão 'Ver Factura' tentou obter o documento via
+      /ccmsns/api/documentos/{guid} e recebeu 502 Bad Gateway nesta sessão;
+      depende de um serviço de repositório de documentos que não está
+      operacional/configurado neste ambiente.
+  - descricao: Factura, lote ou prestação CRD com a secção 'Expedição' preenchida
+      (não vazia)
+    obtivel: nao
+    razao: Em todas as facturas percorridas (estados Recepcionada e Conferida Com
+      Erros) a secção Expedição devolveu sempre 'A pesquisa não retornou
+      resultados'; não foi possível localizar, só pela tela, um registo com
+      dados de expedição.
+  - descricao: Registo com a secção/dado 'Conta Corrente' populado
+    obtivel: nao
+    razao: Não existe nenhum elemento, secção ou rótulo 'Conta Corrente' em nenhum
+      dos ecrãs percorridos (Factura, Lote, Prestação) nesta build; a
+      funcionalidade parece não estar implementada nesta cadeia de ecrãs.
+  - descricao: Factura CRD com a secção 'Erros' populada (código e descrição de erro
+      de conferência)
+    obtivel: nao
+    razao: Mesmo numa factura explicitamente no estado 'Conferida Com Erros' (PIID
+      67252) a secção Erros devolveu vazio; não foi possível, só pela tela,
+      encontrar um registo com erros listados nesta secção.
+  - descricao: Acesso a SQLcl/BD QUA read-only para a verificação cruzada ecrã↔BD
+      (totais, nº de lotes/prestações, estados)
+    obtivel: bd
+    razao: Fora do alcance desta tela; necessário para os cenários de coerência
+      ecrã↔BD do documento (§5, queries Q1–Q4).
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: Factura CRD com Recep. Factura = Sim e documento digitalizado efetivamente
+        acessível no repositório de documentos
+      procurei:
+        - Pesquisei facturas CRD com estado 'Conferida Com Erros' (10645
+          resultados) e abri o detalhe da primeira, PIID 67252 (Nº 9700035757),
+          que tem Recep. Fich. Eletr = Sim e Recep. Factura = Sim, e cliquei no
+          botão 'Ver Factura'.
+        - Inspecionei o pedido de rede gerado pelo clique e o conteúdo do modal
+          que abriu.
+        - Repeti a pesquisa noutro conjunto de estados (Recepcionada,
+          Verificada, Anulada) para confirmar se o padrão do 502 era específico
+          daquela factura ou sistémico.
+        - Verifiquei a resposta JSON do endpoint /ccmsns/api/crd/facturas/{id}
+          para ver se o campo guidDocumentoFactura estava preenchido (indicando
+          que a app tenta mesmo resolver um documento real).
+      onde:
+        - http://localhost:4174/cuidados-respiratorios/factura (pesquisa por
+          Estado = Conferida Com Erros)
+        - http://localhost:4174/cuidados-respiratorios/factura/67252 — botão
+          'Ver Factura'
+        - "Rede: GET
+          /ccmsns/api/documentos/%7B0d250b52-8b81-4f2c-85f4-dbeb24e1d683%7D_050\
+          126_A"
+        - "Rede: GET /ccmsns/api/crd/facturas/67252 (campo guidDocumentoFactura
+          preenchido)"
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma-se a conclusão da primeira passagem, agora numa factura
+        diferente (PIID 67252, Nº 9700035757) com Recep. Factura = Sim: o botão
+        'Ver Factura' abre um modal de visualização, mas a imagem não carrega —
+        fica com o ícone de imagem partida — porque o pedido a
+        /ccmsns/api/documentos/{guid} devolve 502 Bad Gateway (screenshot
+        factura-67252-ver-factura-modal.png). A API da factura confirma que
+        existe um guidDocumentoFactura associado
+        (\"{0d250b52-8b81-4f2c-85f4-dbeb24e1d683}_050126_A\"), ou seja a
+        referência ao documento existe na BD, mas o serviço de repositório de
+        documentos que serve o binário não está operacional neste ambiente. Não
+        há outro rótulo, ícone ou ecrã irmão (Lote, Prestação) que exponha este
+        documento por outra via — o botão 'Factura' no ecrã de Lote apenas volta
+        à Factura, não abre o documento. Não obtivel nem pela tela nem pela BD
+        nesta sessão, porque o conteúdo do documento não vive nas tabelas
+        GESTCONFER — vive no repositório externo que está indisponível."
+    - alvo: Factura, lote ou prestação CRD com a secção 'Expedição' preenchida (não
+        vazia)
+      procurei:
+        - "Abri o detalhe de facturas CRD em 6 combinações diferentes de
+          estado/ano para procurar uma com a secção Expedição (tab Informações)
+          preenchida: PIID 67269 (Recepcionada, 2026), PIID 67252 (Conferida Com
+          Erros, 2025-12), PIID 58359 (Verificada, 2026-04) e PIID 46629
+          (Anulada, 2024-10)."
+        - Pesquisei também pelos estados Processamento Concluído e Aguarda
+          Regularização, que devolveram 0 resultados para CRD.
+        - Inspecionei a resposta JSON de /ccmsns/api/crd/facturas/{id} para
+          confirmar se o campo 'expedicao' vinha vazio ao nível da própria API
+          (não só da renderização).
+        - Procurei uma secção equivalente nos ecrãs standalone de Lotes e
+          Prestações CRD (fora do drill a partir da Factura), e no detalhe do
+          Lote e da Prestação individuais.
+      onde:
+        - http://localhost:4174/cuidados-respiratorios/factura/67269
+          (Recepcionada)
+        - http://localhost:4174/cuidados-respiratorios/factura/67252 (Conferida
+          Com Erros)
+        - http://localhost:4174/cuidados-respiratorios/factura/58359 (Verificada)
+        - http://localhost:4174/cuidados-respiratorios/factura/46629 (Anulada)
+        - http://localhost:4174/cuidados-respiratorios/factura?idEstado=19
+          (Processamento Concluído — 0 resultados)
+        - http://localhost:4174/cuidados-respiratorios/factura?idEstado=16
+          (Aguarda Regularização — 0 resultados)
+        - http://localhost:4174/cuidados-respiratorios/lote/438489 (Detalhe do
+          Lote e tab Prestações)
+        - http://localhost:4174/cuidados-respiratorios/prestacao/28806261
+        - 'Rede: GET /ccmsns/api/crd/facturas/67252 → campo "expedicao":[]'
+      resultado: nao_existe
+      accao: null
+      nota: "Em todas as 4 facturas CRD abertas (estados Recepcionada, Conferida Com
+        Erros, Verificada e Anulada, cobrindo datas de 2024 a 2026) a secção
+        Expedição devolveu sempre 'A pesquisa não retornou resultados'. A
+        resposta JSON da API confirma que o próprio backend devolve 'expedicao':
+        [] — não é um problema de renderização da tela, é a origem de dados que
+        não tem registos de expedição para nenhuma das facturas CRD acessíveis
+        nesta sessão. Não há secção equivalente nos ecrãs de Lote ou Prestação
+        (standalone ou via drill); a única ocorrência da palavra 'Expedição'
+        fora da secção da Factura é o item de menu não relacionado 'Picking para
+        Expedição' em Gestão de Armazém, que é um fluxo de expedição física de
+        caixas de arquivo, não a secção de dados de expedição da factura
+        descrita no plano — não é a mesma coisa (equivalente_aproximado seria só
+        aplicável se eu tivesse encontrado dados; aqui nem cheguei a isso). Sem
+        acesso a SQLcl nesta sessão para confirmar se a tabela subjacente (ex.:
+        algo como TDCFEXPEDICAOCRD) tem ou não registos."
+    - alvo: Registo com a secção/dado 'Conta Corrente' populado
+      procurei:
+        - "Procurei o texto 'Conta Corrente' em toda a árvore de acessibilidade
+          da página em cada ecrã do fluxo CRD: Factura (tabs Informações e
+          Lotes), Lote (tabs Detalhe do Lote e Prestações) e Prestação."
+        - Abri o detalhe completo do Lote 438489 (da factura 67252) e da sua tab
+          Prestações, e depois o detalhe de uma Prestação (28806261) à procura
+          de uma secção ou rótulo com esse nome.
+        - Inspecionei a resposta JSON de /ccmsns/api/crd/lotes/{id} à procura de
+          um campo relacionado com conta corrente.
+        - Visitei os ecrãs standalone de Lotes CRD e Prestações CRD para
+          confirmar que não há sub-tabs 'Detalhes'/'Prestações' com Conta
+          Corrente e Reclamações, como o plano de teste descreve.
+      onde:
+        - http://localhost:4174/cuidados-respiratorios/factura/67252 (tabs
+          Informações e Lotes)
+        - http://localhost:4174/cuidados-respiratorios/lote/438489 (tabs Detalhe
+          do Lote e Prestações)
+        - http://localhost:4174/cuidados-respiratorios/prestacao/28806261
+        - http://localhost:4174/cuidados-respiratorios/lote (ecrã de pesquisa
+          standalone)
+        - "Rede: GET /ccmsns/api/crd/lotes/438489 (sem campo de conta corrente
+          na resposta)"
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma-se a conclusão da primeira passagem: não existe nenhum elemento,
+        secção, rótulo ou aba com o nome 'Conta Corrente' em nenhum ecrã do
+        fluxo Factura → Lote → Prestação de CRD nesta build, nem sub-tabs
+        'Detalhes'/'Prestações' dentro da tab Lotes como o plano de teste
+        original descreve (o que existe é só uma tab 'Lotes' com uma tabela, e
+        dentro do detalhe do lote, tabs 'Detalhe do Lote' e 'Prestações'). A
+        resposta da API do lote (GET /ccmsns/api/crd/lotes/438489) também não
+        tem nenhum campo relacionado com conta corrente, o que sugere que a
+        funcionalidade não está implementada nem ao nível do backend, não é só
+        uma questão de UI. Terminologia da área confirmada como ausente por
+        completo desta cadeia de ecrãs."
+    - alvo: Factura CRD com a secção 'Erros' populada (código e descrição de erro de
+        conferência)
+      procurei:
+        - Pesquisei facturas CRD por Estado = 'Conferida Com Erros' (10645
+          resultados) e abri o detalhe da primeira, PIID 67252 (Nº 9700035757,
+          Recep. Factura = Sim), verificando a secção Erros na tab Informações.
+        - Repeti a verificação da secção Erros noutras facturas com estados
+          distintos (Recepcionada, Verificada, Anulada) para perceber se era um
+          padrão isolado ao PIID 67252 já assinalado pela primeira passagem.
+        - Inspecionei a resposta JSON de /ccmsns/api/crd/facturas/{id} para ver
+          se o campo 'erros' vinha preenchido a nível de API mesmo que a tela
+          não mostrasse.
+        - Procurei uma vista separada 'Lista de erros e diferenças' mencionada
+          no plano de teste, por texto em toda a página.
+      onde:
+        - http://localhost:4174/cuidados-respiratorios/factura/67252 (Conferida
+          Com Erros, Recep. Factura = Sim)
+        - http://localhost:4174/cuidados-respiratorios/factura/67269
+          (Recepcionada)
+        - http://localhost:4174/cuidados-respiratorios/factura/58359 (Verificada)
+        - http://localhost:4174/cuidados-respiratorios/factura/46629 (Anulada)
+        - 'Rede: GET /ccmsns/api/crd/facturas/67252 → campo "erros":[]'
+        - Busca por texto 'Lista de erros' em toda a árvore de acessibilidade da
+          página de detalhe da factura — sem resultado
+      resultado: nao_existe
+      accao: null
+      nota: "Mesmo na factura PIID 67252, explicitamente no estado 'Conferida Com
+        Erros' e com Recep. Factura = Sim, a secção Erros devolve 'A pesquisa
+        não retornou resultados'. A resposta JSON da própria API confirma
+        'erros': [] — a origem de dados está vazia, não é um problema de
+        renderização. Testado noutras 3 facturas em estados diferentes com o
+        mesmo resultado. A vista 'Lista de erros e diferenças' referida no plano
+        de teste como vista auxiliar não existe em lado nenhum desta build
+        (procurada por texto na página, sem resultado). Não há botão, aba ou
+        rota alternativa que exponha erros de conferência para esta área nesta
+        sessão."

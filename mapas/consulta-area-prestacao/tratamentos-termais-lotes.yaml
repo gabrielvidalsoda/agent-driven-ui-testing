@@ -1,0 +1,347 @@
+documento: consulta-area-prestacao/tratamentos-termais-lotes.md
+rota: /tratamentos-termais/lote
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: A1
+    tipo: filtro
+    nome: Pesquisa de Lote
+    como: Preencher um ou mais dos 5 campos do formulário "Pesquisa Lote" e clicar
+      "Pesquisar"
+    promessa: 'Mensagem de validação do próprio ecrã: "Deverá estar preenchido, pelo
+      menos, o n.º da factura, a data da factura, o NIF do prestador ou o cod.
+      do prestador; o n.º de lote só pode ser usado em conjunto com outro
+      critério."'
+    entradas:
+      - campo: N. factura
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Data factura
+        obrigatorio: false
+        origem_valores: calendário DD/MM/YYYY (mês corrente por defeito)
+      - campo: N. Lote
+        obrigatorio: false
+        origem_valores: texto livre; bloqueado pela validação se for o único critério
+          preenchido
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Cod. Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: O documento lista 5 filtros incluindo "Código da Convenção"; o ecrã
+      real não tem esse campo — tem "Cod. Prestador" em seu lugar, que é um
+      critério diferente (prestador, não convenção). Além disso, ao contrário do
+      que o CT-02 assume, "N. Lote" sozinho é rejeitado pela validação (testado
+      com 37212 isolado → "Sem resultados" + alerta); só funciona combinado com
+      N.factura, NIF ou Cod.Prestador.
+  - id: A2
+    tipo: filtro
+    nome: Limpar pesquisa
+    como: Clicar "Limpar" junto ao botão Pesquisar
+    promessa: Repõe os 5 campos vazios e remove os parâmetros da pesquisa da URL,
+      voltando ao estado inicial (sem resultados)
+    casos_documento: []
+  - id: A3
+    tipo: consulta
+    nome: Grelha "Resultado da pesquisa" com linha TOTAIS
+    como: Resultado exibido automaticamente após uma pesquisa válida
+    promessa: 'Colunas: Cód. Prest., NIF, Denominação Prestador, N. Factura, Data
+      Factura, Data Facturação, N. Lotes, Estado, Comunicado (Tot. Comp.),
+      Apurado (Tot. Comp.); linha "TOTAIS" no fim'
+    casos_documento:
+      - CT-01
+      - CT-03
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: 'O cabeçalho é de uma única linha (não duas linhas com grupos
+      Comunicado/Apurado com N.Req./Tot.Prest./Tot.Utente/Tot.Compart. cada,
+      como o documento descreve); a grelha só mostra uma coluna de total por
+      grupo (Tot. Comp. = Total Comparticipação); os demais totais só aparecem
+      no detalhe do lote. Documento espera coluna "Cód. Convenção"; o ecrã
+      mostra "Cód. Prest.". Confirmado por teste cruzando páginas 1 e 2 da mesma
+      pesquisa (NIF 504134353, 385 resultados): a linha TOTAIS (785 / 540 298,43
+      / 515 483,76) é idêntica em ambas as páginas — soma o resultado completo
+      da pesquisa, não a página visível, respondendo à dúvida do CT-03.
+      Formatação numérica usa espaço como separador de milhar ("540 298,43"),
+      não o formato "9.999,99" que o documento antecipava.'
+  - id: A4
+    tipo: navegacao
+    nome: Ver detalhe do lote
+    como: Clicar no botão/ícone "Ver detalhe" na última coluna de uma linha da grelha
+    promessa: Abre /tratamentos-termais/lote/{id} com as tabs "Detalhe do Lote" e
+      "Prestações"
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-04
+      - CT-05
+      - CT-08
+  - id: A5
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Clicar o botão "Exportar XLSX" acima da grelha de resultados
+    promessa: Rótulo do botão promete exportação do resultado da pesquisa para XLSX;
+      fica desativado quando a pesquisa não devolve linhas
+    casos_documento: []
+    ressalva: Ação não mencionada em nenhum ponto do documento; não foi acionada
+      (evita download/gravação); presença confirmada apenas pelo estado
+      ativo/inativo do botão.
+  - id: A6
+    tipo: navegacao
+    nome: Paginação e resultados por página
+    como: Clicar nos números de página, "Go to next/last page" ou escolher
+      10/15/20/50 em "Resultados por página"
+    promessa: "Pagina a grelha (URL reflete pagina=N&tamanho=N); opções de tamanho
+      de página: 10, 15, 20, 50"
+    casos_documento:
+      - CT-03
+    ressalva: Confirma que a linha TOTAIS não recalcula por página — usada como
+      evidência para a dúvida do CT-03 sobre âmbito dos totais.
+  - id: A7
+    tipo: consulta
+    nome: Tab "Detalhe do Lote"
+    como: Aba selecionada por omissão ao abrir o detalhe de um lote
+    promessa: Mostra NIF Prestador, Cód. Convenção, Desc. Prestador, N. da Factura,
+      Estado, Data Factura, Data Facturação, Chave do lote, Número do Lote, Tipo
+      de Lote, ID Imagem; secção "Localização dos arquivos" (Caixa, Pasta,
+      Lugar, Estado da Caixa); "Totais comunicados" e "Totais apurados" (N.
+      Requisições, Total Prestações, Total Utente, Total Comparticipação)
+    casos_documento:
+      - CT-04
+      - CT-07
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: 'Não existe, em lado nenhum desta aba (nem do ecrã), um botão "Detalhe
+      conferência" que o CT-07 espera testar — ação ausente da implementação. O
+      campo "Estado" do lote 37212 (âncora do CT-02) mostra "Recepcionado", não
+      "CCE" como o documento assume para a fatura 8087, apesar dos valores
+      numéricos (4 requisições, 1163,94, 349,31/349,30) coincidirem com o
+      documento. A secção "Localização dos arquivos" e o botão "Ver Lote" não
+      são mencionados no documento. Sobre o CT-08: confirmado que 1.163,94 é o
+      Total Prestações do lote e 349,31 é o Total Comparticipação do mesmo lote
+      (não da fatura em separado) — são dois tipos de total do mesmo lote, não
+      uma divergência lote-vs-fatura como o documento hipotetiza.'
+  - id: A8
+    tipo: consulta
+    nome: Ver Lote (visualizador do documento digitalizado)
+    como: Clicar o botão "Ver Lote" no cabeçalho da tab Detalhe do Lote
+    promessa: Abre um modal com a imagem digitalizada do lote e controlos de zoom,
+      rotação (90º esq./dir.) e "Guardar imagem"; o botão fica desativado quando
+      o lote não tem ID Imagem associado (observado no lote 28140)
+    casos_documento: []
+    ressalva: Não mencionado no documento. Na captura de teste a imagem não carregou
+      (erro de consola), mas a estrutura do visualizador está presente e ativa
+      para lotes com imagem.
+  - id: A9
+    tipo: consulta
+    nome: Tab "Prestações" do lote
+    como: Clicar a aba "Prestações" dentro do detalhe do lote
+    promessa: Lista as requisições do lote com colunas ordenáveis ("Ordenar por...")
+      N. Lote, N. Requisição, Total Prestação/Utente/Comparticipação
+      (Comunicado) e os mesmos três (Apurado); rodapé com totais agregados dos 6
+      valores
+    casos_documento:
+      - CT-05
+    ressalva: Cabeçalhos de coluna clicáveis para ordenação não são mencionados no
+      documento.
+  - id: A10
+    tipo: navegacao
+    nome: Ver detalhe da prestação
+    como: Clicar o botão "Ver detalhe da prestação" numa linha da tab Prestações
+    promessa: Abre /tratamentos-termais/prestacao/{id}, ecrã "Detalhe
+      prescrição/prestação termas" com dados de prescrição, técnicas
+      comunicadas, totais e secção de erros
+    casos_documento: []
+    ressalva: Navegação para fora do âmbito deste documento (ecrã de Prestações de
+      Termas); nenhum CT do documento de Lotes cobre esta ação, embora exista e
+      funcione.
+  - id: A11
+    tipo: navegacao
+    nome: Botão "Factura"
+    como: Clicar o botão "Factura" no rodapé do detalhe do lote
+    promessa: Abre /tratamentos-termais/factura/{id}, o detalhe da fatura de origem
+      do lote
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: Rótulo do botão é "Factura", não "Ir para Fatura" como o documento
+      cita; comportamento confirmado idêntico ao esperado (lote 38314 → fatura
+      8333).
+  - id: A12
+    tipo: navegacao
+    nome: Botão "Voltar"
+    como: Clicar "Voltar" no rodapé do detalhe do lote ou do detalhe da prestação
+    promessa: Regressa ao ecrã anterior
+    casos_documento:
+      - CT-04
+      - CT-05
+      - CT-06
+    ressalva: 'Confirmado que, ao voltar da tab de detalhe do lote para a lista, os
+      filtros e a página da pesquisa (ex.: NIF 504134353, página 2) são
+      preservados, como o CT-04 exige. Ao voltar do detalhe da prestação,
+      regressa ao detalhe do lote sempre na tab "Detalhe do Lote" (não preserva
+      a tab "Prestações" de onde se navegou).'
+  - id: A13
+    tipo: navegacao
+    nome: Breadcrumb "Lotes"
+    como: Clicar no link "Lotes" no breadcrumb do topo do ecrã
+    promessa: Regressa à lista de pesquisa de Lotes
+    casos_documento: []
+insumos_necessarios:
+  - descricao: Fatura de termas com um único lote e poucas requisições (para
+      reproduzir CT-01 e a coerência lote=totais da fatura)
+    obtivel: tela
+    razao: "Confirmado disponível via pesquisa por N.factura/NIF (ex.: 25E1-68,
+      25E1-76, lotes 37212/38314)"
+  - descricao: Fatura de termas com vários lotes/sequências (N. Lotes 1, 2, 3...)
+      para o mesmo N.Factura
+    obtivel: tela
+    razao: "Encontrado ao pesquisar por NIF 504134353 (ex.: fatura 25E1-10 com 3
+      lotes, 24E1-80 com 5 lotes)"
+  - descricao: 'Lote em estado diferente de "Recepcionado" (ex.: CCE — Conferida Com
+      Erros) para observar divergência clara comunicado vs apurado ao nível do
+      Estado'
+    obtivel: bd
+    razao: Todos os lotes observados na amostra (385 resultados do NIF 504134353)
+      mostraram Estado "Recepcionado"; não foi possível localizar via ecrã um
+      lote com outro estado (CSE/CCE/CONF) — precisaria de consulta SQL a
+      TRCFESTADO/tabela de lotes para confirmar se existe massa assim
+  - descricao: Lote sem imagem digitalizada associada (ID Imagem vazio) para testar
+      o botão "Ver Lote" desativado
+    obtivel: tela
+    razao: Encontrado via pesquisa (lote 28140, página 2 do NIF 504134353)
+  - descricao: Lote com execução de conferência associada, para eventual botão/ecrã
+      "Detalhe conferência"
+    obtivel: nao
+    razao: A ação não existe em nenhum ponto do ecrã testado; não há como obter
+      massa para exercitar algo que a UI não oferece
+  - descricao: Prestador/NIF com resultado numeroso (>1 página) para testar
+      paginação e a linha TOTAIS sobre o conjunto completo
+    obtivel: tela
+    razao: NIF 504134353 devolveu 385 resultados / 39 páginas, suficiente para o tour
+  - descricao: Acesso a SQLcl/dicionário de dados (db/conexao-qua.local.md,
+      db/GESTCONFER.md) para confirmar o nome real da tabela de lotes de termas
+    obtivel: bd
+    razao: "O dicionário de dados db/GESTCONFER.md existe no repositório e confirma
+      exatamente o nome hipotetizado no plano: GESTCONFER.TDCFLOTETERMAS (5857
+      linhas, tipo NORMAL), e também GESTCONFER.TDCFFACTURATERMAS (4996 linhas).
+      Isto satisfaz o objetivo do insumo (confirmar o nome real da tabela) sem
+      precisar de SQLcl ao vivo. O ficheiro de credenciais
+      db/conexao-qua.local.md continua não encontrado, portanto o acesso por
+      SQLcl interativo em si permanece indisponível — só o dicionário já
+      materializado é que está acessível. Captura gravada como excerto de texto
+      (não é UI da aplicação nem há visualizador de ficheiros locais no browser
+      desta sessão — a tentativa de abrir o ficheiro via file:// foi bloqueada
+      pela ferramenta de browser), com a citação exata da linha da tabela."
+casos_sem_accao:
+  - CT-07
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: Lote com execução de conferência associada, para eventual botão/ecrã
+        "Detalhe conferência" (CT-07)
+      procurei:
+        - Rótulo exato "Detalhe conferência" na tab Detalhes do Lote de
+          tratamentos-termais/lote/38314 (lote 38314, factura 25E1-76) — só
+          existe o botão "Ver Lote", que abre o visualizador de imagem do
+          documento digitalizado, não um ecrã de conferência
+        - Mesmo rótulo na tab Prestações do lote 38314 — o único botão por linha
+          é "Ver detalhe da prestação", que navega para
+          /tratamentos-termais/prestacao/{id}
+        - 'No detalhe da prestação (id 96665): botão "Ver Prestação"
+          (visualizador de documento) e secção "Erros" ("Sem erros associados")
+          — nenhum link para execução de conferência'
+        - 'No detalhe da factura correspondente
+          (tratamentos-termais/factura/8333, 25E1-76, Estado = "Conferida Sem
+          Erros"): secção "Erros" ("Sem erros associados") e secção "Expedição"
+          ("Não existem expedições para esta factura") — nenhum botão de detalhe
+          de conferência, apesar de a factura já ter sido efetivamente
+          conferida'
+        - 'Como efeito de outra ação: o estado "Conferida Sem Erros" da factura
+          prova que existe uma execução de conferência no motor de regras, mas
+          não expõe nenhuma navegação a partir do ecrã'
+        - 'Cockpit de Conferência (Conferência > Cockpit): o cartão "Termas"
+          aparece marcado "No sistema atual", sem contadores clicáveis (ao
+          contrário dos cartões Medicamentos/MCDT/CRD, que são <button>) — não
+          dá acesso a execuções'
+        - 'Logs de Conferência / Pesquisa de Execuções (Conferência > Logs de
+          Conferência, rota real /motor-regras/execucoes): o combobox "Área de
+          Conferência" tem a opção "Cuidados Termais"; pesquisei só com essa
+          área selecionada — resultado "Nenhum resultado encontrado para os
+          filtros aplicados"; os filtros de negócio (Nº da Fatura, Nº do Lote)
+          ficam desativados para esta área (só funcionam para Medicamentos, MCDT
+          ou CRD), pelo que nem por aí é possível isolar a execução do lote
+          38314'
+        - 'Rota directa: não há padrão de URL documentado ou inferível (nem nos
+          outros ecrãs desta secção) para um ecrã de "detalhe de execução de
+          conferência" por lote'
+      onde:
+        - http://localhost:4174/tratamentos-termais/lote (pesquisa por
+          N.Lote/NIF)
+        - http://localhost:4174/tratamentos-termais/lote/38314 (tabs Detalhe do
+          Lote e Prestações)
+        - http://localhost:4174/tratamentos-termais/prestacao/96665 (detalhe de
+          uma prestação do lote)
+        - http://localhost:4174/tratamentos-termais/factura (pesquisa)
+        - http://localhost:4174/tratamentos-termais/factura/8333 (detalhe da
+          factura 25E1-76, Estado Conferida Sem Erros)
+        - http://localhost:4174/conferencia/cockpit (Cockpit de Conferência,
+          cartão Termas)
+        - http://localhost:4174/motor-regras/execucoes (Logs de Conferência /
+          Pesquisa de Execuções, área "Cuidados Termais")
+      resultado: nao_existe
+      accao: null
+      nota: Mesmo com uma factura de Termas já efetivamente conferida (Estado =
+        Conferida Sem Erros, prova de que existe execução no motor de regras),
+        não há em nenhum ecrã visitado — nem no próprio lote/prestação/factura,
+        nem no Cockpit, nem no Logs de Conferência — um link, botão, ícone ou
+        rota que exponha o detalhe dessa execução. A opção "Cuidados Termais"
+        existe como filtro em Logs de Conferência mas devolve sempre zero
+        resultados e não aceita filtrar por Nº de Lote/Fatura nesta área, então
+        mesmo esse caminho não permite alcançar a execução de um lote concreto.
+    - alvo: Acesso a SQLcl/dicionário de dados (db/conexao-qua.local.md,
+        db/GESTCONFER.md) para confirmar o nome real da tabela de lotes de
+        termas
+      procurei:
+        - Procurei os dois ficheiros citados no plano, db/conexao-qua.local.md e
+          db/GESTCONFER.md, por nome exato e por conteúdo ("GESTCONFER",
+          "conexao-qua"), em todo o repositório local do utilizador (pasta
+          C:\Users\ThinkPad\projetos\mptec e subpastas, incluindo
+          ccmsns-automated-tests, ccmsns, ccmsns_docs)
+        - Não encontrei nenhum db/conexao-qua.local.md (é descrito no próprio
+          plano como ficheiro local não versionado, coerente com a sua ausência
+          aqui) — continua a não haver credenciais para abrir uma sessão SQLcl
+          ao vivo
+        - Encontrei sim o ficheiro do dicionário de dados em
+          C:\Users\ThinkPad\projetos\mptec\insumos\ccmsns_docs\db\GESTCONFER.md,
+          e li o seu conteúdo à procura da tabela de lotes de termas
+      onde:
+        - "Sistema de ficheiros local (fora da aplicação web, tal como o insumo
+          pedia): C:\\Users\\ThinkPad\\projetos\\mptec (pesquisa recursiva)"
+        - 'Ficheiro lido:
+          C:\Users\ThinkPad\projetos\mptec\insumos\ccmsns_docs\db\GESTCONFER.md,
+          secção "1. Tabelas TDCF — Conferência"'
+      resultado: encontrado
+      accao: null
+      captura: insumo-dicionario-gestconfer-tabela-lotes-termas.txt
+      nota: "O dicionário de dados db/GESTCONFER.md existe no repositório e confirma
+        exatamente o nome hipotetizado no plano: GESTCONFER.TDCFLOTETERMAS (5857
+        linhas, tipo NORMAL), e também GESTCONFER.TDCFFACTURATERMAS (4996
+        linhas). Isto satisfaz o objetivo do insumo (confirmar o nome real da
+        tabela) sem precisar de SQLcl ao vivo. O ficheiro de credenciais
+        db/conexao-qua.local.md continua não encontrado, portanto o acesso por
+        SQLcl interativo em si permanece indisponível — só o dicionário já
+        materializado é que está acessível. Captura gravada como excerto de
+        texto (não é UI da aplicação nem há visualizador de ficheiros locais no
+        browser desta sessão — a tentativa de abrir o ficheiro via file:// foi
+        bloqueada pela ferramenta de browser), com a citação exata da linha da
+        tabela."

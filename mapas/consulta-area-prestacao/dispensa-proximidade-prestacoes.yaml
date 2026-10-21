@@ -1,0 +1,483 @@
+documento: consulta-area-prestacao/dispensa-proximidade-prestacoes.md
+rota: /dispensa-proximidade/prestacao
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: ACC-01
+    tipo: filtro
+    nome: Pesquisar por N. Factura
+    como: 'Preencher o campo "N. Factura" (placeholder "Insira o número da factura",
+      ex.: E015-180) e clicar em "Pesquisar". Sozinho já satisfaz a regra mínima
+      de pesquisa.'
+    promessa: Devolve as prestações associadas ao número de factura indicado.
+    entradas:
+      - campo: N. Factura
+        obrigatorio: false
+        origem_valores: texto livre
+  - id: ACC-02
+    tipo: filtro
+    nome: Pesquisar por N. Receita (campo usado como Número de Dispensa/XSID)
+    como: Preencher o campo "N. Receita" (placeholder "Insira o número da receita")
+      com os 19 dígitos do XSID e clicar em "Pesquisar". O valor é enviado como
+      parâmetro numReceita na URL.
+    promessa: Devolve a(s) prestação(ões) cujo identificador de dispensa (chamado
+      "N. Receita" no ecrã e "Chave prestação" no detalhe) corresponde ao valor
+      pesquisado, sem truncar os 19 dígitos.
+    entradas:
+      - campo: N. Receita
+        obrigatorio: false
+        origem_valores: texto livre, 19 dígitos (XSID)
+    casos_documento:
+      - CT-02
+      - CT-03
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: 'O ecrã não tem um filtro rotulado "Número de Dispensa": o campo
+      chama-se "N. Receita" tanto no filtro como na coluna da grelha e no
+      detalhe (onde reaparece também como "Chave prestação"). Confirma o Tour 1
+      do documento: a terminologia da área ("Dispensa") não chegou a este ecrã,
+      que usa sempre "Receita".'
+  - id: ACC-03
+    tipo: filtro
+    nome: Pesquisar por Data da Factura combinada com NIF Prestador ou com Cod.
+      Convenção
+    como: Abrir o calendário nativo (botão "Abrir/fechar calendário", um único dia
+      de cada vez, sem intervalo) para preencher "Data da Factura" e adicionar
+      "NIF Prestador" ou "Cod. Convenção"; clicar em "Pesquisar".
+    promessa: 'Devolve as prestações da data de factura indicada para o
+      prestador/convenção escolhido. O próprio ecrã mostra a regra num alerta ao
+      tentar pesquisar sem nenhum filtro: "Deverá estar preenchido, pelo menos:
+      Número Fatura; ou Número Receita; ou Data Fatura com NIF Prestador; ou
+      Data Fatura com Código Convenção."'
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: calendário nativo, um único dia (DD/MM/YYYY), sem seleção de intervalo
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Cod. Convenção
+        obrigatorio: false
+        origem_valores: texto livre
+    ressalva: Data da Factura é sempre um único dia; não existe filtro de intervalo
+      de datas nem forma de pesquisar "sem filtros restritivos" — a pesquisa é
+      sempre bloqueada por um alerta enquanto nenhuma das combinações válidas
+      estiver preenchida (ver CT-01 e CT-05 em casos_sem_accao).
+  - id: ACC-04
+    tipo: consulta
+    nome: Limpar filtros
+    como: Clicar em "Limpar".
+    promessa: Repõe todos os campos de pesquisa vazios e volta ao estado inicial
+      "Sem resultados / Utilize os filtros acima e clique em pesquisar",
+      removendo os parâmetros da URL.
+  - id: ACC-05
+    tipo: consulta
+    nome: Ordenar resultados por coluna
+    como: Clicar num cabeçalho de coluna com o rótulo "Ordenar por ..." (Cód. Conv.,
+      NIF Prestador, Descrição Prestador, N. Factura, Data Factura, Tipo Lote,
+      N. Receita, Comunicado (Total PVP), Apurado (Total PVP)).
+    promessa: Reordena as linhas da grelha pela coluna clicada.
+  - id: ACC-06
+    tipo: consulta
+    nome: Alterar número de resultados por página
+    como: Abrir o combobox "Resultados por página" e escolher entre 10, 20, 25, 50
+      ou 100.
+    promessa: Redefine quantas linhas a grelha mostra por página.
+  - id: ACC-07
+    tipo: navegacao
+    nome: Paginar resultados
+    como: Usar os botões "Go to first/previous/next/last page" da paginação
+      (desativados quando não há mais páginas nessa direção).
+    promessa: Navega entre páginas do resultado da pesquisa.
+  - id: ACC-08
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Com um resultado de pesquisa não vazio na grelha, clicar em "Exportar
+      XLSX" (fica desativado quando a pesquisa não devolve linhas).
+    promessa: 'Descarrega um ficheiro "prestacoes-dispensa-proximidade.xlsx" com os
+      resultados da pesquisa atual. Confirmado: o clique disparou o download
+      real do ficheiro.'
+  - id: ACC-09
+    tipo: consulta
+    nome: Ver detalhe da prestação
+    como: Na grelha de resultados, clicar no botão da primeira coluna ("Ver detalhe
+      da prestação {id}"); navega para /dispensa-proximidade/prestacao/{id}.
+    promessa: 'Abre um ecrã de detalhe com um único separador "Prestação" contendo:
+      NIF Prestador, Cod. Convenção, Desc. Convenção, Número factura, Data
+      factura, Tipo lote, Chave prestação, N. Receita, Data prestação, Estado;
+      blocos "Informação comunicada" (Total PVP) e "Informação apurada" (Total
+      PVP apurado); e uma tabela "Erros" (colunas N. linha, Cod. erro, Origem,
+      Descrição erro, Justificação).'
+    casos_documento:
+      - CT-02
+      - CT-03
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento descreve dois blocos distintos, "Dados da Prescrição" e
+      "Dados da Prestação"; o ecrã real tem um único separador "Prestação" com
+      os dois conjuntos de campos misturados, sem rótulos de bloco. Também não
+      existe tabela de "Reclamações" (só "Erros"). Nos dois registos duplicados
+      testados (41237/41238), o campo "Estado" mostrava "Conferida Com Erros"
+      mas a tabela Erros exibia "Sem erros de conferência" — só descrevo a
+      observação, sem julgar a causa.
+  - id: ACC-10
+    tipo: navegacao
+    nome: Botão "Lote" no detalhe da prestação
+    como: No detalhe de uma prestação, clicar em "Lote".
+    promessa: Pelo rótulo, promete navegar para o lote associado à prestação.
+    ressalva: 'Testado nas prestações 42061, 41237 e 41238 (todas com "Tipo lote:
+      —", sem lote associado): o clique não abriu nenhum ecrã de lote, apenas
+      devolveu à lista de resultados anterior — comportamento equivalente a
+      "Voltar". Não foi possível observar o comportamento com uma prestação que
+      tenha lote populado, porque nenhum registo real testado tinha essa
+      informação preenchida.'
+  - id: ACC-11
+    tipo: edicao
+    nome: Botão "Alterar" no detalhe da prestação
+    como: No detalhe de uma prestação, clicar em "Alterar". Não submeti nada depois
+      — só observei o que o clique, por si só, provoca.
+    promessa: Pelo rótulo, promete alguma alteração/edição da prestação.
+    ressalva: 'O clique não abriu modal nem navegou para nenhum formulário, e não
+      disparou nenhum pedido de rede (confirmado via lista de network requests:
+      só houve o GET de detalhe já carregado antes). Nesta build, o botão está
+      presente mas sem efeito observável — o que também contradiz a descrição do
+      documento de que o ecrã é "read-only", já que o botão promete alteração
+      mesmo sem a exercer de facto.'
+  - id: ACC-12
+    tipo: navegacao
+    nome: Botão "Voltar" no detalhe da prestação
+    como: No detalhe de uma prestação, clicar em "Voltar".
+    promessa: Regressa ao ecrã de pesquisa/resultados anterior.
+  - id: ver-lote-por-rota-directa
+    tipo: consulta
+    nome: Ver detalhe do lote (com prestações associadas) por número de lote
+    como: "Não existe campo de pesquisa por 'Número de Lote' em nenhuma tela desta
+      área. Mas o número de lote é o próprio identificador da rota de detalhe:
+      acedendo diretamente a /dispensa-proximidade/lote/{numeroDeLote} (ex.:
+      14427 ou 15045) abre-se o detalhe do lote; o separador 'Prestações' lista
+      as prestações desse lote. Alternativamente chega-se lá a partir do detalhe
+      de uma Factura (separador Lotes > botão 'Ver lotes da factura')."
+    promessa: Mostra o lote e todas as prestações nele incluídas, tal como o CT-04
+      pedia — mas por rota direta/drill-down a partir da Factura, não por um
+      filtro de pesquisa dedicado por número de lote.
+    rota: /dispensa-proximidade/lote/{numeroDeLote}
+    casos_documento:
+      - CT-04
+    equivalente_aproximado: true
+    ressalva: Também foi gravada CT-04_lote-detalhe-por-rota-directa.png,
+      confirmando o mesmo mecanismo para o lote 15045.
+  - id: pesquisar-prestacao-por-numero-receita
+    tipo: filtro
+    nome: Pesquisar prestação pelo Número de Receita (XSID)
+    como: No filtro 'N. Receita' da tela Prestações, colar o XSID de 19 dígitos e
+      clicar Pesquisar.
+    promessa: Devolve a prestação exata, mesmo sendo de um ciclo recente (2026), sem
+      depender de um filtro de datas por intervalo.
+    rota: /dispensa-proximidade/prestacao
+    entradas:
+      - campo: N. Receita
+        obrigatorio: false
+        origem_valores: XSID de 19 dígitos (GESTCONFER.TDCFPRESTACAODISPPROX)
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: "É o mesmo mecanismo já validado no CT-02, aplicado a registos
+      recentes em vez de 'pesquisar por datas' como o charter sugeria — não
+      existe pesquisa por intervalo de datas nesta tela. Confirmado com os dois
+      registos reais: 42912 (FARMACIA SANTARITA, NIF 126072086, fatura E013-646,
+      28/02/2026) e 43798 (Farmácia Felix Franco, NIF 168571668, fatura
+      E013-453, 30/04/2026)."
+  - id: abrir-visualizador-factura
+    tipo: consulta
+    nome: Abrir o Visualizador de documento a partir do detalhe da Factura
+    como: No detalhe de uma Factura de Dispensa em Proximidade, clicar no botão 'Ver
+      Factura' junto ao título 'Detalhe Factura'.
+    promessa: Abre um modal 'Visualizador' com título dinâmico ('Factura'),
+      controlos de zoom, rotação e download da imagem/documento associado ao
+      GUID da factura.
+    rota: /dispensa-proximidade/factura/{id}
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: O Visualizador existe e funciona (mesmo tipo de componente descrito no
+      protótipo), mas nesta tela irmã só está ligado ao contexto Factura; não há
+      botão equivalente no detalhe da Prestação nem do Lote de Dispensa em
+      Proximidade, pelo que o CT-09 (testado a partir da tela de Prestações, com
+      título dinâmico Prestação/Lote/Prescrição/Factura) não fica coberto tal
+      como descrito no charter. Nesta execução a imagem em si não chegou a
+      carregar (erro 502 do endpoint /ccmsns/api/documentos/..., visível na
+      consola), mas o modal, o título e os controlos renderizaram normalmente.
+  - id: abrir-visualizador-factura-massa
+    tipo: consulta
+    nome: Abrir o Visualizador de documento (Factura) como massa/prova de conceito
+    como: Pesquisar uma Factura na tela Facturas de Dispensa em Proximidade (ex. NIF
+      Prestador 517993694), abrir o detalhe e clicar 'Ver Factura'.
+    promessa: Abre o modal Visualizador com a imagem do documento associado ao GUID
+      da factura, quando o endpoint de documentos responde.
+    rota: /dispensa-proximidade/factura/{id}
+    equivalente_aproximado: true
+    ressalva: O Visualizador como funcionalidade é obtível pela tela (Facturas da
+      mesma área), mas não confirma uma imagem real de Prestação nem o campo
+      Código Imagem; o endpoint de imagem devolveu erro 502 nesta execução.
+insumos_necessarios:
+  - descricao: Prestação real de Dispensa de Proximidade com XSID (Número de
+      Dispensa/N. Receita) conhecido, para pesquisar e abrir o detalhe
+    obtivel: bd
+    razao: O universo real é fixo (10 prestações + teste) e já documentado com
+      PIID/XSID; a tela não permite descobrir XSIDs por pesquisa livre sem já se
+      saber pelo menos um filtro (Factura, NIF, Convenção ou o próprio XSID).
+  - descricao: Par de prestações duplicadas com o mesmo XSID no mesmo lote (caso de
+      ouro, ex. 41237/41238)
+    obtivel: bd
+    razao: É um registo real e único na BD QUA; não há forma de o recriar pela tela,
+      que é só de consulta.
+  - descricao: Prestação com "Tipo Lote"/"Código Tipo Lote" efetivamente preenchido
+      (ex. tipo 94), para validar CT-08
+    obtivel: nao
+    razao: Em todas as prestações reais testadas (42061, 41237, 41238) o campo "Tipo
+      lote" aparece como "—"; a tela não tem sequer uma coluna "Código Tipo
+      Lote" para exibir esse dado, e não há ação na tela que o popule.
+  - descricao: Prestação com imagem/documento associado, para testar Código Imagem e
+      um eventual Visualizador
+    obtivel: nao
+    razao: Nem a coluna "Código Imagem" nem qualquer botão/modal "Visualizador"
+      existem nesta tela nesta build; não há como obter essa massa porque a
+      funcionalidade em si não está presente.
+  - descricao: Segundo perfil de utilizador (ex. com permissão de alteração) para
+      comparar o comportamento do botão "Alterar" com o perfil de consulta usado
+    obtivel: nao
+    razao: Só havia disponível o utilizador de consulta (PRRmanta_dev) neste
+      ambiente; não é possível confirmar se "Alterar" está apenas desativado
+      para este perfil ou se está inerte para todos.
+casos_sem_accao:
+  - CT-01
+  - CT-04
+  - CT-05
+  - CT-07
+  - CT-08
+  - CT-09
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-01
+      procurei:
+        - Pesquisar sem nenhum filtro preenchido na tela Prestações (botão
+          Pesquisar em branco)
+        - Pesquisar preenchendo apenas NIF Prestador, sem Data da Factura, na
+          tela Prestações
+        - Verificar se o campo 'Data da Factura' aceita um intervalo (de/até) em
+          vez de uma data única
+        - Comparar com a tela Facturas da mesma área, onde a pesquisa por NIF
+          Prestador isolado é aceite (validação mais permissiva)
+        - Enumerar manualmente, via N. Receita, os identificadores reais citados
+          no documento (42061, 42912, 41237, 41238, 43798) para confirmar a que
+          prestadores/NIFs pertencem
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao (pesquisa em
+          branco e com NIF isolado)
+        - http://localhost:4174/dispensa-proximidade/factura (pesquisa por NIF
+          isolado, para comparação)
+      resultado: nao_existe
+      accao: null
+      nota: "A tela impõe a regra 'Deverá estar preenchido, pelo menos: Número Fatura;
+        ou Número Receita; ou Data Fatura com NIF Prestador; ou Data Fatura com
+        Código Convenção.' Não existe pesquisa sem filtro nem filtro de
+        intervalo de datas — 'Data da Factura' é uma data única. Confirmámos que
+        os registos reais pertencem a prestadores/NIFs distintos (pelo menos
+        três: 517993694 'Farmácia Nova de S.Roque', 126072086 'FARMACIA
+        SANTARITA', 168571668 'Farmácia Felix Franco'), pelo que mesmo a tela de
+        Facturas (que aceita NIF isolado) só devolveria uma fração do universo
+        de cada vez. A cobertura total só é atingível pela query SQL do próprio
+        documento ou enumerando manualmente cada identificador conhecido — nunca
+        por uma única pesquisa na UI desta build."
+    - alvo: CT-04
+      procurei:
+        - Procurar um filtro 'Número de Lote' na tela Prestações de Dispensa em
+          Proximidade (inexistente)
+        - Procurar o mesmo filtro na tela Lotes da mesma área (inexistente; só
+          há N. Factura, Data Factura, NIF Prestador, Cod. Convenção, Tipo de
+          Lote)
+        - A partir da Factura E015-138 (prestador 517993694), usar o separador
+          'Lotes' > botão 'Ver lotes da factura', que leva à tela Lotes já
+          filtrada por N. Factura
+        - Na listagem de Lotes resultante, abrir 'Ver detalhe do lote 14427' e o
+          separador 'Prestações'
+        - Testar rota direta /dispensa-proximidade/lote/{idLote} com os dois
+          números do documento (15045 e 14427)
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao
+        - http://localhost:4174/dispensa-proximidade/lote
+        - http://localhost:4174/dispensa-proximidade/factura/25175 (separador
+          Lotes)
+        - http://localhost:4174/dispensa-proximidade/lote/14427
+        - http://localhost:4174/dispensa-proximidade/lote/15045
+      resultado: encontrado
+      accao: ver-lote-por-rota-directa
+      equivalente_aproximado: true
+      captura: CT-04_lote-14427-prestacoes-duplicadas.png
+      nota: Também foi gravada CT-04_lote-detalhe-por-rota-directa.png, confirmando o
+        mesmo mecanismo para o lote 15045.
+    - alvo: CT-05
+      procurei:
+        - Tentar filtrar por um intervalo de Data da Factura cobrindo fevereiro
+          a abril de 2026 (o campo é de data única, não de intervalo)
+        - "Pesquisar diretamente pelos XSID indicados no documento no campo 'N.
+          Receita' da tela Prestações: 1300011746000041451 (prestação 42912) e
+          1300017655000048752 (prestação 43798)"
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao
+      resultado: encontrado
+      accao: pesquisar-prestacao-por-numero-receita
+      equivalente_aproximado: true
+      captura: CT-05_prestacao-42912-recente-2026.png
+    - alvo: CT-07
+      procurei:
+        - Percorrer todos os cabeçalhos da tabela de resultados da pesquisa de
+          Prestações
+        - Abrir o detalhe de uma prestação real (42061) e listar todos os campos
+          mostrados
+        - Abrir o detalhe da Factura da mesma área e verificar a secção
+          'Identificadores' (GUID Factura, GUID Resumo), por semelhança
+          conceptual com 'Código Imagem'
+        - Abrir o detalhe dos lotes reais 14427 e 15045 e verificar todos os
+          campos mostrados
+        - Verificar o separador 'Erros' da Factura e da Prestação, para ver se
+          algum identificador aparece ao nível da linha de erro
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao (tabela e detalhe
+          da prestação 42061)
+        - http://localhost:4174/dispensa-proximidade/factura/25175 (detalhe,
+          separadores Informação e Erros)
+        - http://localhost:4174/dispensa-proximidade/lote/14427 e /15045
+          (detalhe do lote)
+      resultado: nao_existe
+      accao: null
+      nota: "As colunas reais da tabela de Prestações são: Cód. Conv., NIF Prestador,
+        Descrição Prestador, N. Factura, Data Factura, Tipo Lote, N. Receita,
+        Comunicado (Total PVP), Apurado (Total PVP) — não há Código Imagem, Id
+        da Prestação nem Id da Prescrição. O detalhe da prestação mostra apenas
+        NIF Prestador, Cod./Desc. Convenção, Número/Data factura, Tipo lote,
+        Chave prestação (=N. Receita), Data prestação, Estado, Totais e Erros —
+        os três campos continuam ausentes. A Factura tem uma secção
+        'Identificadores' com GUID Factura/GUID Resumo, mas é um conceito
+        diferente (GUID de factura, não Código Imagem nem Id de
+        Prestação/Prescrição) e nem existe ao nível da Prestação."
+    - alvo: CT-08
+      procurei:
+        - Verificar as colunas 'Tipo Lote' (tabela) e 'Tipo lote' (detalhe) nas
+          prestações reais 42061, 41237, 41238, 42912, 43798
+        - Abrir o combobox 'Tipo de Lote' no filtro da tela Lotes de Dispensa em
+          Proximidade, para ver o catálogo de tipos disponível
+        - Verificar o campo 'Tipo de Lote' no detalhe dos lotes reais 14427 e
+          15045
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao
+        - http://localhost:4174/dispensa-proximidade/lote (combobox Tipo de Lote)
+        - http://localhost:4174/dispensa-proximidade/lote/14427 e /15045 (campo
+          Tipo de Lote no detalhe)
+      resultado: nao_existe
+      accao: null
+      nota: "O combobox 'Tipo de Lote' do filtro de Lotes desta área só oferece uma
+        opção: '10 - Normal' — não existe a opção 94 nem qualquer outra. Em
+        todos os lotes e prestações reais inspecionados (14427, 15045, 41237,
+        41238, 42061, 42912, 43798) o campo Tipo/Código Tipo Lote aparece vazio
+        ('—'). Guardado CT-08_tipo-lote-combobox.png como evidência do catálogo
+        (não é um 'encontrado' porque confirma a ausência do tipo 94, não a sua
+        presença)."
+    - alvo: CT-09
+      procurei:
+        - Procurar botão/ícone 'Ver Prestação' ou equivalente no detalhe da
+          prestação 42061 (só existem os botões 'Lote' e 'Alterar')
+        - Procurar o mesmo no detalhe do Lote 14427/15045 (só existem 'Ir para
+          Factura', 'Voltar', 'Factura')
+        - "Procurar na tela Facturas da mesma área: no detalhe da factura
+          E015-138 existe o botão 'Ver Factura'"
+        - Clicar em 'Ver Factura' e observar o modal aberto (título, controlos,
+          imagem)
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao/42061 (sem botão
+          de visualizador)
+        - http://localhost:4174/dispensa-proximidade/lote/14427 (sem botão de
+          visualizador)
+        - http://localhost:4174/dispensa-proximidade/factura/25175 (botão 'Ver
+          Factura' encontrado e testado)
+      resultado: encontrado
+      accao: abrir-visualizador-factura
+      equivalente_aproximado: true
+      captura: CT-09_visualizador-factura-modal.png
+    - alvo: insumo:Prestação com Tipo Lote/Código Tipo Lote efetivamente preenchido
+        (ex. tipo 94)
+      procurei:
+        - Verificar o campo Tipo Lote/Código Tipo Lote em todas as prestações
+          reais localizadas (42061, 41237, 41238, 42912, 43798) e no registo de
+          teste
+        - Abrir o combobox 'Tipo de Lote' do filtro da tela Lotes, para ver se o
+          catálogo inclui o tipo 94
+        - Verificar o campo 'Tipo de Lote' no detalhe dos lotes reais 14427 e
+          15045
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao
+        - http://localhost:4174/dispensa-proximidade/lote (combobox Tipo de Lote)
+        - http://localhost:4174/dispensa-proximidade/lote/14427 e /15045
+      resultado: nao_existe
+      accao: null
+      nota: "Mesma investigação e evidência do CT-08: o catálogo de Tipo de Lote desta
+        área em QUA só disponibiliza '10 - Normal' e nenhum registo real
+        inspecionado (prestação ou lote) tem o campo preenchido. Não
+        encontrámos, dentro da tela, nenhum registo com tipo 94; não confirmámos
+        por SQL (fora do âmbito desta repescagem), pelo que não é possível dizer
+        se a massa existe apenas na BD."
+    - alvo: insumo:Prestação com imagem/documento associado, para testar Código Imagem
+        e um eventual Visualizador
+      procurei:
+        - Procurar coluna 'Código Imagem' e botão/modal 'Visualizador' na tela
+          de Prestações (ausentes, confirmando o achado da primeira passagem
+          nesse ecrã)
+        - Procurar o mesmo na tela Facturas da mesma área — encontrado botão
+          'Ver Factura' no detalhe
+        - Abrir esse Visualizador com um registo real (factura E015-138, GUID
+          {14814fcb-84b2-44c1-a016-fd61237f73a5}_310725_A) e observar o
+          resultado
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao (sem Código
+          Imagem nem Visualizador)
+        - http://localhost:4174/dispensa-proximidade/factura/25175 (Visualizador
+          encontrado e aberto)
+      resultado: encontrado
+      accao: abrir-visualizador-factura-massa
+      equivalente_aproximado: true
+      captura: CT-09_visualizador-factura-modal.png
+      nota: O Visualizador como funcionalidade é obtível pela tela (Facturas da mesma
+        área), mas não confirma uma imagem real de Prestação nem o campo Código
+        Imagem; o endpoint de imagem devolveu erro 502 nesta execução.
+    - alvo: insumo:Segundo perfil de utilizador (ex. com permissão de alteração) para
+        comparar o comportamento do botão "Alterar"
+      procurei:
+        - Verificar se o botão 'Alterar' no detalhe da prestação está marcado
+          como desativado (atributo disabled) para o perfil de consulta
+          PRRmanta_dev — não está
+        - Clicar no botão 'Alterar' sem submeter nada, para observar se abre
+          formulário, mostra erro de permissão, ou não tem efeito
+        - Procurar um seletor de perfil/utilizador na aplicação sem fazer logout
+          (só existe o nome/perfil 'Manta / PRRmanta_dev' e o botão 'Sair' no
+          canto superior direito, sem opção de trocar de perfil)
+        - Ponderei fazer logout para ver se o ecrã de login oferece escolha de
+          outro perfil, mas não avancei
+      onde:
+        - http://localhost:4174/dispensa-proximidade/prestacao/42061 (botão
+          Alterar)
+        - Barra superior da aplicação (perfil do utilizador e botão Sair)
+      resultado: nao_existe
+      accao: null
+      nota: "Confirmámos algo que a primeira passagem não tinha testado: o botão
+        'Alterar' está fisicamente habilitado (sem atributo disabled) mesmo para
+        o perfil de consulta, mas clicar nele não teve qualquer efeito visível —
+        não abriu formulário, não navegou, não mostrou erro. Isto é consistente
+        com o botão estar simplesmente inerte nesta build, independentemente do
+        perfil, mas não é prova definitiva sem testar um perfil com permissão de
+        alteração real. Não existe, dentro da aplicação, nenhum mecanismo de
+        troca de perfil sem logout, e não avançámos com o logout por não haver
+        credenciais de um segundo perfil disponíveis nesta corrida e por isso
+        arriscar perder a única sessão ativa sem forma de voltar a entrar."

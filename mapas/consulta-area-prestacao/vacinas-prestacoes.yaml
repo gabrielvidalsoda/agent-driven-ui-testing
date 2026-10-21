@@ -1,0 +1,341 @@
+documento: consulta-area-prestacao/vacinas-prestacoes.md
+rota: /vacinas/prestacao
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: pesquisar-prestacoes-vacinas
+    tipo: consulta
+    nome: Pesquisar prestações de vacinas
+    como: Preencher um ou mais dos 8 campos do formulário 'Pesquisa prestações' e
+      clicar 'Pesquisar'. O pedido só é enviado ao serviço se pelo menos um
+      campo estiver preenchido; caso contrário aparece um alerta em vez de
+      chamada de rede.
+    promessa: A grelha 'Resultado da pesquisa' promete listar as prestações que
+      cumprem os filtros, com as colunas Cod. Convenção, NIF Prestador,
+      Descrição prestador, N. Factura, Data factura, N. lote, Tipo lote, Número
+      receita, Total Comp. (Comunicado) e Total Comp. (Apurado); o rodapé mostra
+      'N resultados' e paginação.
+    rota: /vacinas/prestacao
+    entradas:
+      - campo: Número da factura
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Ex. 00000000000'
+      - campo: Data da factura
+        obrigatorio: false
+        origem_valores: seletor de calendário ou texto DD/MM/YYYY
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Ex. 00000000000'
+      - campo: Código convenção
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Ex. 00000000000'
+      - campo: Número do lote
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Ex. 00000000000'
+      - campo: Número receita
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Ex. 00000000000'
+      - campo: Valor SNS
+        obrigatorio: false
+        origem_valores: texto livre; aceita vírgula decimal (testado '3,00', foi enviado
+          ao serviço tal como escrito)
+      - campo: Número linha RSP
+        obrigatorio: false
+        origem_valores: texto livre; placeholder 'Ex. 00000000000'
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-04
+      - CT-09
+      - CT-10
+    ressalva: "Sem nenhum filtro preenchido, o botão 'Pesquisar' não chega a chamar
+      o serviço: mostra o alerta 'É necessário preencher pelo menos um dos
+      campos de pesquisa.' (confirma o comportamento esperado no CT-09).
+      Pesquisa por lote inexistente devolveu grelha vazia com 'Nenhum resultado
+      encontrado...' sem erro (confirma CT-10)."
+  - id: limpar-filtros-pesquisa
+    tipo: filtro
+    nome: Limpar filtros de pesquisa
+    como: Clicar no botão 'Limpar', junto a 'Pesquisar'.
+    promessa: O rótulo 'Limpar' promete repor todos os campos do formulário e
+      remover os parâmetros da última pesquisa da URL.
+    casos_documento: []
+  - id: ordenar-resultados-grelha
+    tipo: filtro
+    nome: Ordenar a grelha de resultados por coluna
+    como: Clicar no cabeçalho de uma coluna ordenável (todas exceto a coluna do
+      botão 'Ver detalhe' e a coluna 'Valor Apurado' das tabelas do detalhe);
+      alterna asc/desc e acrescenta 'ordenar=<campo>,<direcao>' à URL (ex.
+      'ordenar=dataFatura,asc').
+    promessa: O texto 'Ordenar por <coluna>' em cada cabeçalho promete reordenar a
+      lista pelo campo indicado.
+    casos_documento: []
+  - id: definir-resultados-por-pagina
+    tipo: filtro
+    nome: Escolher número de resultados por página
+    como: Abrir o combobox 'Resultados por página' e escolher entre as opções 10, 15
+      ou 20.
+    promessa: O rótulo promete alterar quantos registos aparecem por página de
+      resultados.
+    casos_documento: []
+  - id: paginar-resultados
+    tipo: navegacao
+    nome: Paginar resultados
+    como: Usar os botões 'Go to first/previous/next/last page' por baixo da grelha.
+    promessa: A paginação promete percorrer o conjunto de resultados quando este
+      excede o tamanho de página escolhido.
+    casos_documento: []
+    ressalva: "Não foi possível exercer com resultado real: em todas as pesquisas
+      realizadas (máx. 8 registos) os botões de paginação ficaram desativados
+      por caber tudo numa só página."
+  - id: ver-detalhe-prestacao
+    tipo: navegacao
+    nome: Abrir detalhe de uma prestação
+    como: Clicar na linha da grelha (cursor de mão) ou no ícone/botão 'Ver detalhe'
+      da primeira coluna; navega para /vacinas/prestacao/{id}.
+    promessa: A vista 'Detalhe prestação' promete os campos NIF Prestador, Cod.
+      convenção, Desc. Convenção, N. Factura, Data Factura, Tipo Lote, Chave
+      Prestação, N. Receita, Data Prestação e Estado, mais as secções
+      'Informação comunicada' (Total PVP) e 'Informação apurada' (Total PVP
+      apurado, Total PVU apurado, Total Comp. apurado).
+    rota: /vacinas/prestacao/{id}
+    casos_documento:
+      - CT-05
+    ressalva: Nos dois registos verificados (PIID 6620914 e 6621061, ambos do lote
+      38301/fatura E015-354), 'Chave Prestação' e 'N. Receita' mostraram sempre
+      o mesmo valor de 19 dígitos; não há nenhum campo de número de utente em
+      parte alguma do detalhe.
+  - id: consultar-reclamacoes-prestacao
+    tipo: consulta
+    nome: Consultar tabela Reclamações do detalhe
+    como: Ler a tabela 'Reclamações' dentro do detalhe da prestação; cabeçalhos
+      ordenáveis exceto 'Valor Apurado'.
+    promessa: Cabeçalhos Tipo, ID Notificação, Cod. Erro, Desc. Erro, Valor Apurado,
+      Decisão prometem detalhar reclamações associadas à prestação; quando vazia
+      mostra 'A pesquisa não retornou resultados'.
+    casos_documento:
+      - CT-06
+    ressalva: Vazia nos dois registos testados do lote 38301.
+  - id: consultar-erros-prestacao
+    tipo: consulta
+    nome: Consultar tabela Erros do detalhe
+    como: Ler a tabela 'Erros' dentro do detalhe da prestação.
+    promessa: Cabeçalhos N. Linha, Cod. Erro, Origem, Descrição Erro, Justificação
+      prometem listar os erros de conferência associados à prestação.
+    casos_documento:
+      - CT-06
+    ressalva: Nos dois registos testados (estado 'Recepcionado') a tabela mostrou
+      uma linha com N. Linha=1 mas as restantes colunas vazias — não foi
+      possível avaliar a coerência estado/erros pedida no CT-06 porque a fatura
+      80208/E015-354 usada aparece com estado 'Recepcionado', não 'CCE' como o
+      documento pressupõe.
+  - id: consultar-prestacoes-tragagentese
+    tipo: consulta
+    nome: Consultar separador 'Prestações TRAg' do detalhe
+    como: Dentro do detalhe da prestação, clicar no separador 'Prestações TRAg' (ao
+      lado de 'Prestações').
+    promessa: O separador promete listar prestações TRAg associadas à prestação de
+      vacina; nos dois registos testados mostrou a mensagem 'Sem prestações TRAg
+      para esta prestação.'
+    casos_documento: []
+    ressalva: "O documento de cenários não descreve este separador; o detalhe não é
+      'sem abas' como o documento afirma — tem duas: 'Prestações' e 'Prestações
+      TRAg'."
+  - id: visualizar-prestacao
+    tipo: consulta
+    nome: Visualizar imagem da prestação (botão 'Visualizar')
+    como: No detalhe, clicar no botão com ícone de olho e texto 'Visualizar', ao
+      lado do botão desativado 'DM'.
+    promessa: O rótulo e o ícone prometem abrir uma visualização (modal) da imagem
+      digitalizada da prestação, correspondendo ao 'Ver Prestação' descrito no
+      documento.
+    casos_documento:
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: Nos dois registos testados (6620914, 6621061) o clique não abriu
+      nenhum modal/diálogo visível no DOM nem gerou qualquer pedido de rede novo
+      — não foi possível confirmar o comportamento nem com imagem nem a mensagem
+      de 'sem imagem' que o CT-07 espera.
+  - id: botao-dm-detalhe
+    tipo: consulta
+    nome: Botão 'DM' no detalhe da prestação
+    como: Botão rotulado 'DM', ao lado de 'Visualizar'; aparece desativado
+      (disabled), sem tooltip nem aria-label.
+    promessa: Só o rótulo 'DM' está disponível; sem texto de ajuda não é possível
+      descrever a promessa além do rótulo.
+    casos_documento: []
+    ressalva: Ficou sempre desativado nos registos consultados; não foi possível
+      descobrir que condição o ativaria nem para que serve.
+  - id: voltar-lista-prestacoes
+    tipo: navegacao
+    nome: Voltar à lista de prestações
+    como: Clicar no botão 'Voltar' no fundo do detalhe, ou no link 'Prestações' do
+      breadcrumb, ou no menu lateral 'Vacinas > Prestações'.
+    promessa: Promete devolver à grelha de pesquisa de prestações de vacinas.
+    casos_documento: []
+  - id: vacinas-prestacao-detalhe-tab-trag
+    tipo: consulta
+    nome: Separador 'Prestações TRAg' no Detalhe da Prestação de Vacinas
+    como: No Detalhe da Prestação (clicar numa linha da lista de Prestações de
+      Vacinas), junto ao separador 'Prestações' existe um segundo separador
+      'Prestações TRAg'; ao selecioná-lo mostra o(s) registo(s) TRAg associados
+      a essa prestação, ou a mensagem 'Sem prestações TRAg para esta prestação.'
+      quando não existe associação
+    promessa: Mostra se a prestação de vacina selecionada tem registo(s) de Testes
+      Rápidos de Antigénio (TRAg) associados, contrariando a conclusão da 1ª
+      passagem de que não havia forma na tela de o descobrir
+    rota: /vacinas/prestacao/{id}
+insumos_necessarios:
+  - descricao: Número de lote ou de fatura de vacinas já conhecido, para usar como
+      filtro de pesquisa (ex. lote 38301 / fatura E015-354)
+    obtivel: bd
+    razao: A tela não lista lotes/faturas por si nem tem autocomplete; exige pelo
+      menos um filtro preenchido à partida, logo o identificador tem de vir de
+      outra fonte (BD ou o ecrã de Facturas de Vacinas).
+  - descricao: Prestação de vacina com imagem digitalizada associada, para validar o
+      botão 'Visualizar'
+    obtivel: bd
+    razao: Não foi possível confirmar via UI se algum registo tem imagem associada;
+      nos dois registos testados o clique não teve efeito observável.
+  - descricao: Prestação de vacina com reclamação registada, para ver a tabela
+      Reclamações preenchida
+    obtivel: bd
+    razao: Todos os registos do lote 38301 mostraram a tabela Reclamações vazia.
+  - descricao: Prestação de fatura de vacinas em estado CCE (com erros reais de
+      conferência), para testar coerência entre Estado e a tabela Erros
+    obtivel: bd
+    razao: A fatura 80208/E015-354 usada nos testes aparece com Estado
+      'Recepcionado', não CCE; é necessário outro identificador de massa para
+      ver a tabela Erros preenchida de forma coerente com o estado.
+  - descricao: Prestação de vacina com registo associado em 'Prestações TRAg'
+    obtivel: nao
+    razao: Não há na tela forma de descobrir qual prestação tem TRAg associado;
+      depende de massa específica não identificada nesta sessão.
+  - descricao: Utilizador com perfil de consulta (read-only) autenticado na aplicação
+    obtivel: tela
+    razao: A sessão já disponível (Manta / PRRmanta_dev) foi suficiente para
+      pesquisar e navegar em todo o ecrã.
+casos_sem_accao:
+  - CT-03
+  - CT-08
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: "[insumo] Prestação de vacina com registo associado em 'Prestações TRAg'"
+      procurei:
+        - Um mecanismo na tela de Detalhe da Prestação (vacinas) que permita
+          descobrir se a prestação tem registo associado em 'Prestações TRAg',
+          já que a 1ª passagem concluiu que não existia tal forma
+        - Abri o detalhe de 9 prestações reais de vacinação (PIID 6620914,
+          6620915, 6620916, 6620917, 6620918, 6620919, 6620920, 6621061 do lote
+          38301/fatura E015-354, e 6271161 do lote 34404/fatura E015-345, todas
+          do prestador NIF 504511718) para inspecionar a área acima da secção
+          'Detalhe prestação'
+        - Cliquei no separador 'Prestações TRAg' em cada uma dessas 9 prestações
+          para ver o conteúdo mostrado
+      onde:
+        - http://localhost:4174/vacinas/prestacao/6621061 (e demais PIIDs
+          listados em 'procurei')
+        - Separador 'Prestações TRAg', ao lado do separador 'Prestações', no
+          cabeçalho do Detalhe da Prestação
+      resultado: encontrado
+      accao: vacinas-prestacao-detalhe-tab-trag
+      captura: alvo-tras-prestacoes-trag-tab.png
+      nota: O mecanismo de descoberta existe e está visível na tela (contrariando 'não
+        há na tela forma de descobrir'), mas nas 9 prestações reais verificadas
+        (2 lotes/2 faturas do mesmo prestador) o separador devolveu sempre 'Sem
+        prestações TRAg para esta prestação.' Não confirmei visualmente nenhuma
+        prestação com registo TRAg populado; para obter esse exemplo concreto
+        seria necessário continuar a amostragem pela tela (não teria de recorrer
+        a SQL, já que o próprio ecrã já demonstra suportar a consulta) ou pedir
+        a um colega com acesso a BD para indicar um PIID com TRAg.
+    - alvo: CT-03
+      procurei:
+        - Um campo, coluna ou rótulo 'Nº Utente' / 'Utente' / identificador de
+          utente em qualquer parte do ecrã de pesquisa de prestações e da lista
+          de resultados (lote 38301)
+        - O mesmo no Detalhe da Prestação (todos os campos de identificação,
+          'Informação comunicada', 'Informação apurada', tabelas de Reclamações
+          e Erros) para os PIID 6620914 e 6621061
+        - Texto 'Utente' em toda a página do detalhe via pesquisa textual
+          (browser_find), depois de expandir o separador 'Prestações' e o
+          separador 'Prestações TRAg'
+        - Um botão/ícone de configuração de colunas na tabela de resultados que
+          pudesse adicionar uma coluna de utente (não existe tal controlo)
+        - O botão 'Visualizar' (par do botão 'DM' desativado) no detalhe, para
+          ver se abria um modal/imagem com o nº de utente visível — cliquei e
+          tirei screenshot; não abriu modal nem nova aba
+        - As mesmas colunas na tela irmã 'Facturas de Vacinas' (não é o mesmo
+          assunto de CT-03, mas é a tela mais próxima na secção; também não
+          mostra utente, só dados agregados de fatura)
+      onde:
+        - http://localhost:4174/vacinas/prestacao?numeroLote=38301 (lista)
+        - http://localhost:4174/vacinas/prestacao/6620914 e /6621061 (detalhe,
+          separador 'Prestações' e 'Prestações TRAg')
+        - http://localhost:4174/vacinas/factura?numeroFatura=E015-354 (tela irmã)
+      resultado: nao_existe
+      accao: null
+      nota: Nenhum campo, coluna, modal ou separador do ecrã de Vacinas > Prestações
+        expõe nº de utente ou qualquer identificador de utente. Os únicos
+        identificadores mostrados são NIF Prestador, Cod. Convenção, N. Factura,
+        Nº Lote, Chave Prestação e N. Receita (um número de 19 dígitos, não o nº
+        de utente de 9 dígitos referido no plano). O botão 'Visualizar' não
+        produz nenhum modal nem nova aba nestas prestações (sem imagem
+        digitalizada associada), pelo que também não é por essa via que o utente
+        aparece.
+    - alvo: CT-08
+      procurei:
+        - Botões 'Ir para Fatura' e 'Detalhe do processamento' no Detalhe da
+          Prestação (PIID 6621061 / fatura E015-354) — só existem os botões
+          'Voltar' e 'Visualizar'
+        - Texto '/fatura|processamento/i' em toda a página do detalhe via
+          pesquisa textual — sem correspondências fora dos itens de menu lateral
+        - "Se a fatura E015-354 tem alguma forma de 'ver processamento' na tela
+          'Facturas de Vacinas': pesquisei a fatura e a linha resultante não tem
+          botão 'Ver detalhe' nem cursor de clique (ao contrário da lista de
+          Prestações), confirmando o comportamento já assinalado no plano ('essa
+          consulta não tem vista de detalhe')"
+        - "Se 'Conferência Manual: Supervisão' (que tem filtros Nº Lote / Nº
+          Fatura / Nº Prestação e um botão 'Ver detalhe' por tarefa) devolve
+          alguma tarefa de processamento para o nosso lote 38301 ou para a
+          prestação 6621061 — pesquisei por ambos, 0 resultados em ambos os
+          casos"
+        - Se 'Logs de Conferência' (Execuções do motor de regras,
+          /motor-regras/execucoes) permite pesquisar execuções de Vacinas por
+          Fatura/Lote/Prestação — o combo 'Área de Conferência' lista 'Vacinas'
+          como opção, mas ao selecioná-la os campos 'Nº da Fatura', 'Prestador
+          (NIF)', 'Nº do Lote' e 'Nº da Prestação' continuam desativados com a
+          mensagem 'Selecione a Área (Medicamentos, MCDT ou CRD) para usar estes
+          filtros.'; pesquisei mesmo assim só com Área=Vacinas e obtive 'Nenhum
+          resultado encontrado para os filtros aplicados.'
+        - Se o 'Cockpit' (/conferencia/cockpit) tem um mosaico clicável para
+          'Vacinas' que leve a um detalhe de processamento — o mosaico 'Vacinas
+          / Vacinação' aparece mas rotulado 'No sistema atual' e não é um botão
+          clicável (ao contrário dos mosaicos Medicamentos/MCDT/CRD, que são
+          botões), com 0 faturas / 0 prestações
+      onde:
+        - http://localhost:4174/vacinas/prestacao/6621061 (detalhe)
+        - http://localhost:4174/vacinas/factura?numeroFatura=E015-354 (lista de
+          faturas)
+        - http://localhost:4174/conferencia/supervisao (pesquisa por Nº
+          Lote=38301 e por Nº Prestação=6621061)
+        - http://localhost:4174/motor-regras/execucoes (Logs de Conferência,
+          Área de Conferência = Vacinas)
+        - http://localhost:4174/conferencia/cockpit (mosaico Vacinas)
+      resultado: nao_existe
+      accao: null
+      nota: "Não encontrei, em nenhuma das 5 telas verificadas, um botão, ligação ou
+        efeito de outra ação que leve de uma prestação de Vacinas até um
+        'Detalhe do processamento' equivalente ao mencionado no plano. A área de
+        Vacinas parece ainda não estar integrada no motor de conferência/cockpit
+        desta versão: o cockpit trata-a como 'No sistema atual' (não clicável,
+        ao contrário de Medicamentos/MCDT/CRD) e o ecrã de Logs de Conferência
+        aceita 'Vacinas' como valor de Área mas bloqueia os filtros de negócio
+        (Fatura/Lote/Prestação) só para Medicamentos, MCDT e CRD, devolvendo
+        sempre zero execuções para Vacinas. Quanto a 'Ir para Fatura': confirmei
+        que o destino esperado (Facturas de Vacinas) existe e mostra a fatura
+        E015-354, mas não encontrei nenhum botão na prestação que leve lá — a
+        navegação, tal como descrita no plano, não está implementada nesta
+        versão."

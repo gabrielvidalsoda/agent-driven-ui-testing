@@ -1,0 +1,331 @@
+documento: consulta-area-prestacao/mcdt-lotes.md
+rota: /mcdts/lote
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: a1
+    tipo: filtro
+    nome: Filtrar por Número da Factura
+    como: Preencher a textbox 'Número da Factura' (placeholder 'Insira o número da
+      factura') e carregar em Pesquisar
+    promessa: Restringe os lotes à factura indicada; testado com 'FTLFLPNF2025-105'
+      devolveu exatamente os 2 lotes reais da factura (9673174 e 9673173)
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+    casos_documento:
+      - CT-01
+      - CT-03
+  - id: a2
+    tipo: filtro
+    nome: Filtrar por Data da Factura
+    como: Escrever DD/MM/YYYY na textbox ou escolher no calendário aberto pelo botão
+      'Abrir/fechar calendário'
+    promessa: Calendário de data única (não intervalo); nenhuma data aparece
+      bloqueada, incluindo datas futuras ao mês corrente
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+    casos_documento: []
+  - id: a3
+    tipo: filtro
+    nome: Filtrar por NIF Prestador
+    como: Preencher a textbox 'NIF Prestador' e Pesquisar
+    promessa: Restringe os lotes ao NIF do prestador; testado com 501319956
+      combinado com Número do Lote, devolveu 320 lotes desse prestador
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+    casos_documento: []
+  - id: a4
+    tipo: filtro
+    nome: Filtrar por Código do Prestador
+    como: Preencher a textbox 'Código do Prestador' e Pesquisar
+    promessa: "Rótulo do campo é 'Código do Prestador', não 'Código da Convenção'
+      como referido no documento; a grelha mostra uma coluna 'Cód. Convenção'
+      (ex.: 01532M21N) que parece ser o mesmo valor"
+    entradas:
+      - campo: Código do Prestador
+        obrigatorio: false
+    casos_documento: []
+    equivalente_aproximado: true
+    ressalva: O documento chama a este filtro 'Código da Convenção'; a tela rotula-o
+      'Código do Prestador'. Não testado isoladamente com valor real para
+      confirmar que aceita o código de convenção (ex. 01532M21N).
+  - id: a5
+    tipo: filtro
+    nome: Filtrar por Natureza da Prestação
+    como: Abrir o combobox 'Natureza da Prestação' e escolher uma opção da lista
+    promessa: O combobox lista 16 opções (Análises Clínicas, Anatomia Patológica,
+      Cardiologia, Medicina Nuclear, Electroencefalografia, Endoscopia
+      Gastroent., Medicina Física e Reabilit., Otorrinolaringologia, Pneumo e
+      Imunoalerg., Urologia, Neurofisiologia, Radiologia, Consultas, Psicologia,
+      Análises Clínicas - Atos não Convencionados, IPATIMUP) — coincide
+      exatamente com o catálogo TRAREAMCDT (A a Y) descrito no documento,
+      incluindo a área Y (IPATIMUP) na consulta genérica
+    entradas:
+      - campo: Natureza da Prestação
+        obrigatorio: false
+        origem_valores: combobox estático, 16 opções, coincide com INTEGRACOES.TRAREAMCDT
+    casos_documento:
+      - CT-04
+    ressalva: A área Y (IPATIMUP) aparece na lista genérica de Natureza da
+      Prestação, apesar de o documento (§6, riscos) referir que essa área 'não
+      deve aparecer duplicada na consulta genérica'; não foi possível confirmar
+      com dados reais se filtrar por IPATIMUP aqui devolve os mesmos lotes do
+      ecrã dedicado, por não ter sido localizada massa real dessa área.
+  - id: a6
+    tipo: filtro
+    nome: Filtrar por Número do Lote
+    como: Preencher a textbox 'Número do Lote' e Pesquisar
+    promessa: "O rótulo sugere pesquisa pelo identificador do lote, mas o campo
+      pesquisa pela sequência exibida na coluna 'Nº Lote' (não pelo
+      identificador interno PIIDLOTE): pesquisar '9673174' devolveu 'Nenhum
+      resultado encontrado...'; pesquisar '1' (a sequência real do lote)
+      devolveu 320 lotes só com NIF 501319956"
+    entradas:
+      - campo: Número do Lote
+        obrigatorio: false
+    casos_documento:
+      - CT-02
+    equivalente_aproximado: true
+    ressalva: CT-02 do documento espera 'pesquisar diretamente o lote 9673174' e
+      obter esse lote; na prática o campo não aceita o identificador interno
+      (PIIDLOTE), só a sequência (sempre '1' nos exemplos observados), que não é
+      única — confirma o próprio risco descrito no documento (§6, 'sequência de
+      lote não é única'), mas invalida o passo exato de CT-02 como escrito.
+  - id: a7
+    tipo: consulta
+    nome: Pesquisar lotes
+    como: Carregar no botão 'Pesquisar' com qualquer combinação (incluindo nenhum)
+      dos filtros preenchidos
+    promessa: Grelha 'Resultados da Pesquisa' com paginação server-side ('Resultados
+      por página', navegação de páginas) e mensagem 'Nenhum resultado
+      encontrado...' quando não há correspondência, sem erro técnico e com os
+      filtros preservados no formulário e na URL
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-09
+  - id: a8
+    tipo: consulta
+    nome: Limpar filtros
+    como: Carregar no botão 'Limpar'
+    promessa: Repõe todos os campos de pesquisa vazios e remove os parâmetros da
+      URL, voltando a /mcdts/lote sem querystring
+    casos_documento: []
+  - id: a9
+    tipo: consulta
+    nome: Ordenar colunas da grelha de resultados
+    como: Carregar no cabeçalho de qualquer coluna (todas têm 'Ordenar por ...', ex.
+      Cód. Convenção, NIF Prestador, Nº da Factura, Data Factura, Natureza
+      Prest., Nº Lote, e as 8 colunas de Comunicado/Apurado)
+    promessa: Cabeçalhos clicáveis prometem ordenação da lista pela coluna escolhida
+    casos_documento:
+      - CT-05
+  - id: a10
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Carregar no botão 'Exportar XLSX' por cima da grelha de resultados (fica
+      desativado quando a pesquisa não tem resultados)
+    promessa: Promete exportar os resultados da pesquisa atual para um ficheiro XLSX
+    casos_documento: []
+  - id: a11
+    tipo: consulta
+    nome: Selecionar linhas da grelha (checkboxes)
+    como: Marcar checkboxes de linha; a barra acima da tabela mostra 'N itens
+      selecionados' com um botão 'Limpar seleção'
+    promessa: Existe seleção múltipla de linhas em todas as grelhas do ecrã (lista
+      de lotes, Erros do lote, Prestações do lote), mas não foi observado nenhum
+      botão de ação em lote (batch) que apareça ao selecionar
+    casos_documento: []
+    ressalva: Não foi possível determinar a finalidade da seleção — pode ser
+      vestígio de um componente de tabela partilhado sem ação associada nesta
+      tela; nenhuma opção adicional apareceu depois de marcar uma linha.
+  - id: a12
+    tipo: navegacao
+    nome: Ver detalhe do lote
+    como: Carregar no botão 'Ver detalhe' na última coluna de uma linha da grelha de
+      resultados
+    promessa: Abre /mcdts/lote/{PIIDLOTE} (identificador interno, confirmado
+      9673174) com o cabeçalho do lote (NIF Prestador, Código Convenção, Desc.
+      Prestador, Número/Data da Factura, Estado, Número do Lote, Tipo de Lote,
+      Chave do lote, Área das Prestações, Guid) e a tab 'Detalhe do Lote'
+      pré-selecionada
+    casos_documento:
+      - CT-02
+      - CT-03
+      - CT-06
+  - id: a13
+    tipo: navegacao
+    nome: Alternar tabs Detalhe do Lote / Prestações
+    como: Carregar na tab 'Detalhe do Lote' ou 'Prestações' no detalhe de um lote
+    promessa: Tab 'Detalhe do Lote' mostra Localização dos arquivos
+      (Caixa/Pasta/Lugar/Estado da Caixa), Totais comunicados, Totais apurados e
+      Erros; tab 'Prestações' mostra a lista paginada de prestações do lote
+    casos_documento:
+      - CT-06
+    ressalva: No lote 9673174 testado (real, RECP), Localização dos arquivos, Chave
+      do lote, Guid e Estado apareceram todos como '—' (vazios) e a tabela de
+      Erros mostrou 'A pesquisa não retornou resultados'; não foi possível
+      confirmar com este registo se estes campos são alguma vez preenchidos
+      nesta tela.
+  - id: a14
+    tipo: navegacao
+    nome: Paginar a lista de Prestações do lote
+    como: Na tab Prestações, carregar nos números de página ou em 'Go to
+      next/previous/first/last page'
+    promessa: "Paginação server-side com total real (lote 9673174: '174 resultados',
+      18 páginas de 10); confirmado que a página 2 mostra prestações
+      312988541-550, sem repetir as da página 1 (312988531-540)"
+    casos_documento:
+      - CT-07
+  - id: a15
+    tipo: navegacao
+    nome: Abrir detalhe de uma prestação do lote
+    como: Na tab Prestações, carregar no botão 'Abrir detalhe da prestação MCDT' de
+      uma linha
+    promessa: Abre uma página própria /mcdts/prestacoes/{chave} (não um modal dentro
+      do lote) com as secções 'Prescrição de MCDTs' (utente mascarado, ex.
+      '****8159'), 'Prestação de MCDTs', 'Informação Comunicada', 'Informação
+      Conferida', 'Detalhe da prescrição', 'Detalhe da prestação' e 'Erros';
+      rodapé com botões 'Voltar', 'Factura' e 'Lote' para navegação ascendente
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento descreve as secções da prestação como 'Erros e
+      Reclamações'; a tela testada não tem nenhuma secção de Reclamações — só
+      existe o item de menu principal 'Reclamações', cujas opções estão todas
+      marcadas '(em breve)'. Também confirmado que voltar ao lote a partir daqui
+      (botão 'Lote') repõe sempre a tab 'Detalhe do Lote' e a página 1, não
+      preservando a posição anterior na tab Prestações.
+  - id: a16
+    tipo: navegacao
+    nome: Navegar para a Factura mãe
+    como: No detalhe do lote, carregar no botão 'Factura' no rodapé
+    promessa: Abre /mcdts/factura/{PIID} (confirmado 1036726) com o detalhe da
+      factura, onde os totais comunicado/apurado da factura (3853,96 / 3833,86)
+      batem exatamente com a soma dos dois lotes (3732,99+120,97 e
+      3712,89+120,97)
+    casos_documento:
+      - CT-03
+      - CT-08
+  - id: a17
+    tipo: navegacao
+    nome: Voltar
+    como: Carregar no botão 'Voltar' no rodapé do detalhe do lote ou do detalhe da
+      prestação
+    promessa: Regressa ao ecrã anterior na hierarquia de navegação
+    casos_documento:
+      - CT-08
+  - id: a18
+    tipo: navegacao
+    nome: Ver Lote / Ver Prestação (visualizar arquivo digitalizado)
+    como: Botão 'Ver Lote' no cabeçalho do detalhe do lote, e 'Ver Prestação' no
+      cabeçalho do detalhe da prestação
+    promessa: O rótulo sugere abrir o arquivo/imagem digitalizada associada ao lote
+      ou à prestação
+    casos_documento: []
+    ressalva: Em ambos os registos reais testados (lote 9673174 e prestação
+      312988541) o botão apareceu desativado (disabled); não foi possível
+      confirmar o que faz nem encontrar um registo onde ficasse ativo.
+insumos_necessarios:
+  - descricao: Factura MCDT real com 2+ lotes (idealmente com sequência de lote
+      repetida) para exercitar CT-01/CT-03
+    obtivel: tela
+    razao: A própria pesquisa por Número da Factura já localiza casos reais, como
+      FTLFLPNF2025-105 / 1036726 usado nesta exploração.
+  - descricao: Lote MCDT em estado diferente de RECP (20 CONF, 21 CSE ou 23 CCE)
+      para comparar coluna Apurado / Estado
+    obtivel: bd
+    razao: A tela não filtra por estado; o campo 'Estado' no detalhe do lote
+      apareceu vazio ('—') no exemplo testado, seria preciso consultar
+      TRCFESTADO/TDCFLOTEMCDT para localizar um lote com estado preenchido.
+  - descricao: Lote ou prestação MCDT com erros de conferência reais (para ver a
+      secção Erros com conteúdo, não 'sem erros')
+    obtivel: bd
+    razao: Todos os registos observados nesta exploração mostraram 'A pesquisa não
+      retornou resultados' / 'Sem erros para esta prestação'; é preciso
+      identificar via SQL um lote/prestação com erro associado.
+  - descricao: Lote MCDT da área Y (IPATIMUP) para confirmar como a Natureza da
+      Prestação genérica trata essa área
+    obtivel: bd
+    razao: Não foi encontrado nem pesquisado um lote real dessa área nesta sessão;
+      precisa de consulta a TRAREAMCDT/TDCFLOTEMCDT filtrando pela área Y.
+  - descricao: Lote MCDT com Localização dos arquivos preenchida (Caixa/Pasta/Lugar)
+      para testar o botão 'Ver Lote'
+    obtivel: bd
+    razao: O lote testado tinha todos estes campos vazios e o botão 'Ver Lote' ficou
+      desativado; seria preciso localizar um lote já arquivado
+      fisicamente/digitalmente.
+  - descricao: Caso de reclamação associado a uma prestação MCDT, para confirmar se
+      existe alguma secção de Reclamações no ecrã
+    obtivel: nao
+    razao: O módulo de Reclamações da aplicação está todo marcado '(em breve)' no
+      menu principal; não há forma de gerar ou consultar uma reclamação real no
+      ambiente atual.
+  - descricao: Utilizador com perfil de consulta para a área MCDT no ambiente de Qualidade
+    obtivel: tela
+    razao: A sessão usada (Manta / PRRmanta_dev) já tinha acesso pleno ao menu
+      Consulta por Área de Prestação > MCDT > Lotes.
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: Caso de reclamação associado a uma prestação MCDT, para confirmar se
+        existe alguma secção de Reclamações no ecrã
+      procurei:
+        - Rótulo 'Reclamações' ou equivalentes (Reclamação, Queixa, Contestação,
+          Impugnação) no menu principal
+        - Uma secção 'Reclamações' dentro do detalhe de uma prestação MCDT real,
+          tal como o próprio plano de teste (CT-06) descreve como parte esperada
+          do detalhe da prestação
+        - Uma secção equivalente (Reclamações/Notas de reclamação) no detalhe do
+          lote MCDT (tab 'Detalhe do Lote')
+        - Uma secção equivalente no detalhe da factura MCDT
+        - Ícones sem rótulo, menus de contexto ou menus de três pontos nas
+          linhas da tabela de prestações, lotes e facturas
+        - Rota directa adivinhada para um sub-ecrã de reclamações da prestação
+          (/mcdts/prestacoes/{id}/reclamacoes)
+      onde:
+        - Menu principal, item 'Reclamações' e respectivo submenu
+          (http://localhost:4174/mcdts/lote)
+        - http://localhost:4174/mcdts/lote/9673174 — tab 'Detalhe do Lote'
+          (Localização dos arquivos, Totais Comunicados, Totais Apurados, Erros)
+          e tab 'Prestações'
+        - http://localhost:4174/mcdts/prestacoes/312988531 — detalhe real de uma
+          prestação do lote 9673174 (requisição 1001000015514147801), com as
+          secções Prescrição de MCDTs, Prestação de MCDTs, Informação
+          Comunicada, Informação Conferida, Detalhe da prescrição, Detalhe da
+          prestação, Erros
+        - http://localhost:4174/mcdts/prescricao (tela 'Prestações' MCDT, mesma
+          rota de detalhe /mcdts/prestacoes/{id})
+        - http://localhost:4174/mcdts/factura/1036726 — detalhe da factura
+          FTLFLPNF2025-105, tabs 'Informações' (Informação comunicada,
+          Informação conferida, Diferenças, Erros, Notas Crédito/Débito,
+          Expedição) e 'Lotes'
+        - http://localhost:4174/mcdts/prestacoes-ipatimup — ecrã de pesquisa de
+          Prestações IPATIMUP
+        - http://localhost:4174/mcdts/prestacoes/312988531/reclamacoes
+          (tentativa de rota directa)
+      resultado: nao_existe
+      accao: null
+      nota: "O menu 'Reclamações' está todo marcado '(em breve)', confirmando a
+        conclusão da primeira passagem. Fui além do menu e abri o drill completo
+        até uma prestação MCDT real (lote 9673174, prestação 312988531,
+        requisição 1001000015514147801): o próprio plano de teste (CT-06)
+        esperava aí uma secção 'Reclamações', mas o ecrã real não a mostra — só
+        Prescrição de MCDTs, Prestação de MCDTs, Informação Comunicada,
+        Informação Conferida, Detalhe da prescrição, Detalhe da prestação e
+        Erros. Também não existe no detalhe do lote (só Localização dos
+        arquivos, Totais Comunicados, Totais Apurados, Erros) nem no detalhe da
+        factura MCDT (Informação comunicada/conferida, Diferenças, Erros, Notas
+        Crédito/Débito, Expedição). Uma rota directa adivinhada para um sub-ecrã
+        de reclamações da prestação devolveu 404. Não há, portanto, forma de
+        gerar, consultar ou sequer visualizar um caso de reclamação associado a
+        uma prestação MCDT em nenhum ponto da aplicação testada."

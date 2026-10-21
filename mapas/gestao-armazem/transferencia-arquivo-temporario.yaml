@@ -1,0 +1,280 @@
+documento: gestao-armazem/transferencia-arquivo-temporario.md
+rota: /armazem/transferencia-arquivo-temporario
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: acc-01
+    tipo: criacao
+    nome: Pistolar caixa (transferência automática)
+    como: O campo "Código da caixa" já vem com foco ao abrir a tela; pistola-se o
+      código de barras ou digita-se manualmente seguido de Enter.
+    promessa: 'Texto de ajuda do cabeçalho: "Pistole as caixas que saíram da
+      digitalização: o sistema atribui e guarda logo a localização no arquivo
+      temporário." O parágrafo junto ao campo reforça: "Pistole uma caixa para o
+      sistema atribuir a localização."'
+    entradas:
+      - campo: Código da caixa
+        obrigatorio: true
+        origem_valores: leitor de código de barras ou digitação manual + Enter
+          (placeholder "Pistolar caixa…")
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-05
+      - CT-07
+      - CT-09
+      - CT-10
+    ressalva: Não submeti nenhuma pistolagem (real ou de teste) para não escrever na
+      BD nem consumir localizações. Não confirmei visualmente a atribuição da
+      localização, o destaque em letras grandes do par CAIXA-LOCALIZAÇÃO nem o
+      comportamento de rejeição em caixa duplicada.
+  - id: acc-02
+    tipo: consulta
+    nome: Alternar "Perfil (demo)"
+    como: 'Abrir o combobox "Perfil (demo)" (só tem esta opção no ecrã, sem exigir
+      novo login) e escolher entre as duas opções listadas: Operador e
+      Supervisor.'
+    promessa: Rótulo "Perfil (demo)"; ao mudar para Supervisor aparece de imediato o
+      bloco "Novo Contador" + botão "Alterar Contador", que fica ausente para
+      Operador.
+    entradas:
+      - campo: Perfil (demo)
+        obrigatorio: true
+        origem_valores: "combobox fechado com 2 opções: Operador, Supervisor"
+    casos_documento:
+      - CT-04
+    equivalente_aproximado: true
+    ressalva: 'É um seletor de demonstração dentro do próprio ecrã (rótulo
+      "(demo)"), não uma troca de sessão/login real: qualquer pessoa marca
+      "Supervisor" sem autenticação nem crachá adicional. Não corresponde ao
+      mecanismo de RBAC real que o CT-04 pretende validar (utilizador supervisor
+      autenticado, incluindo tentativa de acesso direto por URL/atalho a partir
+      do Operador).'
+  - id: acc-03
+    tipo: edicao
+    nome: '"Novo Contador" / "Alterar Contador" (só com Perfil = Supervisor)'
+    como: Com "Perfil (demo)" = Supervisor, preencher o campo "Novo Contador"
+      (placeholder "1") e clicar "Alterar Contador". NÃO CLIQUEI no botão nesta
+      passagem.
+    promessa: Rótulo do campo "Novo Contador" + rótulo do botão "Alterar Contador";
+      nenhum texto de ajuda adicional é mostrado junto ao bloco.
+    entradas:
+      - campo: Novo Contador
+        obrigatorio: true
+        origem_valores: texto livre, mas o campo só aceita dígitos — digitei "abc" e o
+          valor ficou vazio; digitei "999999" e ficou aceite sem qualquer aviso
+          de limite
+    casos_documento:
+      - CT-02
+      - CT-04
+      - CT-05
+      - CT-06
+      - CT-07
+    ressalva: Confirmei apenas o filtro client-side de dígitos (caracteres não
+      numéricos são descartados silenciosamente, sem mensagem de erro). Não
+      cliquei em "Alterar Contador" para não mexer no ponteiro real de
+      atribuição de localizações; por isso não vi nenhuma mensagem de validação
+      de limite máximo, nenhuma sugestão de "próximo lugar livre" quando o valor
+      está ocupado, nem a confirmação com contagem de lugares livres que o
+      documento descreve — nenhuma dessas três promessas está visível na tela
+      sem submeter.
+  - id: acc-04
+    tipo: filtro
+    nome: Filtrar grelha "Caixas alocadas" por localização e por caixa
+    como: Preencher "Localização De", "Localização Até" e/ou "Caixa" acima da
+      grelha; "Limpar" esvazia os três campos de uma vez.
+    promessa: Cabeçalho "Caixas alocadas" com os três campos de filtro e a contagem
+      "N caixas" ao lado do botão "Limpar".
+    entradas:
+      - campo: Localização De
+        obrigatorio: false
+        origem_valores: texto livre — aceitou "abc123" sem qualquer validação de formato
+      - campo: Localização Até
+        obrigatorio: false
+        origem_valores: texto livre, sem validação observada
+      - campo: Caixa
+        obrigatorio: false
+        origem_valores: texto livre, sem validação observada
+    casos_documento:
+      - CT-08
+    ressalva: A grelha esteve sempre vazia ("0 caixas") durante toda a exploração e
+      nenhuma chamada de API para esta tela foi feita ao carregar a página (só
+      confirmei uma chamada não relacionada, de aprovações pendentes). Não
+      consegui por isso confirmar que o filtro efetivamente restringe linhas
+      reais; confirmei só que os campos aceitam texto livre e que "Limpar" os
+      repõe.
+  - id: acc-05
+    tipo: consulta
+    nome: Ver grelha "Caixas alocadas"
+    como: 'Observar a tabela abaixo dos filtros: colunas "Caixa", "Localização",
+      "Área de Conferência", "Hora", checkbox "Marcar/Desmarcar Todas", contador
+      "X itens selecionados" com "Limpar seleção".'
+    promessa: Cabeçalhos de coluna da própria grelha + mensagem de estado vazio "Sem
+      caixas alocadas. Pistole a primeira caixa."
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-05
+      - CT-07
+      - CT-08
+      - CT-09
+      - CT-10
+    ressalva: "Grelha vazia durante toda a sessão. Não vi nenhum pedido de rede
+      desta tela para popular a grelha ao carregar a página — parece ser estado
+      só de sessão/cliente (não persistido nem recarregado do servidor), o que é
+      relevante para o Tour 5 (coerência ecrã-BD): um refresh da página
+      aparentemente perde a listagem visível mesmo que a transferência tenha
+      sido gravada na BD."
+  - id: acc-06
+    tipo: remocao
+    nome: Remover caixa(s) selecionada(s)
+    como: Marcar o checkbox de uma ou mais linhas da grelha e clicar "Remover". NÃO
+      CLIQUEI no botão nesta passagem.
+    promessa: Rótulo do botão "Remover", junto ao indicador "X itens selecionados" /
+      "Limpar seleção".
+    entradas:
+      - campo: Seleção de linha (checkbox)
+        obrigatorio: true
+        origem_valores: checkbox por linha da grelha + "Marcar/Desmarcar Todas" no cabeçalho
+    casos_documento:
+      - CT-09
+    ressalva: O botão "Remover" está sempre habilitado no DOM, mesmo com "0 itens
+      selecionados" — não cliquei para não arriscar alterar estado real. A tela
+      não mostra, em lado nenhum, texto explícito sobre o efeito da remoção
+      (caixa voltar ao estado Digitalização, localização ficar livre); essa
+      promessa vem apenas do rótulo do botão e do documento, não de um texto de
+      ajuda da própria tela.
+insumos_necessarios:
+  - descricao: Caixa em estado que antecede o arquivo ("Digitalização"), pronta para
+      ser pistolada nesta tela
+    obtivel: bd
+    razao: Esta tela não cria caixas nesse estado; o menu "Gestão de Armazém" tem
+      uma tela "Preparação" anterior no fluxo que possivelmente as produz, mas
+      não foi percorrida nesta passagem — não confirmei se ela deixa a caixa
+      pronta para esta tela sem passos adicionais. Sem essa confirmação, a via
+      mais segura é assumir massa preparada diretamente na BD/fluxo completo.
+  - descricao: Utilizador com perfil de supervisor real (login distinto, para testar
+      RBAC de facto)
+    obtivel: nao
+    razao: O ecrã só oferece o seletor "Perfil (demo)", que qualquer utilizador
+      consegue mudar sem autenticação adicional; não há aqui forma de obter um
+      segundo utilizador com permissões reais distintas.
+  - descricao: Segundo posto/sessão a pistolar em simultâneo (para o CT-10 de
+      concorrência)
+    obtivel: tela
+    razao: Basta abrir uma segunda aba/janela na mesma tela com o utilizador demo
+      disponível; não depende de nada fora do ambiente.
+  - descricao: Mapa de ocupação real da zona 5 (Arquivo Temporário) — lugares
+      livres/ocupados, incluindo os casos conhecidos 842 e 1006
+    obtivel: bd
+    razao: Só é visível por SQL read-only contra GESTARMAZEM.TRPRATELEIRA / TDCAIXA,
+      conforme as queries do documento; a tela não expõe uma consulta de
+      ocupação.
+  - descricao: Parametrização do limite máximo de posições/lugares da zona (para dar
+      valores concretos ao CT-06)
+    obtivel: nao
+    razao: O campo "Novo Contador" não mostra nenhum limite, mensagem ou dica na
+      interface; o documento já assinala que depende de confirmação com a
+      equipa, fora do que a tela ou a BD read-only revelam por si.
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: Utilizador com perfil de supervisor real (login distinto, para testar RBAC
+        de facto)
+      procurei:
+        - Um seletor de utilizador/perfil ligado a autenticação real (não o
+          'Perfil (demo)')
+        - Um ecrã de gestão de utilizadores/perfis nas telas irmãs da secção
+          Gestão de Armazém
+        - Ligação entre o cabeçalho de sessão (utilizador 'Manta /
+          PRRmanta_dev') e uma troca de utilizador real
+        - Rota direta para um ecrã de administração de utilizadores/permissões
+          dentro da secção
+      onde:
+        - "http://localhost:4174/armazem/transferencia-arquivo-temporario —
+          combobox 'Perfil (demo)': só duas opções, Operador e Supervisor, sem
+          autenticação"
+        - "http://localhost:4174/armazem/transferencia-arquivo-temporario —
+          botão 'Sair' no cabeçalho: abre confirmação 'Terminar Sessão'
+          (Não/Sim), indicando que existe sessão/login reais fora deste ecrã,
+          mas nenhuma forma de trocar para um segundo utilizador com perfil
+          distinto sem esse logout completo (cancelei com 'Não', sem submeter)"
+        - http://localhost:4174/armazem/associacao-caixa — sem seletor de
+          perfil, sem gestão de utilizadores
+        - http://localhost:4174/gestao-armazem/faturas-incidencia (incl. modal
+          'Atribuir Localização') — sem seletor de perfil, sem gestão de
+          utilizadores
+        - http://localhost:4174/armazem/libertar-arquivo-temporario (incl. 'Nova
+          libertação') — sem seletor de perfil, sem gestão de utilizadores
+        - http://localhost:4174/arquivo — sem seletor de perfil, sem gestão de
+          utilizadores
+        - http://localhost:4174/picking-expedicao — sem seletor de perfil, sem
+          gestão de utilizadores
+        - http://localhost:4174/armazem/preparacao — identificação por
+          crachá/código de operador, não é autenticação nem distingue perfis
+        - http://localhost:4174/armazem/guia-anf — sem seletor de perfil, sem
+          gestão de utilizadores
+        - http://localhost:4174/armazem/registo-entrada — sem seletor de perfil,
+          sem gestão de utilizadores
+      resultado: nao_existe
+      accao: null
+      nota: Em nenhuma das 9 telas visitadas existe forma de obter um segundo
+        utilizador com perfil de supervisor real e distinto. O único mecanismo
+        de troca de perfil é o combobox 'Perfil (demo)' do próprio ecrã de
+        transferência, que qualquer utilizador muda livremente sem autenticação
+        adicional — confirma a conclusão da primeira passagem. O botão 'Sair'
+        revela que existe uma sessão/login real (SSO) por trás da aplicação, mas
+        nenhuma tela desta secção oferece gestão de utilizadores ou uma segunda
+        conta com permissões distintas; obter isso exigiria credenciais reais de
+        um segundo utilizador, fora do alcance desta exploração.
+    - alvo: Parametrização do limite máximo de posições/lugares da zona (para dar
+        valores concretos ao CT-06)
+      procurei:
+        - Mensagem, dica, tooltip ou texto de ajuda junto ao campo 'Novo
+          Contador' que indique um valor máximo
+        - Atributo HTML (max/min/title) no campo 'Novo Contador' que revele um
+          limite
+        - Um ecrã de parametrização de zonas/lugares/capacidade nas telas irmãs
+          da secção Gestão de Armazém
+        - Qualquer número de referência (ex. exemplos de placeholder) que sirva
+          de proxy para o limite de posições da zona 5
+      onde:
+        - "http://localhost:4174/armazem/transferencia-arquivo-temporario —
+          mudei 'Perfil (demo)' para Supervisor: campo 'Novo Contador' aparece
+          com placeholder '1' e botão 'Alterar Contador', sem qualquer texto de
+          limite, dica ou validação visível; inspecionei o input via DOM
+          (max='', min='', type='text', title='') — sem limite codificado no
+          próprio elemento"
+        - http://localhost:4174/armazem/associacao-caixa — combobox 'Área', sem
+          qualquer referência a capacidade/limite de lugares
+        - "http://localhost:4174/gestao-armazem/faturas-incidencia — modal
+          'Atribuir Localização': campo 'Local' é texto livre (ex.: 'CASSETE
+          25'), sem numeração de posições nem limite"
+        - "http://localhost:4174/armazem/libertar-arquivo-temporario — 'Nova
+          Libertação': campos 'Localização Inicial'/'Localização Final' com
+          exemplos '1800'/'1950' (apenas exemplos de formato, não um limite
+          declarado)"
+        - http://localhost:4174/arquivo — combobox 'Tipo' só tem
+          Factura/Pasta/Caixa, sem opção de zona nem capacidade
+        - http://localhost:4174/picking-expedicao — sem qualquer referência a
+          zonas/lugares
+        - http://localhost:4174/armazem/preparacao — sem qualquer referência a
+          zonas/lugares
+        - http://localhost:4174/armazem/guia-anf — sem qualquer referência a
+          zonas/lugares
+        - http://localhost:4174/armazem/registo-entrada — sem qualquer
+          referência a zonas/lugares
+      resultado: nao_existe
+      accao: null
+      nota: "Nenhuma das telas revela, na interface, um limite máximo de
+        posições/lugares da zona de arquivo. O único valor numérico próximo ao
+        tema são os exemplos '1800'/'1950' nos campos de intervalo de 'Nova
+        Libertação', mas são apenas placeholders de formato, não uma
+        parametrização declarada de capacidade — não conta como equivalente.
+        Confirma a conclusão da primeira passagem: o valor para o CT-06 continua
+        a depender de confirmação direta com a equipa, fora do que qualquer ecrã
+        do produto ou a BD read-only expõe."

@@ -1,0 +1,441 @@
+documento: consulta-area-prestacao/cuidados-respiratorios-prestacoes.md
+rota: /cuidados-respiratorios/prestacao
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Filtrar por Número da Factura
+    como: Campo de texto "Número da Factura" (placeholder "Insira o número da
+      factura") no bloco Pesquisa Prestações; preencher e clicar Pesquisar.
+    promessa: Restringir a lista a prestações da factura indicada.
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre
+    ressalva: 'Campo existe e foi visto na lista/detalhe (ex.: "545", "9700035757"),
+      mas não foi submetido isoladamente nesta exploração; o padrão de
+      querystring (?numFactura=...) é inferido por analogia com nifPrestador e
+      numPrescricao, que foram testados.'
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Filtrar por Data da Factura
+    como: Campo com date-picker (placeholder DD/MM/YYYY) e botão "Abrir/fechar
+      calendário"; selecionar um dia no calendário (não aceita digitação livre —
+      o texto digitado diretamente não ficou retido) e clicar Pesquisar.
+    promessa: Restringir a lista às prestações da factura emitida nessa data.
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: date-picker, um único dia
+    casos_documento:
+      - CT-02
+    equivalente_aproximado: true
+    ressalva: Testado com 31/12/2025 → querystring dataFactura=2025-12-31, devolveu
+      2530 resultados. É um filtro de DIA ÚNICO, sem campo "de/até"; o CT-02 do
+      documento pressupõe filtrar por um período (dezembro de 2025 inteiro) —
+      isso não existe nesta tela, seria preciso repetir a pesquisa dia a dia.
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: Filtrar por NIF do Prestador
+    como: Campo de texto "NIF do Prestador"; preencher e clicar Pesquisar.
+    promessa: Restringir a lista às prestações do prestador com esse NIF.
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: NIF do Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+    ressalva: Testado com 507713222 → querystring nifPrestador=507713222, devolveu
+      291991 resultados (universo grande, sem paginação de segurança adicional
+      além da normal).
+  - id: filtro-codigo-convencao
+    tipo: filtro
+    nome: Filtrar por Código da Convenção
+    como: Campo de texto "Código da Convenção" (placeholder "Insira o código da
+      convenção"); preencher e clicar Pesquisar.
+    promessa: 'Restringir a lista às prestações da convenção indicada (ex.: "3050003L").'
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: Código da Convenção
+        obrigatorio: false
+        origem_valores: texto livre
+    ressalva: Existe no formulário mas não foi submetido isoladamente nesta exploração.
+  - id: filtro-numero-lote
+    tipo: filtro
+    nome: Filtrar por Número do Lote
+    como: Campo de texto "Número do Lote"; preencher e clicar Pesquisar.
+    promessa: Restringir a lista às prestações desse lote.
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: Número do Lote
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: Existe como filtro isolado nesta tela (entrar com o número do lote e
+      pesquisar), mas o CT-07 descreve um drill vindo do ecrã de Lotes CRD com
+      contexto preservado (factura+lote+prestação); isso não foi testado aqui
+      porque está noutro ecrã. Nesta exploração todas as linhas devolvidas
+      mostraram Nº Lote = "0" mesmo tendo Nº Factura e Tipo de Lote preenchidos
+      — vale confirmar se "0" é um valor real de negócio ou um placeholder de
+      campo não populado.
+  - id: filtro-tipo-lote
+    tipo: filtro
+    nome: Filtrar por Tipo de Lote
+    como: Combobox "Tipo de Lote"; abre uma lista de opções fixas.
+    promessa: Restringir a lista ao tipo de lote selecionado.
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: Tipo de Lote
+        obrigatorio: false
+        origem_valores: "catálogo fixo: Aerossolterapia; Oxigenoterapia; Ventiloterapia;
+          Equipamentos; Prescrições sem necessidade de envio de papel;
+          Prescrições sem necessidade de envio de papel –
+          Aerossolterapia/Oxigenoterapia/Ventiloterapia/Outros equipamentos;
+          Conferência eletrónica; Prescrições sem papel –
+          Aerossolterapia/Oxigenoterapia/Ventiloterapia/Outros equipamentos (14
+          valores)"
+    ressalva: Combobox abre e lista os 14 valores; não foi submetido com Pesquisar
+      para confirmar o efeito de filtragem nesta exploração.
+  - id: filtro-numero-prescricao
+    tipo: filtro
+    nome: Filtrar por Número da Prescrição
+    como: Campo de texto "Número da Prescrição" (placeholder "Insira o número da
+      prescrição"); preencher (aceita 19 dígitos) e clicar Pesquisar.
+    promessa: Localizar a prestação daquela prescrição.
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: Número da Prescrição
+        obrigatorio: false
+        origem_valores: texto livre, até 19+ dígitos
+    casos_documento:
+      - CT-01
+      - CT-03
+    ressalva: Testado com 3051000007006411817 (devolveu a prestação 28922899,
+      valores batendo com o documento exceto o Nº Lote, ver ressalva de
+      filtro-numero-lote) e com o mesmo valor rodeado de espaços
+      ("  3051...817  ") — o campo tolerou e a querystring saiu já sem espaços
+      (trim automático), confirmando a expectativa do CT-01. Também observei, ao
+      pesquisar por Data da Factura, prescrições reais de 19 dígitos com prefixo
+      1051 além de 3051 — relevante para o risco do CT-03.
+  - id: filtro-tipo-prescricao
+    tipo: filtro
+    nome: Filtrar por Tipo de Prescrição
+    como: Combobox "Tipo de Prescrição"; abre uma lista de opções fixas.
+    promessa: Restringir a lista ao tipo de prescrição selecionado.
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: Tipo de Prescrição
+        obrigatorio: false
+        origem_valores: "catálogo fixo: Prescrição De Continuidade; Prescrição Inicial;
+          Prescrição Modificação (3 valores)"
+    ressalva: O documento assinala como risco "Tipo de Prescrição sem catálogo
+      confirmado" — mas nesta build o catálogo existe e é fixo (3 valores), e os
+      mesmos 3 rótulos aparecem como coluna "Tipo Prescrição" nos resultados
+      reais. Não foi submetido com Pesquisar para confirmar o efeito de
+      filtragem.
+  - id: consulta-limpar-filtros
+    tipo: filtro
+    nome: Limpar filtros
+    como: Botão "Limpar" junto ao botão Pesquisar.
+    promessa: Repor todos os campos de pesquisa e a lista de resultados ao estado
+      inicial ("Sem resultados").
+    rota: /cuidados-respiratorios/prestacao
+  - id: consulta-pesquisar
+    tipo: consulta
+    nome: Pesquisar prestações (combinação AND dos filtros preenchidos)
+    como: Botão "Pesquisar"; combina em AND todos os campos preenchidos e chama GET
+      /ccmsns/api/crd/prestacoes com os parâmetros correspondentes.
+    promessa: Devolver a lista de prestações que respeitam todos os filtros
+      preenchidos; exige pelo menos um filtro.
+    rota: /cuidados-respiratorios/prestacao
+    casos_documento:
+      - CT-10
+    ressalva: 'Confirmado: pesquisar sem nenhum filtro preenchido não dispara
+      chamada à API — mostra alerta "É necessário preencher pelo menos um dos
+      campos de pesquisa." Corresponde exatamente à expectativa do CT-10
+      ("pesquisa sem critérios é recusada com mensagem").'
+  - id: consulta-lista-resultados
+    tipo: consulta
+    nome: Grelha de Resultados da Pesquisa
+    como: Tabela exibida após pesquisar, com colunas Cód. Convenção, NIF Prestador,
+      Descrição, Nº da Factura, Data Factura, Nº Lote, Tipo de Lote, Nº
+      Prescrição, Tipo Prescrição, Estado, Qtd. Comunicado, Valor Comunicado,
+      Qtd. Apurado, Valor Apurado.
+    promessa: Mostrar, por linha, os dados de identificação e os valores
+      comunicados/apurados de cada prestação encontrada.
+    rota: /cuidados-respiratorios/prestacao
+    casos_documento:
+      - CT-04
+    equivalente_aproximado: true
+    ressalva: O documento fala em colunas "Comunicado, Apurado e Total"; a tela não
+      tem uma coluna "Total" separada — tem dois pares Qtd./Valor Comunicado e
+      Qtd./Valor Apurado, alinhados à direita. Valores conferidos batem com a BD
+      para a prestação 28922899 (Qtd. 31, Valor 40,30 em ambas as colunas — sem
+      divergência comunicado/apurado nesta amostra).
+  - id: consulta-mensagem-sem-resultados
+    tipo: consulta
+    nome: Estado vazio da grelha (pesquisa sem correspondência)
+    como: 'Pesquisar com um filtro que não corresponde a nenhum registo (ex.: Número
+      da Prescrição "3051999999999999999").'
+    promessa: Indicar claramente que não há resultados, sem quebrar a grelha.
+    rota: /cuidados-respiratorios/prestacao
+    casos_documento:
+      - CT-10
+    ressalva: 'Confirmado: linha única na tabela com "Nenhuma prestação corresponde
+      aos filtros aplicados.", rodapé "0 resultados" e botão "Exportar XLSX"
+      fica desabilitado.'
+  - id: consulta-ordenar-coluna
+    tipo: consulta
+    nome: Ordenar por coluna (cabeçalhos clicáveis)
+    como: Cabeçalhos "Ordenar por Cód. Convenção", "Ordenar por Nº da Factura",
+      "Ordenar por Data Factura", "Ordenar por Nº Lote", "Ordenar por Nº
+      Prescrição" têm cursor de clique.
+    promessa: O rótulo acessível ("Ordenar por X") promete reordenar a lista por
+      aquela coluna.
+    rota: /cuidados-respiratorios/prestacao
+    ressalva: "Testado (2 cliques, toggle) numa pesquisa com 2530 resultados: nenhum
+      novo pedido de rede foi disparado e a ordem das linhas na página não
+      mudou. Aparenta ser não funcional/decorativo nesta build — a promessa do
+      rótulo não é cumprida."
+  - id: navegacao-paginacao
+    tipo: navegacao
+    nome: Paginação dos resultados
+    como: Controlos "Go to page N", "Go to next/previous/first/last page" por baixo
+      da grelha.
+    promessa: Navegar entre páginas de resultados sem perder os filtros aplicados.
+    rota: /cuidados-respiratorios/prestacao
+    ressalva: "Testado (ida à página 2 com filtro dataFactura=2025-12-31):
+      querystring atualizou para pagina=1 e a chamada à API trouxe outro
+      conjunto de 10 linhas, mantendo o filtro de data."
+  - id: filtro-resultados-por-pagina
+    tipo: filtro
+    nome: Resultados por página
+    como: Combobox "Resultados por página" junto ao rodapé da grelha.
+    promessa: Alterar o tamanho de página (10/25/50/100).
+    rota: /cuidados-respiratorios/prestacao
+    entradas:
+      - campo: Resultados por página
+        obrigatorio: false
+        origem_valores: 10, 25, 50, 100
+  - id: exportacao-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Botão "Exportar XLSX" acima da grelha; dispara POST
+      /ccmsns/api/crd/prestacoes/exportar com os mesmos filtros da pesquisa
+      atual.
+    promessa: Descarregar um ficheiro Excel (prestacoes-crd.xlsx) com os resultados
+      da pesquisa atual.
+    rota: /cuidados-respiratorios/prestacao
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: Confirmado que o botão dispara o download de "prestacoes-crd.xlsx"
+      (guardado nesta pasta de corrida). Não abri o ficheiro para confirmar
+      ausência de truncagem/notação científica nos identificadores de 19 dígitos
+      — só confirmei que a ação de exportar existe e produz um ficheiro. Fica
+      desabilitado quando a pesquisa não tem resultados.
+  - id: navegacao-ver-detalhe
+    tipo: navegacao
+    nome: Ver detalhe da prestação
+    como: Botão de ícone na primeira coluna de cada linha, rotulado "Ver detalhe da
+      prestação {nº prescrição}"; navega para
+      /cuidados-respiratorios/prestacao/{idPrestacao}.
+    promessa: Abrir o detalhe completo daquela prestação.
+    rota: /cuidados-respiratorios/prestacao
+    casos_documento:
+      - CT-05
+  - id: consulta-detalhe-prestacao
+    tipo: consulta
+    nome: Detalhe da Prestação
+    como: Ecrã /cuidados-respiratorios/prestacao/{id}, chamando GET
+      /ccmsns/api/crd/prestacoes/{id}; organizado em blocos "Factura / Lote",
+      "Prescrição", "Prestador / Utente", "Quantidades / Valores" e uma grelha
+      "Linhas de Prestação" (Nº Linha, Sistema Prescrito, Contexto, Qtd./Valor
+      Unit./Total Comunicado e Apurado).
+    promessa: O cabeçalho "Detalhe da Prestação" promete mostrar todos os dados
+      daquela prestação.
+    rota: /cuidados-respiratorios/prestacao/{id}
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: 'Divergência relevante: o documento pede secções "Informação
+      Comunicada", "Informação Conferida", "Erros", "Conta Corrente" e
+      "Reclamações". Nenhuma delas existe nesta tela — confirmei inspecionando o
+      payload JSON de GET /ccmsns/api/crd/prestacoes/28922899, que só tem os
+      campos de identificação, prescrição, prestador/utente, quantidades/valores
+      e a lista "linhas" (linhas de prestação). Não há nenhum campo, secção ou
+      chamada de API adicional para erros, conta corrente ou reclamações. "Nº
+      Utente" (número, não nome) é exibido — compatível com a exigência de não
+      mostrar nome de utente, mas é mais exposição de dado pessoal do que zero.'
+  - id: navegacao-ver-prescricao
+    tipo: navegacao
+    nome: Ver Prescrição (botão desabilitado)
+    como: Botão "Ver Prescrição" no cabeçalho do Detalhe da Prestação; aparece
+      sempre desabilitado (disabled) nesta build.
+    promessa: O rótulo promete abrir o ecrã/registo da prescrição associada a esta
+      prestação.
+    rota: /cuidados-respiratorios/prestacao/{id}
+    ressalva: Não pude testar o destino real porque o botão está desabilitado
+      (cinzento, sem cursor de clique) em todas as prestações inspecionadas —
+      parece uma funcionalidade prevista mas ainda não ligada.
+  - id: navegacao-voltar
+    tipo: navegacao
+    nome: Voltar (do detalhe para a lista)
+    como: Botão "Voltar" no fundo do Detalhe da Prestação.
+    promessa: Regressar à lista de resultados.
+    rota: /cuidados-respiratorios/prestacao/{id}
+    casos_documento:
+      - CT-05
+    ressalva: 'Confirmado que os filtros são preservados: ao voltar, a URL da lista
+      manteve ?numPrescricao=3051000007006411817&pagina=0&tamanho=10, exatamente
+      como a expectativa do CT-05 ("Voltar regressa à lista com filtros
+      preservados").'
+  - id: selecao-linhas-resultado
+    tipo: consulta
+    nome: Seleção de linhas na grelha ("0 itens selecionados" / Limpar seleção)
+    como: Indicador "N itens selecionados" e botão "Limpar seleção" acima da grelha,
+      tanto na lista de resultados como na grelha "Linhas de Prestação" do
+      detalhe.
+    promessa: Sugere um mecanismo de seleção de linhas (possivelmente para
+      exportação seletiva), mas não encontrei checkboxes visíveis nas células
+      nem testei a seleção diretamente.
+    rota: /cuidados-respiratorios/prestacao
+    ressalva: Não explorei esta ação a fundo para evitar cliques ambíguos na mesma
+      célula que contém o botão de detalhe; efeito exato (o que faz selecionar
+      linhas, se afeta a exportação) fica por confirmar.
+  - id: consulta-estado-prestacao-crd
+    tipo: consulta
+    nome: Coluna/campo Estado traduzido na lista e no detalhe da Prestação CRD
+    como: 'Pesquisar prestações no ecrã de Prestações CRD (ex.: por Número da
+      Prescrição) e observar a coluna "Estado" nos resultados, ou abrir o
+      detalhe de uma prestação e ver o campo "Estado" na secção "Prestador /
+      Utente".'
+    promessa: 'O código de estado da prescrição/prestação (ex.: 11) é apresentado já
+      traduzido para a descrição do catálogo (ex.: "Recepcionado"), tanto na
+      lista de resultados como no detalhe da prestação.'
+    rota: /cuidados-respiratorios/prestacao
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: 'A tradução do código de estado para descrição (parte do CT-08) existe
+      e é visível na própria tela de Prestações CRD, na coluna Estado da lista
+      (ex.: "Recepcionado" para o código 11 RECP) e no campo Estado do detalhe.
+      Já a pesquisa restrita por Estado (a outra metade do cenário) não existe
+      nesta tela nem em Lotes CRD; a tela de Facturas CRD tem um filtro chamado
+      "Estado", mas para um catálogo diferente (estados de fatura, não de
+      prescrição/prestação), pelo que não é a mesma coisa. O caso continua por
+      cobrir quanto ao filtro por estado de prescrição/prestação.'
+insumos_necessarios:
+  - descricao: Prestação CRD real com número de prescrição de 19 dígitos (prefixo
+      3051 ou 1051 observado), para repetir CT-01/CT-03 com valores próprios da
+      sessão de teste
+    obtivel: bd
+    razao: A tela é estritamente de consulta (read-only); os registos só existem
+      porque já estão na BD QUA (GESTCONFER.TDCFPRESTACAOCRD), não há como
+      criá-los pela interface.
+  - descricao: 'Prestação em estado diferente de "Recepcionado" (ex.: 12 CONF, 24
+      CCE, 25 CSE) para confirmar que o ecrã traduz corretamente os quatro
+      estados do catálogo (CT-08)'
+    obtivel: bd
+    razao: Não há filtro por Estado na tela; é preciso encontrar por SQL um registo
+      já nesse estado e depois localizá-lo por outro filtro (prescrição, factura
+      ou lote).
+  - descricao: "Lote com múltiplas prescrições associadas (ex.: o lote 393253 /
+      factura 67269 referido no documento), para testar o filtro Número do Lote
+      com um conjunto maior que 1 resultado"
+    obtivel: bd
+    razao: Depende de massa específica já existente na BD; a tela não permite criar
+      lotes.
+  - descricao: "Factura com número duplicado (ex.: 2026A15-44) para testar se a
+      navegação/pesquisa por Número da Factura ambíguo é tratada de forma
+      segura"
+    obtivel: bd
+    razao: É um caso de dados específico apontado pelo documento; só localizável com
+      SQL prévio.
+  - descricao: Acesso a SQLcl/BD QUA em modo estritamente read-only para verificação
+      cruzada ecrã↔BD dos valores exibidos
+    obtivel: bd
+    razao: Necessário para confirmar Qtd./Valor Comunicado/Apurado, datas e estados
+      contra a fonte de verdade, como o próprio documento pede na secção 5.
+casos_sem_accao:
+  - CT-06
+  - CT-08
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-06
+      procurei:
+        - Texto "Conta Corrente" no detalhe da prestação CRD (prestação 28922899)
+        - Secção equivalente de saldo/movimentos financeiros no detalhe da
+          prestação CRD
+        - Texto "Conta Corrente" no detalhe da Factura CRD (referência do
+          documento como tela com terminologia coerente)
+        - Secções e separadores do detalhe da Factura CRD que possam
+          corresponder a Conta Corrente por outro nome
+        - Texto "Conta Corrente" na tela de Lotes CRD (pesquisa e colunas)
+      onde:
+        - "http://localhost:4174/cuidados-respiratorios/prestacao/28922899
+          (Detalhe da Prestação: secções Factura/Lote, Prescrição,
+          Prestador/Utente, Quantidades/Valores, Linhas de Prestação)"
+        - "http://localhost:4174/cuidados-respiratorios/factura/66955 (Factura
+          de CRDs: separadores Informações e Lotes; dentro de Informações:
+          Informação Não Conferida, Informação Conferida, Diferenças, Erros,
+          Expedição)"
+        - http://localhost:4174/cuidados-respiratorios/lote (Pesquisa Lotes,
+          colunas da lista de resultados)
+      resultado: nao_existe
+      accao: null
+      nota: Nem o detalhe da Prestação nem o detalhe da Factura CRD (referida no
+        documento como tendo terminologia coerente) têm qualquer secção chamada
+        ou parecida com "Conta Corrente". A Factura CRD tem, em vez disso,
+        separadores/secções Informação Não Conferida, Informação Conferida,
+        Diferenças, Erros e Expedição — nenhuma trata de saldo/movimentos por
+        conta corrente. A tela de Lotes CRD também não apresenta essa
+        terminologia nas colunas de pesquisa. Não encontrei elemento renderizado
+        que corresponda ao pedido do CT-06; fica como hipótese de funcionalidade
+        ainda não implementada.
+    - alvo: CT-08
+      procurei:
+        - Campo/filtro "Estado" no formulário de pesquisa de Prestações CRD
+        - "Tradução do código de estado da prescrição/prestação (ex.: 11 RECP)
+          para descrição do catálogo, na coluna Estado da lista de resultados"
+        - Tradução do estado no detalhe da prestação (secção Prestador/Utente)
+        - Filtro "Estado" equivalente nas telas de Lotes CRD e Facturas CRD
+          desta mesma secção de menu, e comparação do catálogo de valores
+      onde:
+        - "http://localhost:4174/cuidados-respiratorios/prestacao (formulário de
+          pesquisa: Número da Factura, Data da Factura, NIF do Prestador, Código
+          da Convenção, Número do Lote, Tipo de Lote, Número da Prescrição, Tipo
+          de Prescrição — sem campo Estado)"
+        - http://localhost:4174/cuidados-respiratorios/prestacao?numPrescricao=3051000007006411817
+          (lista de resultados, coluna Estado)
+        - http://localhost:4174/cuidados-respiratorios/prestacao/28922899
+          (detalhe, secção Prestador/Utente, campo Estado)
+        - "http://localhost:4174/cuidados-respiratorios/lote (formulário de
+          pesquisa: sem campo Estado; coluna Estado existe na lista mas não é
+          filtro)"
+        - 'http://localhost:4174/cuidados-respiratorios/factura (formulário de
+          pesquisa: tem combobox "Estado" com opções Aguarda Comunicação de
+          Correcções, Aguarda Regularização, Anulada, Comunicada Informação Não
+          Conferida, Conferida Com Erros, Conferida Sem Erros, Em Reconferência,
+          Processamento Concluído, Recepcionada, Recepcionada com Erros,
+          Verificada)'
+      resultado: encontrado
+      accao: consulta-estado-prestacao-crd
+      equivalente_aproximado: true
+      captura: CT-08-lista-estado-traduzido.png
+      nota: 'A tradução do código de estado para descrição (parte do CT-08) existe e é
+        visível na própria tela de Prestações CRD, na coluna Estado da lista
+        (ex.: "Recepcionado" para o código 11 RECP) e no campo Estado do
+        detalhe. Já a pesquisa restrita por Estado (a outra metade do cenário)
+        não existe nesta tela nem em Lotes CRD; a tela de Facturas CRD tem um
+        filtro chamado "Estado", mas para um catálogo diferente (estados de
+        fatura, não de prescrição/prestação), pelo que não é a mesma coisa. O
+        caso continua por cobrir quanto ao filtro por estado de
+        prescrição/prestação.'

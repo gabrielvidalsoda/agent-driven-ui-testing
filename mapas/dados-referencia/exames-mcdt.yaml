@@ -1,0 +1,341 @@
+documento: dados-referencia/exames-mcdt.md
+rota: /mcdts/exames
+mapeado_em: http://localhost:4174/mcdts/exames — percorrido manualmente via
+  browser (Playwright) em 2026-09-02; capturas em
+  corridas/dados-referencia__exames-mcdt__mapa/
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: A1
+    tipo: filtro
+    nome: Filtrar por Área MCDT
+    como: Ecrã Dados de Referência > Exames MCDT (/mcdts/exames). Abrir o combobox
+      'Área MCDT' (opções carregadas de GET /ccmsns/api/mcdt/areas) e escolher
+      uma área; o valor vai para a URL como ?codigoArea=<letra>.
+    promessa: Selecionar uma das áreas MCDT reais para filtrar a pesquisa.
+    rota: /mcdts/exames
+    entradas:
+      - campo: Área MCDT
+        obrigatorio: false
+        origem_valores: "combobox fechado, 16 opções fixas: Análises Clínicas (A),
+          Anatomia Patológica (B), Cardiologia (C), Medicina Nuclear (D),
+          Electroencefalografia (E), Endoscopia Gastroent. (F), Medicina Física
+          e Reabilit. (G), Otorrinolaringologia (H), Pneumo e Imunoalerg. (I),
+          Urologia (J), Neurofisiologia (L), Radiologia (M), Consultas (N),
+          Psicologia (O), Análises Clínicas - Atos não Convencionados (P),
+          IPATIMUP (Y)"
+    casos_documento:
+      - CT-02
+  - id: A2
+    tipo: filtro
+    nome: Filtrar por Código do Exame
+    como: Escrever no campo de texto 'Código do Exame' (placeholder 'Ex. 123.4 ou
+      1234.56') e clicar 'Pesquisar'; o valor vai para a URL como ?codigoExame=.
+    promessa: Pesquisar exames pelo código de convenção, incluindo casa decimal e
+      zeros à esquerda.
+    rota: /mcdts/exames
+    entradas:
+      - campo: Código do Exame
+        obrigatorio: false
+        origem_valores: "texto livre, validado no cliente com o formato NNN(N).N(N);
+          mensagem exibida ao falhar: 'O código do exame deve ter o formato
+          NNN(N).N(N) — exemplos: 123.4, 1234.56.' Um código SNS puro (ex.
+          '26075', sem ponto decimal) é rejeitado por esta validação e o clique
+          em Pesquisar não chega a submeter."
+    casos_documento:
+      - CT-01
+      - CT-03
+      - CT-04
+    equivalente_aproximado: true
+    ressalva: CT-01 pede pesquisa pelo código SNS 26075; o campo só aceita o código
+      de convenção e rejeita dígitos SNS puros. Consegui obter o mesmo exame
+      (759, 'Anticorpos para CMV IgM', área Análises Clínicas) pesquisando pelo
+      código de convenção 1134.1. CT-03 (874.5) e CT-04 (037.0, zero à esquerda)
+      funcionaram tal e qual descritos — o zero à esquerda e o ponto decimal são
+      preservados na pesquisa e na apresentação.
+  - id: A3
+    tipo: consulta
+    nome: Pesquisar exames MCDT
+    como: Botão 'Pesquisar', ativo assim que a Área MCDT e/ou o Código do Exame (em
+      formato válido) estão preenchidos; com ambos vazios o botão fica
+      desabilitado/inerte.
+    promessa: Devolver, na grelha 'Resultados da Pesquisa', os exames que
+      correspondem aos filtros preenchidos (colunas Designação Área MCDT, Código
+      SNS, Código Exame, Descrição MCDT, Ações).
+    rota: /mcdts/exames
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-09
+    ressalva: "Confirmado CT-02: as 16 áreas do combobox batem com a lista do
+      documento e a pesquisa por área A devolveu 569 exames. Confirmado CT-04: o
+      código de convenção '037.0' devolveu 3 exames distintos em 3 áreas
+      diferentes (Análises Clínicas/24197, Consultas/sem código SNS, Medicina
+      Nuclear/58000) — o código de convenção não é único por área. CT-09
+      (pesquisa sem resultados) confirmado: mensagem limpa 'Nenhum exame MCDT
+      corresponde aos filtros aplicados.', sem erro."
+  - id: A4
+    tipo: filtro
+    nome: Limpar filtros de pesquisa
+    como: Botão 'Limpar' ao lado de 'Pesquisar'.
+    promessa: Repor a Área MCDT para 'Selecione' e o Código do Exame vazio, voltando
+      ao estado inicial 'Sem resultados'.
+    rota: /mcdts/exames
+    casos_documento: []
+  - id: A5
+    tipo: navegacao
+    nome: Ver detalhe do exame
+    como: Botão/ícone (olho) na coluna 'Ações' de cada linha da grelha de resultados
+      (rótulo acessível 'Ver detalhe do exame {código}'); navega para
+      /mcdts/exames/{idMcdt}.
+    promessa: Abrir a ficha completa do exame selecionado.
+    rota: /mcdts/exames/{id}
+    casos_documento:
+      - CT-05
+  - id: A6
+    tipo: consulta
+    nome: Ficha do exame MCDT
+    como: Bloco de informação no topo do detalhe do exame (/mcdts/exames/{id}).
+    promessa: Mostrar Área, Descrição do Exame, Código Convenção, Quantidade Máx.
+      Autorizada e Código SNS do exame selecionado, sem trocar os três códigos.
+    rota: /mcdts/exames/{id}
+    casos_documento:
+      - CT-05
+      - CT-03
+    ressalva: "Confirmado em 4 exames de áreas diferentes (759 Análises Clínicas,
+      599 Análises Clínicas, 785 Análises Clínicas, 11071 Radiologia): os três
+      códigos (id interno na URL, Código SNS, Código Convenção) aparecem sempre
+      nos campos corretos e a área da ficha coincide com a da linha de origem."
+  - id: A7
+    tipo: consulta
+    nome: Histórico de Preços do exame
+    como: Secção 'Histórico de Preços' no detalhe do exame.
+    promessa: Listar o histórico de preços e vigências do exame (cabeçalho da
+      secção); mostra 'Sem histórico de preços para este exame.' quando a API
+      devolve historicoPrecos vazio.
+    rota: /mcdts/exames/{id}
+    casos_documento:
+      - CT-06
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: A resposta de GET /ccmsns/api/mcdt/exames/{id} devolve
+      historicoPrecos:[] em todos os 326 exames amostrados (16 áreas, incluindo
+      os 7 da massa do documento) — nunca observei esta secção com conteúdo. A
+      ficha do exame também não tem nenhum campo de preço/taxa
+      moderadora/desconto por convenção fora desta secção; o que CT-07 pede
+      (comparar com TRCONVMCDTEXAMES por convenção) não tem contraparte visível
+      na tela além deste histórico, que está sempre vazio.
+  - id: A8
+    tipo: consulta
+    nome: Exames Equivalentes
+    como: Secção 'Exames Equivalentes' no detalhe do exame.
+    promessa: Listar exames equivalentes ao selecionado; mostra 'A pesquisa não
+      retornou resultados' quando vazio.
+    rota: /mcdts/exames/{id}
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: examesEquivalentes:[] em todos os 326 exames amostrados; o estado
+      vazio é explícito e distinto de erro, como o CT-08 pede, mas não foi
+      possível validar o conteúdo real da secção (nunca populada na amostra).
+  - id: A9
+    tipo: consulta
+    nome: Exames Compatíveis
+    como: Secção 'Exames Compatíveis' no detalhe do exame.
+    promessa: Listar exames compatíveis com o selecionado; mostra 'A pesquisa não
+      retornou resultados' quando vazio.
+    rota: /mcdts/exames/{id}
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: examesCompativeis:[] em todos os 326 exames amostrados.
+  - id: A10
+    tipo: consulta
+    nome: Exames Não Prescritos Autorizados
+    como: Secção 'Exames Não Prescritos Autorizados' no detalhe do exame.
+    promessa: Listar exames não prescritos mas autorizados em conjunto com o
+      selecionado; mostra 'A pesquisa não retornou resultados' quando vazio.
+    rota: /mcdts/exames/{id}
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: examesNaoPrescritosAutorizados:[] em todos os 326 exames amostrados.
+  - id: A11
+    tipo: consulta
+    nome: Exames Obrigatórios
+    como: Secção 'Exames Obrigatórios' no detalhe do exame.
+    promessa: Listar exames obrigatórios associados ao selecionado; mostra 'A
+      pesquisa não retornou resultados' quando vazio.
+    rota: /mcdts/exames/{id}
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: examesObrigatorios:[] em todos os 326 exames amostrados.
+  - id: A12
+    tipo: navegacao
+    nome: Voltar à pesquisa (botão Voltar)
+    como: Botão 'Voltar' no fundo do detalhe do exame.
+    promessa: Regressar à lista de resultados.
+    rota: /mcdts/exames
+    casos_documento:
+      - CT-08
+    ressalva: "Confirmado: preserva os filtros e a paginação da pesquisa anterior
+      (testado a partir de ?codigoExame=1134.1&pagina=0&tamanho=10 — regressou
+      exatamente a esse estado)."
+  - id: A13
+    tipo: navegacao
+    nome: Breadcrumb 'Exames MCDT'
+    como: Link 'Exames MCDT' no breadcrumb, visível tanto na lista como no detalhe
+      do exame.
+    promessa: Regressar ao ecrã de pesquisa de Exames MCDT.
+    rota: /mcdts/exames
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "Diverge do CT-08: a partir do detalhe, este link navega para
+      /mcdts/exames sem os parâmetros da pesquisa anterior — os filtros e os
+      resultados são repostos ao estado inicial 'Sem resultados'. Só o botão
+      'Voltar' (A12) preserva a pesquisa; o breadcrumb não. O CT-08 espera que
+      'ambos os caminhos de regresso funcionem e preservem a pesquisa' — só um
+      dos dois preserva."
+  - id: A14
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Botão 'Exportar XLSX' acima da grelha de resultados, visível apenas com
+      pesquisa efetuada; fica desabilitado quando a pesquisa devolve 0
+      resultados.
+    promessa: Gerar um ficheiro .xlsx com os resultados da pesquisa atual (rótulo do
+      botão).
+    rota: /mcdts/exames
+    casos_documento: []
+    ressalva: "Testado com filtro de área A ativo: dispara POST
+      /ccmsns/api/mcdt/exames/exportar?codigoArea=A (mantém o filtro) e
+      descarrega exames-mcdt.xlsx com sucesso."
+  - id: A15
+    tipo: consulta
+    nome: Ordenar resultados por coluna
+    como: Clicar nos cabeçalhos clicáveis 'Ordenar por Designação Área MCDT / Código
+      SNS / Código Exame' da grelha de resultados.
+    promessa: Reordenar a lista de exames pela coluna escolhida (rótulo acessível
+      'Ordenar por X').
+    rota: /mcdts/exames
+    casos_documento: []
+    ressalva: "Não funcional: cliquei em 'Ordenar por Código SNS' com a pesquisa de
+      área A ativa — o ícone de ordenação no cabeçalho mudou de estado
+      visualmente, mas nenhum pedido de rede foi disparado (confirmado na lista
+      de pedidos) e a ordem das linhas manteve-se exatamente igual à anterior ao
+      clique."
+  - id: A16
+    tipo: filtro
+    nome: Resultados por página
+    como: Combobox 'Resultados por página' abaixo da grelha de resultados, com
+      opções 10/25/50/100.
+    promessa: Alterar quantos exames aparecem por página.
+    rota: /mcdts/exames
+    casos_documento: []
+    ressalva: "Não funcional: selecionei '25' com a pesquisa de área A ativa — o
+      valor no combobox mudou para 25 e a contagem de páginas recalculou para 23
+      (569/25), mas continuaram a aparecer apenas 10 linhas na grelha e nenhum
+      pedido de rede novo foi disparado; ao navegar para a página seguinte, o
+      pedido usou tamanho=10 (não 25) — o valor escolhido nunca chega à API."
+  - id: A17
+    tipo: navegacao
+    nome: Paginação de resultados
+    como: Controlos abaixo da grelha (primeira página, página anterior, número de
+      página, próxima página, última página).
+    promessa: Navegar entre as páginas de resultados da pesquisa atual.
+    rota: /mcdts/exames
+    casos_documento: []
+    ressalva: "Funcional: 'Go to page 2' com área A disparou GET
+      .../exames?pagina=1&tamanho=10&codigoArea=A e mostrou exames diferentes
+      (incluindo SNS 24197 / exame 599, da massa do documento)."
+  - id: A18
+    tipo: navegacao
+    nome: Estado 'exame não encontrado'
+    como: Aceder diretamente a /mcdts/exames/{id} com um id inexistente (testado com
+      999999999).
+    promessa: "Mostra a mensagem 'Exame MCDT não encontrado(a) com id: {id}' e um
+      botão 'Voltar à pesquisa'."
+    rota: /mcdts/exames/{id}
+    casos_documento: []
+insumos_necessarios:
+  - descricao: Exame MCDT com Histórico de Preços populado (para CT-06/CT-07)
+    obtivel: bd
+    razao: A API devolveu historicoPrecos:[] em 326 exames amostrados, cobrindo as
+      16 áreas MCDT (incluindo os 7 da massa do documento); sem consulta a
+      TRCONVMCDTEXAMES não há forma de saber se existe algum exame com preço
+      carregado neste ambiente.
+  - descricao: Exame MCDT com pelo menos uma relação definida (equivalente,
+      compatível, não prescrito autorizado ou obrigatório), para CT-08
+    obtivel: bd
+    razao: Os 4 campos relacionais vieram sempre vazios na mesma amostra de 326
+      exames; as tabelas de regras de conferência que os alimentam não foram
+      identificadas no documento nem exploradas via SQLcl nesta passagem.
+  - descricao: Exame MCDT identificado pelo código de convenção (formato NNN(N).N(N))
+    obtivel: tela
+    razao: qualquer linha da grelha de resultados fornece um código de convenção
+      válido para reutilizar no filtro 'Código do Exame'.
+  - descricao: Lista oficial das 16 áreas MCDT (TRAREAMCDT)
+    obtivel: tela
+    razao: o combobox 'Área MCDT' já lista as 16 áreas, carregadas de GET
+      /ccmsns/api/mcdt/areas — bateu certo com a secção 5 do documento sem
+      precisar de BD.
+  - descricao: Acesso a SQLcl/BD QUA (INTEGRACOES.TRMCDT, TRAREAMCDT,
+      TRCONVMCDTEXAMES) para confirmar se a ausência de preços/relações é falta
+      de dados no ambiente ou funcionalidade por implementar
+    obtivel: bd
+    razao: fora do alcance desta ferramenta de browser; requer a ligação SQLcl
+      descrita em db/conexao-qua.local.md, referida no documento.
+  - descricao: Perfil de utilizador com acesso de consulta ao ecrã Exames MCDT
+    obtivel: tela
+    razao: sessão de teste já disponível ('Manta / PRRmanta_dev') e suficiente — o
+      ecrã é integralmente read-only, sem ações que exijam outro perfil.
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-02
+  alvos:
+    - alvo: Pesquisa direta por Código SNS no filtro 'Código do Exame' (CT-01)
+      procurei:
+        - digitar o código SNS puro '26075' no campo Código do Exame e clicar
+          Pesquisar
+        - procurar um segundo campo de pesquisa dedicado ao Código SNS no
+          formulário de pesquisa
+      onde:
+        - /mcdts/exames (formulário de pesquisa exames MCDT)
+      resultado: nao_existe
+      accao: null
+      accao_alegada: A2 (filtro Código do Exame) — aceita apenas o formato de código
+        de convenção
+      equivalente_aproximado: true
+      nota: O campo mostra a validação 'O código do exame deve ter o formato
+        NNN(N).N(N)...' e o clique em Pesquisar não chega a submeter (URL não
+        muda). O mesmo exame (759) só foi obtido pesquisando o código de
+        convenção 1134.1, que devolveu SNS 26075 correto.
+    - alvo: Exame MCDT com Histórico de Preços, Exames Equivalentes, Compatíveis, Não
+        Prescritos Autorizados ou Obrigatórios preenchidos (CT-06, CT-07, CT-08)
+      procurei:
+        - Abri o detalhe dos 7 exames da massa do documento (759, 760, 775, 779,
+          781, 785, 599) e mais 1 exame de Radiologia (11071) pela tela — as 5
+          secções sempre vazias.
+        - Chamei diretamente GET /ccmsns/api/mcdt/exames/{id} (via consola do
+          browser) para mais 322 exames adicionais, cobrindo as 16 áreas MCDT
+          (cerca de 20-30 exames por área, obtidos das primeiras páginas de cada
+          área), e inspecionei os campos
+          historicoPrecos/examesEquivalentes/examesCompativeis/examesNaoPrescritosAutorizados/examesObrigatorios
+          da resposta JSON.
+      onde:
+        - /mcdts/exames/{id} (detalhe) para os 8 exames iniciais
+        - GET /ccmsns/api/mcdt/exames/{id} chamado diretamente para mais 322
+          ids, via fetch na consola do browser
+      resultado: nao_existe
+      accao: A7, A8, A9, A10, A11
+      nota: Em 326 exames amostrados nas 16 áreas (incluindo os 7 citados no
+        documento), a API devolveu sempre arrays vazios nos 5 campos
+        relacionais. Sem acesso à BD (TRCONVMCDTEXAMES e às tabelas de regras de
+        equivalência/compatibilidade, fora do alcance desta ferramenta), não dá
+        para confirmar se é ausência de dados neste ambiente ou funcionalidade
+        ainda não populada — mas a amostra é grande e espalhada por todas as
+        áreas, o que reduz a hipótese de coincidência.

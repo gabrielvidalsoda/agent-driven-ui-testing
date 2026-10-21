@@ -1,0 +1,414 @@
+documento: consulta-area-prestacao/mcdt-prestacao-ipatimup.md
+rota: /mcdts/prestacoes-ipatimup
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: nav-acesso-menu
+    tipo: navegacao
+    nome: Aceder ao ecrã via menu lateral
+    como: Consulta por Área de Prestação > MCDT > Prestação IPATIMUP
+    promessa: Breadcrumb mostra 'Consulta por Área de Prestação / MCDT / Prestação
+      IPATIMUP'; o item de menu chama-se 'Prestação IPATIMUP' (não 'Prestações')
+    rota: /mcdts/prestacoes-ipatimup
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Pesquisar por Número da Factura
+    como: Preencher o campo 'Número da Factura' e clicar Pesquisar
+    promessa: Placeholder 'Insira o número da factura'; campo texto livre
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: "texto livre; sem máscara visível; API usa numeroFactura= e faz
+          correspondência exata (testado: 'TESTE' não encontra
+          'FAT-TESTE-IPATIMUP-001')"
+    casos_documento:
+      - CT-01
+      - CT-04
+    ressalva: Confirmado que a correspondência é exata, não 'contém' — relevante
+      para quem escrever casos de pesquisa parcial.
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Pesquisar por Data da Factura
+    como: Escrever no formato DD/MM/YYYY ou escolher no calendário (ícone) e clicar
+      Pesquisar
+    promessa: Placeholder 'DD/MM/YYYY'; calendário com navegação de mês/ano e datas
+      futuras desativadas (grid mostra dias após a data atual como [disabled])
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: texto DD/MM/YYYY ou seleção no datepicker; API recebe
+          dataFactura=YYYY-MM-DD
+    casos_documento:
+      - CT-01
+      - CT-02
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: Pesquisar por NIF Prestador
+    como: Preencher o campo 'NIF Prestador' e clicar Pesquisar
+    promessa: Placeholder 'Insira o NIF Prestador'
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-01
+  - id: filtro-codigo-convencao
+    tipo: filtro
+    nome: Pesquisar por Código da Convenção
+    como: Preencher o campo 'Código da Convenção' e clicar Pesquisar
+    promessa: Placeholder 'Insira o código da convenção'
+    entradas:
+      - campo: Código da Convenção
+        obrigatorio: false
+        origem_valores: texto livre, aceita alfanumérico (testado com 'CONV-TST')
+    casos_documento:
+      - CT-01
+  - id: filtro-numero-cheque
+    tipo: filtro
+    nome: Pesquisar por Número de Cheque
+    como: Preencher o campo 'Número de Cheque' e clicar Pesquisar
+    promessa: Placeholder 'Insira o número de cheque'
+    entradas:
+      - campo: Número de Cheque
+        obrigatorio: false
+        origem_valores: texto livre, aceita alfanumérico (testado com
+          'CHEQUE-TESTE-001', sem mascaramento)
+    casos_documento:
+      - CT-01
+  - id: filtro-numero-utente
+    tipo: filtro
+    nome: Pesquisar por Número de Utente
+    como: Preencher o campo 'Número de Utente' e clicar Pesquisar
+    promessa: Placeholder 'Insira o número de utente'
+    entradas:
+      - campo: Número de Utente
+        obrigatorio: false
+        origem_valores: "campo com máscara SÓ DÍGITOS: ao digitar 'UTENTE-TESTE-001' o
+          campo fica só com '001', descartando as letras em tempo real"
+    casos_documento:
+      - CT-01
+      - CT-04
+    ressalva: "Divergência confirmada: o único registo real em QUA tem Número de
+      Utente sintético alfanumérico ('UTENTE-TESTE-001'). O campo de filtro só
+      aceita dígitos, pelo que este registo NÃO é localizável por este filtro
+      nesta massa — só pelos filtros de factura, NIF, convenção ou cheque. Se a
+      produção usa números de utente puramente numéricos isto pode não afetar o
+      caso real, mas invalida o percurso 'por utente' do CT-01 com a massa
+      disponível em QUA."
+  - id: filtro-limpar
+    tipo: filtro
+    nome: Limpar filtros e resultados
+    como: Clicar em 'Limpar'
+    promessa: Botão 'Limpar' ao lado de 'Pesquisar'
+    casos_documento: []
+  - id: consulta-lista-resultados
+    tipo: consulta
+    nome: Ver lista de resultados da pesquisa
+    como: Após pesquisar, consultar a grelha 'Resultados da Pesquisa'
+    promessa: "Colunas exatamente: Cód. Convenção | NIF Prestador | Nº da Factura |
+      Data Factura | N° Utente | Cód. Exame | N° Cheque | Total | Total Apurado
+      (mais uma coluna sem cabeçalho, à esquerda, com o ícone de detalhe). Linha
+      de rodapé soma Total e Total Apurado. Total/Total Apurado alinhados à
+      direita, formato português (vírgula decimal, ex.: '150,00'). Estado vazio
+      antes de pesquisar: 'Sem resultados / Utilize os filtros acima e clique em
+      pesquisar.' Estado vazio após pesquisa sem resultados: 'Sem resultados
+      para os filtros aplicados.'"
+    casos_documento:
+      - CT-02
+      - CT-04
+      - CT-06
+  - id: consulta-paginacao
+    tipo: consulta
+    nome: Paginar e escolher resultados por página
+    como: "Usar os controlos de paginação e o combobox 'Resultados por página'
+      (opções: 10, 15, 20)"
+    promessa: Navegação de página (primeira/anterior/seguinte/última) e seletor de
+      tamanho de página
+    casos_documento:
+      - CT-08
+    ressalva: Não foi possível exercitar paginação real (mais de 1 página) por a
+      massa em QUA ter apenas 1 registo — confirma o gap descrito no CT-08.
+  - id: consulta-detalhe
+    tipo: consulta
+    nome: Ver detalhe da prestação
+    como: Clicar no ícone de olho / botão 'Ver detalhe da prestação <nº factura>' na
+      linha da grelha
+    promessa: Navega para /mcdts/prestacoes-ipatimup/{id} com secções 'Factura de
+      MCDTs' (Número, Data, Estado, Código/Descrição Convenção, NIF Prestador,
+      NIF Adquirente, Nome ARS), 'Prestação de MCDTs' (Nº Exame, Cód./Descrição
+      IPATIMUP, Valor, Data Início/Fim, Indicador Resultado), 'Dados do Utente'
+      (Nº Utente, Cód./Descrição Local Prescrição, Cód./Descrição ACES,
+      Cód./Desc. ARS, Data Entrada, Valor Comunicado, Valor Apurado, N° Cheque,
+      Data Cheque) e 'Erros'
+    rota: /mcdts/prestacoes-ipatimup/{id}
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-05
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: "Para CT-05: o detalhe mostra Estado = 'Estado Teste' para o código
+      sintético 99999 TST, confirmando que o ecrã não rebenta com estados fora
+      do catálogo — mas a parte do CT-05 que pede pesquisar a factura no ecrã de
+      Facturas MCDT não é exercida por esta tela (é outro ecrã)."
+  - id: nav-voltar-detalhe
+    tipo: navegacao
+    nome: Voltar do detalhe para a lista
+    como: Clicar em 'Voltar' no rodapé do detalhe
+    promessa: Botão 'Voltar'; testado que devolve à pesquisa com os filtros e
+      resultados anteriores preservados (mesma URL com query string)
+    casos_documento: []
+  - id: consulta-tabela-erros
+    tipo: consulta
+    nome: Ver tabela de Erros no detalhe
+    como: Consultar a secção 'Erros' dentro do detalhe da prestação
+    promessa: "Colunas N°, Origem, Cód. Erro, Desc. Erro, Justificação (o documento
+      chama-lhe 'Justificado'; a tela usa 'Justificação'). Estado vazio
+      observado: uma única célula com o texto 'Sem erros' a ocupar a linha, sem
+      erro técnico"
+    casos_documento:
+      - CT-03
+    ressalva: Só foi possível ver o estado vazio (o único registo real não tem
+      erros); a variedade de códigos de erro, justificados e não justificados,
+      fica por confirmar por falta de massa.
+  - id: exportacao-xlsx
+    tipo: exportacao
+    nome: Exportar resultados para XLSX
+    como: Clicar no botão 'Exportar XLSX' (ícone de download) acima da grelha de
+      resultados
+    promessa: "Tooltip/rótulo 'Exportar XLSX'; botão fica desativado quando não há
+      resultados. Testado: dispara POST
+      /ccmsns/api/mcdt/prestacoes/ipatimup/exportar com os filtros ativos e
+      transfere um ficheiro 'prestacoes-ipatimup.xlsx'"
+    casos_documento:
+      - CT-06
+    ressalva: O documento não tem um CT dedicado à exportação; foi associado a CT-06
+      porque a privacidade também tem de valer para o ficheiro exportado, mas o
+      conteúdo do XLSX não foi inspecionado nesta passagem (não abrimos o
+      ficheiro).
+  - id: consulta-prestacoes-mcdt-area-ipatimup
+    tipo: consulta
+    nome: Pesquisa Prestações MCDT com filtro Área da Prestação = IPATIMUP
+    como: Abrir /mcdts/prescricao, abrir o combobox 'Área da Prestação' e selecionar
+      a opção 'IPATIMUP' (envia areaPrestacao=Y no pedido); combinar com Número
+      da Factura e/ou Data da Factura (o formulário exige pelo menos um critério
+      além da área) e clicar Pesquisar.
+    promessa: A área Y=IPATIMUP existe como valor selecionável no catálogo da
+      consulta genérica de Prestações MCDT, e uma prestação IPATIMUP real
+      (FAT-TESTE-IPATIMUP-001) pesquisada por esse filtro devolve 'Nenhum
+      resultado encontrado', confirmando que o circuito IPATIMUP não duplica a
+      contagem na consulta genérica.
+    rota: /mcdts/prescricao
+    casos_documento:
+      - CT-07
+insumos_necessarios:
+  - descricao: Registo em GESTCONFER.TDCFPRESTACAOIPATIMUP com Número de Utente
+      puramente numérico, para conseguir exercitar o filtro 'Número de Utente'
+      (que só aceita dígitos)
+    obtivel: nao
+    razao: O ecrã é só de consulta; a massa IPATIMUP só entra por carregamento
+      oficial via circuito de integração, que não está disponível neste ambiente
+      de exploração. O único registo real em QUA tem código sintético
+      alfanumérico, incompatível com a máscara do campo.
+  - descricao: Conjunto de facturas IPATIMUP com dezenas de prestações, para
+      exercitar paginação, ordenação e volumes
+    obtivel: nao
+    razao: Requer carregamento oficial de ficheiros de facturação processados pelo
+      circuito normal de integração (não DML manual), fora do alcance desta
+      sessão.
+  - descricao: Prestações de vários utentes e vários cheques, para obter mais de 1
+      resultado nos filtros Número de Utente e Número de Cheque
+    obtivel: nao
+    razao: Mesma limitação de massa/carregamento oficial.
+  - descricao: Prestações com erros de conferência, com vários códigos, justificados
+      e não justificados, para exercitar a tabela de Erros fora do estado vazio
+    obtivel: nao
+    razao: Mesma limitação de massa/carregamento oficial; o único registo real não
+      tem erros.
+  - descricao: Prestações em estados diferentes do ciclo (além do estado sintético
+      99999 TST), para validar a tradução de estados no detalhe
+    obtivel: nao
+    razao: Mesma limitação de massa/carregamento oficial.
+  - descricao: Acesso à aplicação com utilizador de perfil de consulta para a área MCDT
+    obtivel: tela
+    razao: Sessão já autenticada como 'Manta / PRRmanta_dev' com acesso pleno ao ecrã.
+  - descricao: Confirmação de que a área Y = IPATIMUP existe em INTEGRACOES.TRAREAMCDT
+    obtivel: bd
+    razao: Só verificável por SQL read-only; o ecrã não expõe essa tabela de
+      referência.
+casos_sem_accao:
+  - CT-08
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-07 Circuito exclusivo (sem dupla contagem)
+      procurei:
+        - "O registo único, para conhecer os identificadores reais a usar na
+          verificação (via ecrã /mcdts/prestacoes-ipatimup, pesquisa por Número
+          da Factura = FAT-TESTE-IPATIMUP-001): Cód. Convenção CONV-TST, NIF
+          Prestador 500233033, Nº Utente UTENTE-TESTE-001, Cód. Exame
+          EXAME-TESTE-001, Nº Cheque CHEQUE-TESTE-001."
+        - Na consulta genérica de Prestações MCDT (/mcdts/prescricao), se o
+          filtro 'Área da Prestação' lista IPATIMUP como valor de catálogo
+          (equivalente a confirmar a área Y em TRAREAMCDT, mas pela UI em vez de
+          SQL).
+        - Na mesma consulta genérica, se a prestação IPATIMUP aparece
+          pesquisando por Número da Factura = FAT-TESTE-IPATIMUP-001, isolado e
+          combinado com Área da Prestação = IPATIMUP e Data da Factura =
+          25/05/2026 (para confirmar que não há dupla contagem no circuito
+          genérico).
+      onde:
+        - http://localhost:4174/mcdts/prestacoes-ipatimup (pesquisa pelo registo
+          único)
+        - http://localhost:4174/mcdts/prescricao (combobox 'Área da Prestação';
+          pesquisas com numeroFatura=FAT-TESTE-IPATIMUP-001, com areaPrestacao=Y
+          isolado, e com numeroFatura+dataFatura+areaPrestacao=Y)
+      resultado: encontrado
+      accao: consulta-prestacoes-mcdt-area-ipatimup
+      captura: CT-07_area-prestacao-ipatimup-no-combobox-generico.png;
+        CT-07_prestacoes-mcdt-generico-sem-duplicacao-ipatimup.png
+    - alvo: CT-08 Documentar o gap de massa
+      procurei:
+        - "Um módulo ou ecrã do CCMSNS para registar/encaminhar formalmente um
+          pedido de massa de teste adicional (ex.: 'Pedido de Massa', 'Gestão de
+          Requisitos de Teste', 'Suporte')."
+        - Se alguma das ações em 'Reclamações' (Criar Reclamação, Notificação de
+          Reclamação, etc.) ou em 'Controlo de Qualidade' servisse como canal
+          genérico de pedido/registo de gap, em vez de um fluxo de reclamação de
+          faturação.
+      onde:
+        - "Menu completo da aplicação (todas as secções: Dados de Referência,
+          Consulta por Área de Prestação, Gestão de Armazém, Controlo e
+          Contabilização, Conferência, Controlo de Qualidade, Fecho,
+          Reclamações, Dashboards), inspecionado via snapshot de acessibilidade
+          a partir de qualquer ecrã do CCMSNS."
+      resultado: nao_existe
+      accao: null
+      nota: "Todas as entradas de 'Reclamações' (Criar Reclamação, Notificação de
+        Reclamação, Iniciar Reconferência, etc.) estão marcadas '(em breve)' e,
+        mesmo que disponíveis, tratam reclamações de faturação/prestador — não
+        um pedido interno de massa de teste para QUA. Não há em nenhuma secção
+        do menu um módulo de gestão de requisitos de teste ou pedido de massa.
+        Documentar o gap de massa é uma ação de gestão de teste fora do produto
+        CCMSNS (ex.: ticket num sistema de tracking), não uma funcionalidade da
+        aplicação — não é isto que a segunda passagem deveria encontrar dentro
+        da tela."
+    - alvo: Registo em GESTCONFER.TDCFPRESTACAOIPATIMUP com Número de Utente puramente
+        numérico
+      procurei:
+        - Se o campo 'Número de Utente' do ecrã /mcdts/prestacoes-ipatimup
+          aceita, de facto, texto alfanumérico (contrariando a alegação de
+          máscara só-dígitos da primeira passagem) — testei escrevendo
+          'UTENTE-TESTE-001' nesse campo.
+        - Se existe mais do que um registo ligado à área IPATIMUP em qualquer
+          ecrã da secção, pesquisando pelos identificadores do único registo
+          conhecido (NIF Prestador 500233033, Número da Factura
+          FAT-TESTE-IPATIMUP-001) nos ecrãs de Facturas MCDT e Lotes MCDT, que
+          partilham massa com o circuito IPATIMUP.
+      onde:
+        - http://localhost:4174/mcdts/prestacoes-ipatimup (campo 'Número de
+          Utente')
+        - http://localhost:4174/mcdts/factura (pesquisa por NIF Prestador =
+          500233033)
+        - http://localhost:4174/mcdts/lote (pesquisa por Número da Factura =
+          FAT-TESTE-IPATIMUP-001)
+      resultado: nao_existe
+      accao: null
+      nota: "Confirmado por interação direta: o campo 'Número de Utente' rejeita
+        caracteres não numéricos — ao escrever 'UTENTE-TESTE-001' o valor do
+        input ficou vazio (verificado via DOM), validando a máscara só-dígitos
+        que a primeira passagem apontou como causa do bloqueio. A pesquisa por
+        NIF 500233033 em Facturas MCDT devolveu exactamente 1 resultado (a mesma
+        factura de teste), e a pesquisa por essa factura em Lotes MCDT devolveu
+        0 lotes — não há mais nenhum registo ligado a este prestador/circuito em
+        nenhum ecrã da secção que pudesse fornecer um utente numérico
+        alternativo. Sem acesso SQL nesta sessão (só há MCP de browser
+        disponível), não foi possível verificar 'obtivel: bd'."
+    - alvo: Conjunto de facturas IPATIMUP com dezenas de prestações, para exercitar
+        paginação, ordenação e volumes
+      procurei:
+        - Se existe mais do que 1 factura ligada ao prestador/circuito IPATIMUP,
+          pesquisando por NIF Prestador = 500233033 em Facturas MCDT (mesmo NIF
+          do único registo real).
+        - Se a consulta genérica de Prestações MCDT, filtrada por Área da
+          Prestação = IPATIMUP, devolve outras prestações além da conhecida (o
+          que revelaria volume não visível no ecrã específico IPATIMUP).
+      onde:
+        - http://localhost:4174/mcdts/factura (pesquisa por NIF Prestador =
+          500233033 → 1 resultado)
+        - http://localhost:4174/mcdts/prescricao (pesquisa por Área da Prestação
+          = IPATIMUP + Data da Factura = 25/05/2026 → 0 resultados)
+      resultado: nao_existe
+      accao: null
+      nota: Confirmado que só existe 1 factura no sistema ligada a este
+        prestador/circuito (NIF 500233033), e que a consulta genérica por área
+        IPATIMUP não devolve nem sequer essa. Não há qualquer sinal de volume de
+        dados adicional acessível pela UI. Massa por carregamento oficial
+        continua a ser o único caminho, tal como a primeira passagem concluiu.
+    - alvo: Prestações de vários utentes e vários cheques, para obter mais de 1
+        resultado nos filtros Número de Utente e Número de Cheque
+      procurei:
+        - Se outros ecrãs da secção (Facturas MCDT, Lotes MCDT, Prestações MCDT
+          genérico) revelam mais do que 1 prestação/utente/cheque ligados ao
+          circuito IPATIMUP, usando os mesmos identificadores do registo único
+          (NIF 500233033, factura FAT-TESTE-IPATIMUP-001, área IPATIMUP).
+      onde:
+        - http://localhost:4174/mcdts/factura (pesquisa por NIF Prestador =
+          500233033 → 1 resultado)
+        - http://localhost:4174/mcdts/lote (pesquisa por Número da Factura =
+          FAT-TESTE-IPATIMUP-001 → 0 lotes)
+        - http://localhost:4174/mcdts/prescricao (pesquisa por Área da Prestação
+          = IPATIMUP → 0 resultados)
+      resultado: nao_existe
+      accao: null
+      nota: Em nenhum ecrã da secção Consulta por Área de Prestação apareceu mais do
+        que o único registo já conhecido; não há segundo utente nem segundo
+        cheque acessíveis pela UI. Confirma a limitação de massa apontada pela
+        primeira passagem.
+    - alvo: Prestações com erros de conferência, com vários códigos, justificados e
+        não justificados, para exercitar a tabela de Erros fora do estado vazio
+      procurei:
+        - Se algum outro ecrã da secção (Facturas MCDT, Lotes MCDT, Prestações
+          MCDT genérico) expõe prestações com erros de conferência ligadas ao
+          circuito/prestador IPATIMUP, que pudessem ser cruzadas de volta ao
+          ecrã de detalhe IPATIMUP.
+        - Se existe mais do que o único registo IPATIMUP (pré-requisito para ter
+          mais registos com erro), repetindo as mesmas pesquisas cruzadas por
+          NIF, factura e área usadas nos alvos anteriores.
+      onde:
+        - http://localhost:4174/mcdts/factura (pesquisa por NIF Prestador =
+          500233033 → 1 resultado, o mesmo registo de teste)
+        - http://localhost:4174/mcdts/lote (pesquisa por Número da Factura =
+          FAT-TESTE-IPATIMUP-001 → 0 lotes)
+        - http://localhost:4174/mcdts/prescricao (pesquisa por Área da Prestação
+          = IPATIMUP → 0 resultados)
+      resultado: nao_existe
+      accao: null
+      nota: Sem um segundo registo IPATIMUP acessível pela UI, não há como obter
+        prestações adicionais com erros de conferência variados. O único registo
+        real, segundo a primeira passagem, não tem erros — o que as pesquisas
+        cruzadas desta passagem não contradisseram (nenhum outro registo do
+        circuito foi encontrado em lado nenhum).
+    - alvo: Prestações em estados diferentes do ciclo (além do estado sintético 99999
+        TST), para validar a tradução de estados no detalhe
+      procurei:
+        - Se o filtro 'Estado' do ecrã Facturas MCDT, aplicado à
+          factura/circuito IPATIMUP, revela outros estados possíveis (o combobox
+          'Estado' existe nesse ecrã genérico).
+        - Se alguma outra factura ligada ao mesmo prestador (NIF 500233033) ou
+          área (IPATIMUP) existe com estado diferente do sintético 99999 TST.
+      onde:
+        - http://localhost:4174/mcdts/factura (combobox 'Estado'; pesquisa por
+          NIF Prestador = 500233033 → 1 resultado, estado 'Estado Teste')
+        - http://localhost:4174/mcdts/prescricao (pesquisa por Área da Prestação
+          = IPATIMUP → 0 resultados)
+      resultado: nao_existe
+      accao: null
+      nota: O único registo do circuito IPATIMUP continua a ser a factura de teste com
+        estado sintético; não foi encontrado, em nenhum ecrã da secção, outro
+        registo IPATIMUP com estado diferente. Validar a tradução de outros
+        estados no detalhe continua dependente de massa carregada pelo circuito
+        oficial de integração.

@@ -1,0 +1,422 @@
+documento: consulta-area-prestacao/cuidados-respiratorios-lotes.md
+rota: /cuidados-respiratorios/lote
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Filtrar por Número da Factura
+    como: Campo de texto 'Número da Factura' na Pesquisa Lotes, seguido de Pesquisar
+    promessa: Devolve os lotes da factura indicada
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-01
+      - CT-09
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Filtrar por Data da Factura
+    como: Campo de texto com máscara DD/MM/YYYY, ou botão de calendário que abre um
+      datepicker mensal navegável (mês/ano)
+    promessa: Devolve os lotes cuja factura tem a data indicada
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: datepicker (mês/ano, sem limite mín/máx aparente)
+    casos_documento: []
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: Filtrar por NIF do Prestador
+    como: Campo de texto 'NIF do Prestador' na Pesquisa Lotes, seguido de Pesquisar
+    promessa: Devolve os lotes cujo prestador tem o NIF indicado
+    entradas:
+      - campo: NIF do Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento: []
+  - id: filtro-codigo-convencao
+    tipo: filtro
+    nome: Filtrar por Código da Convenção
+    como: Campo de texto 'Código da Convenção' na Pesquisa Lotes, seguido de
+      Pesquisar
+    promessa: Devolve os lotes associados a essa convenção
+    entradas:
+      - campo: Código da Convenção
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento: []
+    ressalva: O documento chama a este filtro 'Cód. Prestador'; a tela chama-lhe
+      'Código da Convenção' e é um campo distinto do 'Código do Prestador' que
+      existe na tela irmã de Facturas CRD.
+  - id: filtro-numero-lote
+    tipo: filtro
+    nome: Filtrar por Número do Lote
+    como: Campo de texto 'Número do Lote' na Pesquisa Lotes, seguido de Pesquisar
+    promessa: Devolve o lote com esse número
+    entradas:
+      - campo: Número do Lote
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-02
+    ressalva: Em toda a amostra real percorrida (~2000 lotes, vários filtros) a
+      coluna/campo 'Nº Lote' devolvido pela API veio sempre '0'; não foi
+      possível confirmar visualmente que este filtro casa com um valor diferente
+      de 0, porque nenhum lote real observado tinha outro valor.
+  - id: filtro-tipo-lote
+    tipo: filtro
+    nome: Filtrar por Tipo de Lote
+    como: Combobox 'Tipo de Lote' com 14 opções fixas, seguido de Pesquisar
+    promessa: Devolve só os lotes desse tipo
+    entradas:
+      - campo: Tipo de Lote
+        obrigatorio: false
+        origem_valores: "lista fixa: Aerossolterapia, Oxigenoterapia, Ventiloterapia,
+          Equipamentos, Prescrições sem necessidade de envio de papel (+ 4
+          variantes por subtipo), Conferência eletrónica, Prescrições sem papel
+          (+ 4 variantes por subtipo)"
+    casos_documento:
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: "O documento espera que o filtro corresponda aos códigos numéricos
+      reais da tabela (992/993/994); a tela oferece uma lista fixa de 14
+      descrições de tipo de prescrição/serviço, sem relação visível com esses
+      códigos numéricos. Testado isoladamente com 'Oxigenoterapia': filtra
+      corretamente (50 de 1928 resultados, todos com essa descrição)."
+  - id: consulta-lista-lotes
+    tipo: consulta
+    nome: Listar resultados da pesquisa de lotes
+    como: Grelha 'Resultados da Pesquisa' após qualquer pesquisa com pelo menos um
+      filtro preenchido
+    promessa: Colunas Cód. Convenção, NIF Prestador, Descrição, Nº da Factura, Data
+      Factura, Tipo de Lote, Nº Lote, Estado, Nº Prescrições (Comunicado), Valor
+      (Comunicado), Nº Prescrições (Apurado), Valor (Apurado); paginação
+      server-side (10/25/50/100 por página)
+    casos_documento:
+      - CT-01
+      - CT-03
+      - CT-08
+      - CT-09
+    ressalva: 1) A coluna 'Nº Lote' mostrou sempre '0' em toda a amostra percorrida.
+      2) A coluna 'Estado' só mostrou o valor 'Recepcionado' em toda a amostra
+      percorrida (~2000 lotes, vários filtros); não foi possível observar
+      CONF/CSE/CCE nem qualquer outro estado a partir da UI. 3) Ao contrário da
+      tela de Facturas CRD (que tem filtro 'Estado'), esta tela não oferece
+      filtro por Estado, só a coluna de leitura. 4) Cabeçalhos 'Ordenar por X'
+      (Cód. Convenção, Nº da Factura, Data Factura, Nº Lote) marcam aria-sort ao
+      clicar mas a ordem das linhas não muda — a ordenação parece não estar
+      ligada a nenhum pedido real.
+  - id: consulta-lista-lotes-vazia
+    tipo: consulta
+    nome: Pesquisa sem resultados / sem filtros
+    como: Pesquisar com filtros que não casam nenhum registo, ou clicar Pesquisar
+      sem preencher nenhum campo
+    promessa: "Sem filtros: banner de aviso 'É necessário preencher pelo menos um
+      dos campos de pesquisa.' e a pesquisa não corre. Com filtros que não
+      casam: linha única na grelha 'Nenhum lote corresponde aos filtros
+      aplicados.'"
+    casos_documento:
+      - CT-09
+  - id: exportacao-xlsx-lista
+    tipo: exportacao
+    nome: Exportar XLSX dos resultados
+    como: Botão 'Exportar XLSX' acima da grelha de resultados (desativado quando 0
+      resultados)
+    promessa: Descarrega um ficheiro 'lotes-crd.xlsx' com os resultados da pesquisa atual
+    casos_documento: []
+  - id: navegacao-detalhe-lote
+    tipo: navegacao
+    nome: Abrir detalhe de um lote
+    como: Botão 'Ver detalhe do lote {id}' na primeira coluna de cada linha da grelha
+    promessa: Abre /cuidados-respiratorios/lote/{piidLote}
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-04
+  - id: consulta-detalhe-lote
+    tipo: consulta
+    nome: Tab 'Detalhe do Lote'
+    como: Tab selecionada por omissão ao abrir o detalhe de um lote
+    promessa: NIF Prestador, Código Convenção, Desc. Prestador, Número da Factura,
+      Data da Factura, Estado, Número do Lote, Tipo de Lote, Chave do Lote,
+      Guid; secção 'Localização dos arquivos' (Caixa, Pasta, Lugar, Estado da
+      Caixa); 'Totais Comunicados' (Nº Prescrições, Nº Prestações); 'Totais
+      Apurados'
+    casos_documento:
+      - CT-04
+      - CT-08
+    ressalva: O bloco 'Totais Apurados' só mostra 'Nº Prescrições' — não mostra 'Nº
+      Prestações' nem 'Valor', ao contrário do bloco irmão 'Totais Comunicados'
+      e da própria grelha de lista (que mostra Valor Apurado). Os campos 'Chave
+      do Lote', 'Guid' e toda a secção 'Localização dos arquivos' apareceram
+      sempre vazios ('—') nos lotes CRD reais consultados.
+  - id: navegacao-lote-factura
+    tipo: navegacao
+    nome: Ir para a factura do lote
+    como: Botão 'Factura' no cabeçalho ou no rodapé do detalhe do lote
+    promessa: Abre a factura mãe do lote
+    casos_documento:
+      - CT-02
+    ressalva: "Confirmado: a navegação usa o identificador interno da factura (ex.:
+      /cuidados-respiratorios/factura/49677), não o número da factura, o que
+      evita o problema de número duplicado descrito no documento."
+  - id: acao-ver-lote-desativada
+    tipo: consulta
+    nome: Botão 'Ver Lote' (localização física)
+    como: Botão 'Ver Lote' no cabeçalho do detalhe do lote
+    promessa: Pelo rótulo e pela secção 'Localização dos arquivos' ao lado, promete
+      mostrar a localização física do lote (caixa/pasta/lugar)
+    casos_documento: []
+    ressalva: Aparece sempre desativado nos lotes CRD reais consultados; a secção
+      'Localização dos arquivos' associada está sempre vazia. Não foi possível
+      confirmar se a funcionalidade chega a ficar ativa para algum lote CRD.
+  - id: consulta-prestacoes-lote
+    tipo: consulta
+    nome: Tab 'Prestações' do lote
+    como: Tab 'Prestações' no detalhe do lote
+    promessa: Tabela Nº Prescrição, Total (Comunicado), Total (Apurado), com
+      paginação server-side
+    casos_documento:
+      - CT-05
+      - CT-06
+    ressalva: "Verificado com um lote de 1287 prescrições (129 páginas de 10): o
+      total da paginação bate certo com 'Totais Apurados > Nº Prescrições' do
+      tab Detalhe. Não foi encontrado, neste ambiente, um lote CRD tão grande
+      quanto o do documento (685), mas o comportamento de paginação/volume é
+      equivalente ao descrito."
+    equivalente_aproximado: true
+  - id: navegacao-detalhe-prestacao
+    tipo: navegacao
+    nome: Abrir detalhe de uma prestação
+    como: Botão 'Ver prestação {id}' em cada linha do tab Prestações
+    promessa: Abre /cuidados-respiratorios/prestacao/{id}
+    casos_documento:
+      - CT-05
+  - id: consulta-detalhe-prestacao
+    tipo: consulta
+    nome: Ecrã de detalhe da prestação
+    como: Página de detalhe aberta a partir do tab Prestações do lote
+    promessa: Secções 'Factura / Lote', 'Prescrição', 'Prestador / Utente',
+      'Quantidades / Valores' e tabela 'Linhas de Prestação'; botão 'Ver
+      Prescrição' (desativado)
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: O documento descreve, ao abrir uma prestação, secções/separadores
+      'Prestação de CRDs, Erros, Conta Corrente e Reclamações'. A tela real não
+      tem tabs nenhuns nesta página — é uma única página fixa com as secções
+      listadas acima. Não existe nenhuma ação ou secção chamada 'Erros', 'Conta
+      Corrente' ou 'Reclamações' neste ecrã.
+  - id: navegacao-menu-crd
+    tipo: navegacao
+    nome: Navegar entre Facturas / Lotes / Prestações CRD pelo menu
+    como: Submenu 'Consulta por Área de Prestação > Cuidados Respiratórios
+      Domiciliários' na barra lateral
+    promessa: Liga as 3 telas relacionadas (Facturas, Lotes, Prestações)
+    casos_documento: []
+  - id: consulta-lote-crd-numero-lote-nao-zero
+    tipo: consulta
+    nome: Ver detalhe do lote CRD — campo 'Número do Lote'
+    como: "Na tela Lotes CRD, pesquisar por NIF do Prestador (ex.: 508274087) ou por
+      Número da Factura (ex.: 2026A15-44) e clicar em 'Ver detalhe do lote' de
+      qualquer linha da lista; ou navegar directamente para
+      /cuidados-respiratorios/lote/{PIID}."
+    promessa: Mostra a tab 'Detalhe do Lote' com o campo 'Número do Lote' a
+      apresentar o valor real do tipo de lote (992, 993 ou 994 nos lotes
+      observados) — nunca '0' nos lotes reais consultados.
+    rota: /cuidados-respiratorios/lote/393252
+    casos_documento:
+      - CT-01 Lotes de uma factura
+      - CT-07 Tipos e sequências de lote
+  - id: consulta-massa-lotes-crd-factura-67269
+    tipo: consulta
+    nome: Consulta dos lotes 393252/393253/393254 da factura 67269 (NIF 508274087)
+    como: Na tela Lotes CRD, pesquisar por Número da Factura = '2026A15-44' (o
+      número humano da factura, não o PIID 67269) e/ou por NIF do Prestador =
+      508274087; ou navegar directamente para
+      /cuidados-respiratorios/lote/{PIID} com PIID 393252, 393253 ou 393254.
+    promessa: "Devolve/mostra o lote com Cód. Convenção 30700113, NIF 508274087,
+      'Vivisol Portugal - ULS Alto Minho', tipos 992/993/994, e os valores
+      exactos do documento: 26 presc./1.534,36 (992), 22 presc./14.412,69 (993)
+      e 2 presc./164,22 (994)."
+    rota: /cuidados-respiratorios/lote/393252
+    casos_documento:
+      - CT-01 Lotes de uma factura
+      - CT-02 Pesquisa por número de lote
+      - CT-04 Tab Detalhes e verificação cruzada
+    equivalente_aproximado: true
+    ressalva: "Confirmado via tela apenas o primeiro grupo da massa (factura
+      67269→'2026A15-44', NIF 508274087, lotes 393252/393253/393254) — os 3
+      PIIDs resolvem exactamente com os valores do documento (ver também
+      lote-393254-detalhe.png). A factura '2026A15-44' está de facto duplicada,
+      mas em muito mais do que os '4 registos' que o documento refere: só com o
+      NIF 508274087 aparecem 1184 lotes na lista, muitos deles réplicas dos
+      mesmos tipo/valor sob a mesma factura — o risco descrito no documento
+      existe, mas é maior do que ali estimado. O segundo grupo da massa (lotes
+      440174/440177 da factura 66955, 15/685 prescrições, 637,49/24.907,06) NÃO
+      foi confirmado: esses PIIDs existem no ambiente mas apontam para registos
+      completamente diferentes (NIF 507713222, Número da Factura '545', tipo
+      Ventiloterapia, Número do Lote '0', sem o valor 637,49), e não encontrei
+      esses valores numa amostra de 100 dos 1184 lotes do NIF 508274087. Essa
+      parte da massa parece não existir tal como descrita neste ambiente."
+insumos_necessarios:
+  - descricao: Lote CRD real com Nº Prescrições/Valor 'Comunicado' e 'Apurado'
+      diferentes entre si (lote parcialmente conferido)
+    obtivel: tela
+    razao: "Encontrado por pesquisa direta (ex.: lote 378098 do NIF 500125546 tinha
+      Valor Comunicado 106,75 e Valor Apurado 0,00)"
+  - descricao: Lote CRD de grande volume (centenas de prescrições) para testar
+      paginação server-side
+    obtivel: tela
+    razao: Encontrado por pesquisa direta (lote 379294, 1287 prescrições apuradas,
+      129 páginas)
+  - descricao: "Lote CRD com Estado diferente de 'Recepcionado' (ex.: equivalente a
+      CONF/CSE/CCE do documento)"
+    obtivel: bd
+    razao: Não foi observado nenhum lote com outro estado em ~2000 registos reais
+      percorridos via UI com vários filtros; a tela não tem filtro por Estado
+      para isolar esse caso, teria de se identificar por SQL
+  - descricao: Lote CRD com valor de 'Nº Lote' diferente de 0
+    obtivel: tela
+    razao: "Contraria a conclusão da 1ª passagem: não é verdade que todos os lotes
+      reais devolvam '0' neste campo. Os lotes 393252/393253/393254 (massa do
+      documento) mostram 992/993/994 respectivamente. É possível que a amostra
+      da 1ª passagem tenha incidido só sobre lotes de outro NIF/prestador onde o
+      valor calha ser 0 (ex.: os lotes 440174/440177 aqui consultados mostram
+      efectivamente '0'), mas a afirmação 'todos' está errada."
+  - descricao: Lote CRD com 'Chave do Lote', 'Guid' ou 'Localização dos arquivos'
+      preenchidos
+    obtivel: nao
+    razao: Em todos os lotes CRD reais consultados estes campos vieram vazios ('—');
+      parecem pertencer a um fluxo de armazém físico (Medicamentos?) não
+      aplicável/não povoado para CRD neste ambiente
+  - descricao: Massa de referência exata do documento (factura 67269, lotes
+      393252/393253/393254, NIF 508274087; lotes 440174/440177 da factura 66955)
+    obtivel: nao
+    razao: Pesquisada diretamente pela tela (Número da Factura, Número do Lote, NIF)
+      e não devolveu nenhum resultado; este build/ambiente usa um conjunto de
+      dados diferente do QUA descrito no documento
+  - descricao: Factura CRD com múltiplos lotes, para somar prestações dos lotes
+      contra o cabeçalho da factura
+    obtivel: tela
+    razao: A tela de Facturas CRD devolve milhares de facturas reais (2580 só com
+      Estado 'Conferida Sem Erros'); é possível cruzar Nº da Factura entre as
+      telas de Facturas e Lotes para montar este caso
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: Lote CRD com valor de 'Nº Lote' diferente de 0
+      procurei:
+        - Pesquisei na tela de Lotes CRD por NIF do Prestador 508274087 (1184
+          resultados) e por Número da Factura 2026A15-44 (24 resultados) e abri
+          o detalhe de vários lotes reais devolvidos, incluindo lotes em estado
+          'Recepcionada' e 'Conferida Com Erros'.
+        - Naveguei directamente às rotas de detalhe
+          /cuidados-respiratorios/lote/393252, /393253, /393254, /393177 e
+          /393180 e inspeccionei o campo 'Número do Lote' na tab Detalhe do
+          Lote.
+      onde:
+        - http://localhost:4174/cuidados-respiratorios/lote (pesquisa por NIF e
+          por Número da Factura)
+        - http://localhost:4174/cuidados-respiratorios/lote/393252
+        - http://localhost:4174/cuidados-respiratorios/lote/393254
+        - http://localhost:4174/cuidados-respiratorios/lote/393177
+        - http://localhost:4174/cuidados-respiratorios/lote/393180
+      resultado: encontrado
+      accao: consulta-lote-crd-numero-lote-nao-zero
+      captura: lote-393252-numero-lote-992.png
+      nota: "Contraria a conclusão da 1ª passagem: não é verdade que todos os lotes
+        reais devolvam '0' neste campo. Os lotes 393252/393253/393254 (massa do
+        documento) mostram 992/993/994 respectivamente. É possível que a amostra
+        da 1ª passagem tenha incidido só sobre lotes de outro NIF/prestador onde
+        o valor calha ser 0 (ex.: os lotes 440174/440177 aqui consultados
+        mostram efectivamente '0'), mas a afirmação 'todos' está errada."
+    - alvo: Lote CRD com 'Chave do Lote', 'Guid' ou 'Localização dos arquivos'
+        preenchidos
+      procurei:
+        - Abri o detalhe de 6 lotes CRD reais e distintos (NIFs, facturas e
+          estados diferentes) e inspeccionei os campos 'Chave do Lote *',
+          'Guid', e a secção 'Localização dos arquivos' (Caixa, Pasta, Lugar,
+          Estado da Caixa).
+        - Testei lotes em estado 'Recepcionada' (393180) e 'Conferida Com Erros'
+          (393177, 393252, 393254), de dois prestadores diferentes (NIF
+          508274087 e NIF 507713222 — lotes 440174/440177).
+        - Abri a tela Medicamentos > Lotes para testar a hipótese da 1ª passagem
+          de que estes campos pertencem a esse fluxo de armazém físico.
+      onde:
+        - http://localhost:4174/cuidados-respiratorios/lote/393252
+        - http://localhost:4174/cuidados-respiratorios/lote/393254
+        - http://localhost:4174/cuidados-respiratorios/lote/393177
+        - http://localhost:4174/cuidados-respiratorios/lote/393180
+        - http://localhost:4174/cuidados-respiratorios/lote/440174
+        - http://localhost:4174/cuidados-respiratorios/lote/440177
+        - http://localhost:4174/medicamentos/lote
+      resultado: nao_existe
+      accao: null
+      nota: "Em todos os 6 lotes CRD reais inspeccionados (estados e prestadores
+        diferentes) os campos 'Chave do Lote', 'Guid', 'Caixa', 'Pasta', 'Lugar'
+        e 'Estado da Caixa' vieram sempre '—'. Na tela Medicamentos > Lotes a
+        listagem nem tem colunas equivalentes (tem antes
+        PVP/PVU/Comparticipação/Fee), pelo que não consegui confirmar aí a
+        hipótese de pertencerem a esse fluxo — a pesquisa nessa tela devolveu
+        'Nenhum resultado encontrado' sem filtros, e não abri detalhe de um lote
+        de Medicamentos por não haver massa disponível para o confirmar de forma
+        visível. Mantenho a conclusão da 1ª passagem: não há forma de ver estes
+        campos preenchidos para CRD neste ambiente."
+    - alvo: Massa de referência exata do documento (factura 67269, lotes
+        393252/393253/393254, NIF 508274087; lotes 440174/440177 da factura
+        66955)
+      procurei:
+        - Pesquisei por Número do Lote=393253 (confirmei o resultado vazio já
+          registado pela 1ª passagem).
+        - Pesquisei por Número da Factura=67269 (o PIID interno da factura, tal
+          como no documento) — sem resultados.
+        - Pesquisei por NIF do Prestador=508274087 — devolveu 1184 lotes,
+          incluindo vários com o tipo/valores exactos do documento
+          (992→26/1.534,36; 994→2/164,22) mas sob a factura humana '2026A15-44'
+          repetida dezenas de vezes.
+        - Pesquisei por Número da Factura=2026A15-44 (o número humano da factura
+          67269) — devolveu 24 lotes, entre os quais 'Ver detalhe do lote
+          393252' (tipo 992, 26/1.534,36) e 'Ver detalhe do lote 393253' (tipo
+          993, 22/14.412,69), exactamente como o documento descreve.
+        - Naveguei directamente às rotas /cuidados-respiratorios/lote/393252,
+          /393253 e /393254 pelo PIID — todas resolvem e mostram exactamente NIF
+          508274087, Número da Factura 2026A15-44, tipos 992/993/994 e os
+          valores do documento.
+        - Naveguei directamente a /cuidados-respiratorios/lote/440174 e /440177
+          (os PIIDs do segundo grupo da massa) e tentei encontrar os valores
+          637,49/24.907,06/685 prescrições numa amostra de 100 dos 1184 lotes do
+          NIF 508274087 via avaliação de página.
+      onde:
+        - http://localhost:4174/cuidados-respiratorios/lote (filtros Número da
+          Factura, NIF do Prestador, Número do Lote)
+        - http://localhost:4174/cuidados-respiratorios/lote/393252
+        - http://localhost:4174/cuidados-respiratorios/lote/393253
+        - http://localhost:4174/cuidados-respiratorios/lote/393254
+        - http://localhost:4174/cuidados-respiratorios/lote/440174
+        - http://localhost:4174/cuidados-respiratorios/lote/440177
+        - http://localhost:4174/cuidados-respiratorios/factura
+      resultado: encontrado
+      accao: consulta-massa-lotes-crd-factura-67269
+      equivalente_aproximado: true
+      captura: massa-referencia-lote-393252-393253.png
+      nota: "Confirmado via tela apenas o primeiro grupo da massa (factura
+        67269→'2026A15-44', NIF 508274087, lotes 393252/393253/393254) — os 3
+        PIIDs resolvem exactamente com os valores do documento (ver também
+        lote-393254-detalhe.png). A factura '2026A15-44' está de facto
+        duplicada, mas em muito mais do que os '4 registos' que o documento
+        refere: só com o NIF 508274087 aparecem 1184 lotes na lista, muitos
+        deles réplicas dos mesmos tipo/valor sob a mesma factura — o risco
+        descrito no documento existe, mas é maior do que ali estimado. O segundo
+        grupo da massa (lotes 440174/440177 da factura 66955, 15/685
+        prescrições, 637,49/24.907,06) NÃO foi confirmado: esses PIIDs existem
+        no ambiente mas apontam para registos completamente diferentes (NIF
+        507713222, Número da Factura '545', tipo Ventiloterapia, Número do Lote
+        '0', sem o valor 637,49), e não encontrei esses valores numa amostra de
+        100 dos 1184 lotes do NIF 508274087. Essa parte da massa parece não
+        existir tal como descrita neste ambiente."

@@ -1,0 +1,384 @@
+documento: gestao-armazem/faturas-incidencia.md
+rota: /gestao-armazem/faturas-incidencia
+mapeado_em: 2026-08-19
+mapeado_contra:
+  ui: origin/develop 30446d5, build de 2026-08-16
+  api: jar de feature/cockpit-disparar 25a869e, construido a 2026-08-12
+accoes:
+  - id: consulta-pesquisar
+    tipo: consulta
+    nome: Pesquisar incidências
+    como: preencher pelo menos um dos campos (Área, Código, Nº Factura, Prestador) e
+      clicar em 'Pesquisar'
+    promessa: a grelha 'Resultados da Pesquisa' lista as faturas com incidência que
+      correspondem aos filtros; se nenhum filtro estiver preenchido surge o
+      alerta 'É necessário preencher pelo menos um dos campos de pesquisa.' e a
+      pesquisa não corre
+    rota: /gestao-armazem/faturas-incidencia
+    entradas:
+      - campo: Área
+        obrigatorio: false
+      - campo: Código
+        obrigatorio: false
+      - campo: Nº Factura
+        obrigatorio: false
+      - campo: Prestador
+        obrigatorio: false
+    casos_documento:
+      - CT-01
+      - CT-07
+      - CT-08
+  - id: filtro-area
+    tipo: filtro
+    nome: Filtrar por Área
+    como: abrir a combobox 'Área' e escolher um valor
+    promessa: restringe os resultados à área escolhida; as opções observadas são
+      apenas MCDT, CRD, Cuidados Termais e Saúde Oral (SISO) — não existe opção
+      CC nem Medicamentos
+    entradas:
+      - campo: Área
+        obrigatorio: false
+        origem_valores: "combobox fixa: Todas, MCDT, CRD, Cuidados Termais, Saúde Oral (SISO)"
+    casos_documento:
+      - CT-01
+      - CT-08
+  - id: filtro-codigo
+    tipo: filtro
+    nome: Filtrar por Código
+    como: escrever no campo texto 'Código' (placeholder 'Ex. 02987F') e pesquisar
+    promessa: restringe os resultados ao código de prestador/convenção indicado
+    entradas:
+      - campo: Código
+        obrigatorio: false
+    casos_documento: []
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Filtrar por Nº Factura
+    como: escrever no campo texto 'Nº Factura' (placeholder 'Ex. 2025/2631') e
+      pesquisar
+    promessa: restringe os resultados ao número de fatura indicado; testado com
+      '24100806' (fatura histórica do documento) e devolveu 'Sem facturas com
+      incidência para os filtros selecionados.'
+    entradas:
+      - campo: Nº Factura
+        obrigatorio: false
+    casos_documento:
+      - CT-01
+      - CT-07
+      - CT-08
+  - id: filtro-prestador
+    tipo: filtro
+    nome: Filtrar por Prestador
+    como: escrever no campo texto 'Prestador' (placeholder 'Nome do prestador') e
+      pesquisar
+    promessa: restringe os resultados por nome de prestador; testado com o valor
+      genérico 'a' e devolveu 0 resultados em todo o ambiente
+    entradas:
+      - campo: Prestador
+        obrigatorio: false
+    casos_documento:
+      - CT-08
+  - id: filtro-limpar
+    tipo: filtro
+    nome: Limpar filtros
+    como: clicar em 'Limpar'
+    promessa: repõe os 4 campos de filtro vazios e volta ao estado inicial 'Sem
+      resultados / Utilize os filtros acima e clique em pesquisar.'
+    casos_documento: []
+  - id: consulta-ordenar-colunas
+    tipo: consulta
+    nome: Ordenar colunas da grelha
+    como: clicar no cabeçalho de uma coluna ordenável
+    promessa: os cabeçalhos 'Data Inserção', 'Área', 'Local', 'Código', 'Nº Factura'
+      e 'Data Factura' têm 'Ordenar por …' como rótulo acessível, isto é, são
+      clicáveis para ordenar; 'Convenção', 'Prestador', 'Quant. Lotes' e 'Obs'
+      não são ordenáveis
+    casos_documento: []
+  - id: consulta-paginacao
+    tipo: consulta
+    nome: Paginar e alterar resultados por página
+    como: usar a navegação de paginação (primeira/anterior/seguinte/última página) e
+      a combobox 'Resultados por página'
+    promessa: a combobox 'Resultados por página' oferece 10, 25, 50 e 100; a
+      paginação fica desativada quando há 0 resultados
+    entradas:
+      - campo: Resultados por página
+        origem_valores: "combobox fixa: 10, 25, 50, 100"
+    casos_documento: []
+  - id: consulta-selecionar-linhas
+    tipo: consulta
+    nome: Selecionar linhas da grelha
+    como: marcar as checkboxes das linhas de resultado
+    promessa: mostra a contagem 'N itens selecionados' e um botão 'Limpar seleção';
+      a seleção habilita o botão 'Exportar XLSX' (que começa desativado)
+    casos_documento: []
+  - id: exportacao-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: selecionar uma ou mais linhas de resultado e clicar em 'Exportar XLSX'
+    promessa: exporta as faturas com incidência selecionadas para XLSX; botão fica
+      desativado sem seleção (não foi possível ativá-lo por não existir nenhuma
+      linha na grelha neste ambiente)
+    casos_documento: []
+  - id: navegacao-atribuir-localizacao
+    tipo: navegacao
+    nome: Abrir ecrã Atribuir Localização
+    como: clicar no botão 'Atribuir localização' no cabeçalho da lista
+    promessa: navega para a rota dedicada
+      /gestao-armazem/faturas-incidencia/atribuir com o formulário de registo de
+      novas incidências
+    rota: /gestao-armazem/faturas-incidencia/atribuir
+    casos_documento:
+      - CT-02
+      - CT-04
+  - id: criacao-atribuir-localizacao
+    tipo: criacao
+    nome: Atribuir localização a fatura (registar incidência)
+    como: escolher Área, preencher Local e Operador (fixo 'sistema'); depois,
+      conforme a área, preencher Convenção + Cód. Convenção (MCDT) ou Código
+      (CRD/Cuidados Termais/SISO), ver o Prestador auto-preenchido (readonly),
+      preencher Nº Factura, Quant. Lotes, Data Factura e Observações, e Guardar
+      (Enter) — o Local mantém-se entre registos para permitir sequência
+      encadeada
+    promessa: "área MCDT mostra os campos 'Convenção' e 'Cód. Convenção' (ajuda: '6
+      primeiros caracteres'); as restantes áreas mostram só 'Código'; o campo
+      'Prestador' é sempre readonly e é preenchido por pesquisa em tempo real —
+      testado com um código inexistente ('99999X') e o ecrã mostrou de imediato
+      'Sem prestador para o código' sob o campo Prestador, sem submeter nada;
+      mensagem inicial 'Selecione uma área para começar a captura.' antes de
+      escolher Área; secção 'Atribuições nesta sessão (0)' acumula os registos
+      guardados nesta sessão com a ajuda 'Cada Enter no último campo guarda uma
+      factura e adiciona-a aqui.'"
+    rota: /gestao-armazem/faturas-incidencia/atribuir
+    entradas:
+      - campo: Área
+        obrigatorio: true
+        origem_valores: "combobox fixa: MCDT, CRD, Cuidados Termais, Saúde Oral (SISO)"
+      - campo: Local
+        obrigatorio: true
+      - campo: Convenção (só em MCDT)
+        obrigatorio: true
+      - campo: Cód. Convenção (só em MCDT, derivado)
+        obrigatorio: true
+        origem_valores: derivado automaticamente da Convenção, ajuda diz '6 primeiros
+          caracteres'
+      - campo: Código (áreas não MCDT)
+        obrigatorio: true
+      - campo: Prestador
+        obrigatorio: false
+        origem_valores: readonly, preenchido por pesquisa em tempo real a partir do
+          Código/Convenção
+      - campo: Nº Factura
+        obrigatorio: true
+      - campo: Quant. Lotes
+        obrigatorio: false
+      - campo: Data Factura
+        obrigatorio: false
+      - campo: Observações
+        obrigatorio: false
+    casos_documento:
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-06
+  - id: navegacao-voltar-a-consulta
+    tipo: navegacao
+    nome: Voltar à consulta
+    como: clicar no botão de fechar (X) do cabeçalho 'Atribuir Localização', com
+      rótulo acessível 'Voltar à consulta'
+    promessa: regressa à rota /gestao-armazem/faturas-incidencia com os filtros da
+      lista repostos a vazio
+    rota: /gestao-armazem/faturas-incidencia/atribuir
+    casos_documento: []
+insumos_necessarios:
+  - descricao: Código ou convenção real de prestador (MCDT, CRD, Cuidados Termais ou
+      Saúde Oral/SISO) aceite pelo ecrã de Atribuir Localização
+    obtivel: bd
+    razao: só é identificável por SQL read-only em INTEGRACOES.TRCONVENCIONADOS; o
+      formulário valida em tempo real e mostra 'Sem prestador para o código'
+      quando o código não existe, mas não sugere valores válidos
+  - descricao: Número de fatura novo (inexistente em QUA) para usar na atribuição,
+      sem colidir com faturas reais
+    obtivel: bd
+    razao: requer confirmação por SQL antes de digitar no ecrã; o próprio ecrã não
+      valida unicidade antecipadamente sem submeter
+  - descricao: Incidência existente na grelha para exercer edição de observação,
+      limite de 255 carateres, remoção e concorrência (CT-09 a CT-12)
+    obtivel: tela
+    razao: "o ambiente está sem qualquer incidência: filtrar pela fatura histórica
+      24100806 devolveu 'Sem facturas com incidência para os filtros
+      selecionados.' e uma pesquisa ampla por Prestador ('a') devolveu 0
+      resultados; só é possível obter uma linha criando-a via 'Atribuir
+      localização', o que depende do insumo de código/convenção real acima"
+  - descricao: Segundo operador autenticado em simultâneo para o cenário de
+      concorrência (CT-12)
+    obtivel: nao
+    razao: o ecrã não expõe troca de utilizador nem simulação de segunda sessão;
+      exige uma segunda conta e um segundo browser fora do alcance deste
+      mapeamento
+  - descricao: Acesso à BD QUA via SQLcl para confirmar XSINDERRO e o tamanho real
+      da coluna de observação
+    obtivel: nao
+    razao: não disponível nesta passagem de mapeamento (sem VPN/SQLcl ligados); só a
+      aplicação foi percorrida
+casos_sem_accao:
+  - CT-09
+  - CT-10
+  - CT-11
+  - CT-12
+repescagem:
+  feita_em: 2026-08-19
+  alvos:
+    - alvo: CT-09
+      procurei:
+        - Botão ou ligação com texto 'Editar', 'Editar observação', 'Alterar' na
+          tela principal e na linha da tabela de resultados
+        - Uma linha real na tabela para clicar (pesquisei sem filtros; por Nº
+          Factura=24100806 -- a incidência histórica; por Área=MCDT, CRD,
+          Cuidados Termais, Saúde Oral (SISO); por Prestador='a' como
+          caracter-coringa) -- todas devolveram 'Sem facturas com incidência
+          para os filtros selecionados'
+        - Como não há nenhuma linha visível para abrir, inspecionei o bundle JS
+          compilado da própria aplicação (fetch same-origin a partir da página,
+          sem qualquer escrita) à procura do componente que desenha as ações de
+          cada linha e do modal de edição
+      onde:
+        - http://localhost:4174/gestao-armazem/faturas-incidencia (pesquisas com
+          vários filtros)
+        - http://localhost:4174/assets/index-CfxSh3gn.js (componentes P3e =
+          ações da linha, R3e = modal 'Editar observação', z3e = ecrã de
+          resultados que liga onEditar ao modal)
+      resultado: encontrado_sem_prova
+      accao: null
+      nota: "Não foi possível confirmar visualmente porque a listagem está vazia neste
+        ambiente (nenhuma incidência corresponde a nenhum filtro testado,
+        incluindo a histórica 24100806). A confirmação é por leitura direta do
+        código-fonte da aplicação, que renderiza este ícone sempre que existe
+        uma linha (prop 'data' do componente P3e). Evidência guardada em
+        evidencia-codigo-fonte.md e captura faturas-incidencia-lista-vazia.png
+        (mostra a coluna de ações sem cabeçalho de texto). — encontrado sem
+        captura: afirmacao por confirmar a mao"
+      accao_alegada: faturas-incidencia-editar-observacao
+    - alvo: CT-10
+      procurei:
+        - Mensagem ou indicação de limite de caracteres no campo de observação,
+          visível na tela ou no modal de edição
+        - Confirmação do tamanho real da coluna de observação na BD (tentativa
+          indireta, já que não há acesso a SQLcl nesta passagem)
+        - Inspeção do bundle JS à procura do atributo de validação do campo
+          Observação no modal de edição
+      onde:
+        - http://localhost:4174/gestao-armazem/faturas-incidencia (mesma
+          tentativa de pesquisa de linhas, sem sucesso -- lista sempre vazia)
+        - "http://localhost:4174/assets/index-CfxSh3gn.js (componente R3e: campo
+          'Observação' com inputProps.maxLength e helperText de contador)"
+      resultado: encontrado_sem_prova
+      accao: null
+      nota: "O limite de 255 é aplicado no cliente (maxLength do input) e coincide com
+        o tamanho mencionado no plano, mas isto é o comportamento da aplicação,
+        não uma leitura da coluna na BD -- continua por confirmar com DESC via
+        SQLcl (mesma limitação de acesso identificada na primeira passagem). Não
+        foi possível testar colar >255 caracteres numa incidência real por não
+        haver nenhuma linha disponível nem se poder submeter dados nesta
+        passagem. — encontrado sem captura: afirmacao por confirmar a mao"
+      accao_alegada: faturas-incidencia-limite-observacao
+    - alvo: CT-11
+      procurei:
+        - Botão ou ligação com texto 'Remover', 'Eliminar', 'Apagar', 'Retirar'
+          na linha da tabela de resultados
+        - Modal de confirmação associado a essa ação
+        - Inspeção do bundle JS à procura do componente de ação de remoção e do
+          modal de confirmação
+      onde:
+        - http://localhost:4174/gestao-armazem/faturas-incidencia (mesmas
+          pesquisas sem resultados que em CT-09/CT-10)
+        - "http://localhost:4174/assets/index-CfxSh3gn.js (componente P3e:
+          segundo ícone da linha com tooltip 'Retirar fatura'; componente L3e:
+          modal de confirmação 'Remover fatura das incidências'; y3e: PATCH
+          .../{id}/retirar)"
+      resultado: encontrado_sem_prova
+      accao: null
+      nota: "Tal como em CT-09/CT-10, não há nenhuma incidência visível neste ambiente
+        para exercitar a ação na prática, nem é permitido submeter/confirmar
+        nada nesta passagem. A existência do ícone e do modal está confirmada
+        por leitura do código-fonte da aplicação, não por captura de ecrã com a
+        ação em curso. — encontrado sem captura: afirmacao por confirmar a mao"
+      accao_alegada: faturas-incidencia-retirar-fatura
+    - alvo: CT-12
+      procurei:
+        - Qualquer indicação na tela ou no modal de edição de que a observação
+          está a ser editada por outro utilizador (aviso, bloqueio, campo de
+          versão)
+        - No pedido de gravação (PATCH), se é enviado algum identificador de
+          versão/etag/timestamp que permita bloqueio otimista
+        - No bundle JS, ocorrências de palavras como 'conflito',
+          'concorrente'/'concorrência', 'outro utilizador', 'desatualizado',
+          'If-Match', que indicassem tratamento de concorrência
+      onde:
+        - http://localhost:4174/gestao-armazem/faturas-incidencia (modal 'Editar
+          observação')
+        - "http://localhost:4174/assets/index-CfxSh3gn.js (função b3e:
+          `Z.patch(`${O8}/${e}`,{observacoes:t})`; pesquisa textual pelas
+          palavras-chave acima)"
+      resultado: nao_existe
+      accao: null
+      nota: "Não existe nenhum mecanismo dedicado a concorrência nesta tela: o pedido
+        de gravação da observação envia apenas o texto (`{observacoes: ...}`),
+        sem número de versão, ETag ou timestamp de leitura, e não há no código
+        nenhuma string relacionada com aviso de conflito ou edição concorrente.
+        A ação usada seria a mesma 'Editar observação' de CT-09 nas duas
+        sessões. Isto sugere fortemente um comportamento 'a última gravação
+        ganha' sem aviso, mas não foi possível confirmar com um teste real de
+        duas sessões em simultâneo -- falta precisamente o segundo operador
+        autenticado (ver o insumo abaixo), a mesma limitação identificada na
+        primeira passagem."
+    - alvo: Segundo operador autenticado em simultâneo para o cenário de concorrência
+        (CT-12)
+      procurei:
+        - Botão ou menu de trocar de utilizador / iniciar segunda sessão dentro
+          da aplicação
+        - Rota de configurações/administração de utilizadores acessível a partir
+          do cabeçalho
+        - No bundle JS, strings como 'trocar utilizador', 'mudar utilizador',
+          'impersonat', 'segunda sessão', 'switch user', 'login-as'
+      onde:
+        - Cabeçalho da aplicação em qualquer tela (mostra utilizador fixo
+          'Manta' / 'PRRmanta_dev' e um único botão 'Sair')
+        - http://localhost:4174/configuracoes (rota apontada pelo ícone de
+          engrenagem do cabeçalho)
+        - http://localhost:4174/assets/index-CfxSh3gn.js (pesquisa textual pelas
+          palavras-chave acima -- sem ocorrências)
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma a conclusão da primeira passagem, agora com mais prova: a rota
+        /configuracoes devolve 404 'Página não encontrada' (captura
+        configuracoes-404.png), e não há no código nenhuma funcionalidade de
+        troca de utilizador ou personificação. Continua a exigir uma segunda
+        conta e um segundo browser, fora do alcance desta passagem de
+        mapeamento."
+    - alvo: Acesso à BD QUA via SQLcl para confirmar XSINDERRO e o tamanho real da
+        coluna de observação
+      procurei:
+        - Qualquer via dentro da própria aplicação que substitua a necessidade
+          de SQLcl para confirmar XSINDERRO='S' de uma fatura
+        - Qualquer via dentro da aplicação que confirme o tamanho real (DESC) da
+          coluna de observação na BD
+        - Ligação VPN/SQLcl (não tentada -- fora do alcance desta passagem, tal
+          como na primeira)
+      onde:
+        - http://localhost:4174/gestao-armazem/faturas-incidencia (semântica da
+          própria pesquisa/listagem)
+        - http://localhost:4174/assets/index-CfxSh3gn.js (constante F8=255 usada
+          como maxLength do campo Observação)
+      resultado: nao_existe
+      accao: null
+      nota: "O acesso a SQLcl/VPN continua indisponível nesta passagem (mesma
+        limitação da primeira). Encontrei apenas equivalentes parciais, não uma
+        substituição completa: (1) por definição, qualquer fatura que apareça
+        nesta listagem já tem XSINDERRO='S' -- é o próprio filtro do ecrã -- mas
+        não há neste ambiente nenhuma fatura visível para servir de confirmação
+        concreta; (2) o limite de 255 caracteres aplicado no campo Observação
+        (ver CT-10) é um indício do tamanho da coluna, mas é validação
+        client-side, não uma leitura da coluna via DESC. Nenhum dos dois
+        substitui de facto o SQLcl para o que o plano pede."

@@ -1,0 +1,390 @@
+documento: consulta-area-prestacao/troca-seringas-facturas.md
+rota: /troca-seringas/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: A1
+    tipo: consulta
+    nome: Pesquisar faturas do Programa Troca de Seringas
+    como: Preencher um ou mais campos do formulário de pesquisa (Número da Factura,
+      Código Prestador, NIF Prestador, Código SICAD (Kit), Convenção SICAD, Mês
+      de Conferência, Data da Factura, Estado) e clicar em 'Pesquisar'.
+    promessa: Cabeçalho 'Pesquisa facturas Programa Troca de Seringas'; se nenhum
+      campo estiver preenchido surge o aviso 'É necessário preencher pelo menos
+      um dos campos de pesquisa.'; a secção 'Resultado da pesquisa' lista as
+      faturas SICAD correspondentes com paginação e contagem real.
+    rota: /troca-seringas/factura
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Código Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Código SICAD (Kit)
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Convenção SICAD
+        obrigatorio: false
+        origem_valores: texto livre (não é select, ao contrário do descrito no documento)
+      - campo: Mês de Conferência
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: campo de data única DD/MM/YYYY com calendário; não existe par de/até
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: "combobox fixo: Verificada, Conferida Sem Erros, Recepcionada
+          com Erros, Anulada"
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-10
+      - CT-11
+    equivalente_aproximado: true
+    ressalva: "Testado com dados reais: Número da Factura 'E012-425' devolveu
+      exatamente a fatura 68334 com todos os valores do documento (prestador
+      9539, NIF 508426880, SICAD 1000166023, 30/04/2025, 2,40, Verificada);
+      'E014/431' devolveu a 68335 (SICAD001). Mas Código SICAD (Kit)
+      '1000164411' devolveu 65 resultados (não 1), indicando que o código não
+      identifica uma fatura isolada. Data da Factura é um campo de data exata
+      (URL usa dataFactura=YYYY-MM-DD): CT-05, desenhado para um intervalo
+      de/até com validação de 'de <= até', não pode ser exercido como descrito
+      porque esse segundo campo não existe."
+  - id: A2
+    tipo: filtro
+    nome: Filtrar por Estado da fatura
+    como: Abrir o combobox 'Estado' e escolher uma das quatro opções antes de
+      pesquisar.
+    promessa: "Lista fixa de 4 estados: Verificada, Conferida Sem Erros,
+      Recepcionada com Erros, Anulada."
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: O documento lista estados 1 RECP, 2 V, 14 CSE, 15 CCE em TRCFESTADO; a
+      combobox observada usa outros rótulos/ids (URL confirma estadoId=2 para
+      'Verificada' e estadoId=34 para 'Recepcionada com Erros'), sem
+      correspondência clara 1:1 com os códigos do documento. A opção mais
+      próxima de 'fatura com erros' devolveu 7 resultados reais, mas nenhum
+      deles expõe uma secção Erros no detalhe (ver casos_sem_accao CT-08).
+  - id: A3
+    tipo: navegacao
+    nome: Abrir detalhe da fatura
+    como: Clicar no botão 'Ver detalhe da factura ...' na primeira coluna de uma
+      linha da grelha de resultados.
+    promessa: Navega para /troca-seringas/factura/{id} e mostra 'Detalhe factura
+      Programa Troca de Seringas' com as secções Identificação da Factura,
+      Prestador, Adquirente e Kit, Totais e Linhas da factura.
+    rota: /troca-seringas/factura/{id}
+    casos_documento:
+      - CT-06
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: "Testado com as faturas 68334 (Verificada) e 584/E010-49 (Recepcionada
+      com Erros). O detalhe real só tem estas secções: falta uma secção própria
+      'Certificado de Submissão' (existe apenas o campo 'Nº Certificado' dentro
+      de Identificação da Factura, sem dados de submissão eletrónica), falta
+      inteiramente 'Documentos Eletrónicos' e falta inteiramente 'Erros' —
+      confirmado mesmo numa fatura com estado 'Recepcionada com Erros'."
+  - id: A4
+    tipo: consulta
+    nome: Ver Linhas da factura (tabela do detalhe)
+    como: Consultar a tabela 'Linhas da factura' dentro da vista de detalhe de uma
+      fatura.
+    promessa: Tabela com colunas Tipo Lote, Preço Unitário, Quantidade, Comunicado,
+      Apurado.
+    casos_documento:
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: Não há colunas Seq, Top Lista nem Descrição, e não há preço/quantidade
+      separados por estimado vs apurado como o documento descreve ('Linhas da
+      Factura SICAD'); aqui só existe um par comunicado/apurado por linha,
+      rotulado 'Comunicado' em vez de 'Estimado'.
+  - id: A5
+    tipo: exportacao
+    nome: Exportar XLSX da lista de resultados
+    como: Clicar no botão 'Exportar XLSX' por cima da grelha de resultados.
+    promessa: Botão 'Exportar XLSX', ativo quando há resultados e desativado
+      ('disabled') quando a pesquisa devolve 0 faturas.
+    casos_documento: []
+    ressalva: Ação presente na tela mas não referida em nenhum cenário do documento,
+      que só menciona Exportar PDF ao nível do detalhe (secção A3/A9 —
+      igualmente ausente).
+  - id: A6
+    tipo: consulta
+    nome: Selecionar linhas da grelha de resultados
+    como: Marcar as caixas de seleção nas linhas da grelha; o contador '0 itens
+      selecionados' atualiza e surge o botão 'Limpar seleção'.
+    promessa: Seleção múltipla de faturas na grelha de resultados.
+    casos_documento: []
+    ressalva: Não referida no documento; não ficou claro, sem submeter nada, se a
+      seleção alimenta apenas o 'Exportar XLSX' ou outra ação.
+  - id: A7
+    tipo: navegacao
+    nome: Paginar e ajustar resultados por página
+    como: Usar a navegação de páginas (primeira/anterior/seguinte/última, números de
+      página) e o combobox 'Resultados por página' (10/20/25/50/100) por baixo
+      da grelha.
+    promessa: Contagem real de resultados (verificado '509 resultados' para
+      Estado=Verificada, '164 resultados' para um NIF Prestador, '65 resultados'
+      para um Código SICAD) com paginação funcional até 51 páginas.
+    casos_documento:
+      - CT-11
+    equivalente_aproximado: false
+  - id: A8
+    tipo: filtro
+    nome: Ordenar colunas da grelha de resultados
+    como: Clicar nos cabeçalhos de coluna (rótulo 'Ordenar por Nº da Factura',
+      'Ordenar por Código Prestador', etc.) na grelha de resultados.
+    promessa: Todas as colunas da grelha (Nº da Factura, Código Prestador, Descrição
+      Convenção, Código SICAD, Convenção, Data Factura, Mês Conferência, Valores
+      Submetidos, Valores Apurados, Data Conferência, Estado) são clicáveis para
+      ordenar.
+    casos_documento: []
+    ressalva: "Colunas reais da grelha diferem das do documento: não existe coluna
+      NIF Prestador nem Descrição Prestador; em vez disso há 'Descrição
+      Convenção' e 'Convenção'. Nos registos observados, 'Convenção' repete
+      sempre o valor de 'Código Prestador' (ex.: 9539/9539, 18147/18147), o que
+      sugere possível troca de mapeamento entre as duas colunas — vale a pena um
+      testador confirmar isto."
+  - id: A9
+    tipo: filtro
+    nome: Limpar filtros de pesquisa
+    como: Clicar no botão 'Limpar' no formulário de pesquisa.
+    promessa: Reinicia todos os campos do formulário e remove os parâmetros da URL,
+      voltando a /troca-seringas/factura.
+    casos_documento: []
+  - id: A10
+    tipo: navegacao
+    nome: Abrir calendário Data da Factura
+    como: Clicar no botão 'Abrir/fechar calendário' junto ao campo Data da Factura.
+    promessa: Abre um datepicker mensal navegável (mês anterior/próximo, seletor de
+      ano) para escolher uma única data.
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: true
+    ressalva: Só permite escolher uma data (que preenche o único campo Data da
+      Factura), não um par de/até; portanto não valida a regra 'de <= até' que o
+      CT-05 espera testar.
+  - id: A11
+    tipo: navegacao
+    nome: Voltar da vista de detalhe para a lista
+    como: Clicar no botão 'Voltar' no fundo da vista de detalhe.
+    promessa: Regressa à grelha de resultados da pesquisa anterior, preservando os
+      parâmetros da pesquisa na URL.
+    casos_documento: []
+  - id: erros-detalhe-factura-outras-areas
+    tipo: consulta
+    nome: Secção/aba 'Erros' no detalhe da factura
+    como: "No detalhe de uma factura: em Medicamentos surge como secção 'Erros'
+      (Cód. Erro, Descrição Erro, Origem, Nº Lote); em Dispensa em Proximidade
+      surge como aba 'Erros' (Cód. Erro, Descrição Erro, Estado)"
+    promessa: Lista os erros de conferência associados à factura
+    rota: /medicamentos/factura/{id} ou /dispensa-proximidade/factura/{id}
+    equivalente_aproximado: true
+    ressalva: A massa (facturas em 'Recepcionada com Erros') é obtível na própria
+      tela de Troca de Seringas, mas o detalhe dessa tela (Identificação,
+      Prestador, Adquirente e Kit, Totais, Linhas da factura) não tem nenhuma
+      secção de Erros, mesmo para essas facturas — confirmei isso abrindo o
+      detalhe da E010-49. A secção/aba Erros só existe noutras telas de Facturas
+      da mesma área de menu (Medicamentos, Dispensa em Proximidade), e nas
+      facturas verificadas aparecia vazia ('Não existem erros'/'Sem erros'),
+      pelo que não confirmei o preenchimento com dados reais de erro.
+  - id: ver-factura-outras-areas
+    tipo: consulta
+    nome: Botão 'Ver Factura' no detalhe da factura
+    como: No detalhe da factura, clicar no botão 'Ver Factura' (canto superior
+      direito) para abrir a imagem digitalizada da factura
+    promessa: Mostra a imagem digitalizada da factura, quando exista
+    rota: /cuidados-continuados/factura/{id} ou /dispensa-proximidade/factura/{id}
+    equivalente_aproximado: true
+    ressalva: O botão 'Ver Factura' existe literalmente nestas duas telas, mas não
+      na tela de Programa Troca de Seringas. Nas facturas verificadas (E015-543,
+      FTCMUC-86) o botão aparecia desativado, por a factura não ter imagem
+      digitalizada associada, pelo que não consegui confirmar o conteúdo do
+      modal. Em Medicamentos existe um visualizador de documento equivalente
+      (abas 'Factura'/'Resumo', embutido em vez de modal), também sem documento
+      disponível na factura testada. Em nenhuma das quatro telas visitadas
+      encontrei um botão 'Exportar PDF' — essa parte do caso continua por
+      confirmar.
+  - id: erros-secao-outras-areas
+    tipo: consulta
+    nome: Secção/aba 'Erros' no detalhe da factura (Medicamentos / Dispensa em
+      Proximidade)
+    como: "No detalhe da factura, consultar a secção 'Erros' (Medicamentos: Cód.
+      Erro, Descrição Erro, Origem, Nº Lote) ou a aba 'Erros' (Dispensa em
+      Proximidade: Cód. Erro, Descrição Erro, Estado)"
+    promessa: Lista os erros de conferência da factura
+    rota: /medicamentos/factura/{id} ou /dispensa-proximidade/factura/{id}
+    equivalente_aproximado: true
+    ressalva: Só a secção Erros tem equivalente confirmado (visto e capturado),
+      noutras telas da mesma secção de menu, e em nenhuma factura verificada
+      continha erros reais. 'Certificado de Submissão' como secção própria e
+      'Documentos Eletrónicos' como lista de documentos não foram encontrados em
+      tela nenhuma das visitadas; o mais próximo que vi foi o campo 'Nº
+      Certificado' (já presente na própria tela de Troca de Seringas) e as
+      colunas booleanas 'Ficheiro Electrónico'/'Factura Papel' na lista de
+      Facturas MCDT (sem dados reais confirmados), que não constituem a secção
+      descrita no documento de cenários.
+  - id: ver-factura-massa-outras-areas
+    tipo: consulta
+    nome: Botão 'Ver Factura' / visualizador de documento no detalhe da factura
+    como: No detalhe da factura, o botão 'Ver Factura' (Cuidados Continuados,
+      Dispensa em Proximidade) ou o painel com abas 'Factura'/'Resumo'
+      (Medicamentos) destinam-se a mostrar a imagem digitalizada quando exista
+    promessa: Exibe a imagem digitalizada da factura associada
+    rota: /cuidados-continuados/factura/{id}, /dispensa-proximidade/factura/{id} ou
+      /medicamentos/factura/{id}
+    equivalente_aproximado: true
+    ressalva: Não existe botão 'Exportar PDF' em nenhuma das telas visitadas — não
+      encontrei essa massa/ação em lado nenhum. O botão/painel 'Ver Factura'
+      existe, mas em todas as facturas verificadas apareceu desativado ou com
+      'Documento não disponível', pelo que não confirmei visualmente uma imagem
+      digitalizada real; não tive tempo de percorrer sistematicamente mais
+      facturas à procura de uma com o botão ativo.
+insumos_necessarios:
+  - descricao: Fatura do Programa Troca de Seringas em estado 'Verificada'
+    obtivel: tela
+    razao: Filtro Estado='Verificada' devolveu 509 resultados reais na pesquisa.
+  - descricao: Fatura do Programa Troca de Seringas em estado 'Recepcionada com Erros'
+    obtivel: tela
+    razao: Filtro Estado devolveu 7 resultados reais (ex. E010-49, prestador 13218).
+  - descricao: Fatura com código SICAD (Kit) alfanumérico tipo 'SICAD001' (registo
+      aparente de teste, CT-04)
+    obtivel: tela
+    razao: Localizável pesquisando Número da Factura 'E014/431' (fatura 68335).
+  - descricao: Fatura com número de fatura duplicado entre mais de um prestador (CT-10)
+    obtivel: bd
+    razao: Não há filtro na tela que garanta ou destaque duplicados; é preciso
+      identificar o caso por query SQL em TDCFFACTURASICAD antes de o exercer na
+      tela.
+  - descricao: Massa ampla (centenas/milhares de faturas) para testar paginação e
+      desempenho
+    obtivel: tela
+    razao: Um único filtro largo (ex. Estado='Verificada') já devolve centenas de
+      resultados paginados (10/20/25/50/100 por página).
+  - descricao: Conteúdo do Certificado de Submissão, Documentos Eletrónicos e secção
+      Erros de uma fatura
+    obtivel: nao
+    razao: Estas secções não existem na tela atual, mesmo para uma fatura em estado
+      'Recepcionada com Erros'; não há outro ecrã na área SICAD que as mostre.
+  - descricao: PDF exportado do detalhe da fatura e imagem digitalizada (modal Ver
+      Factura)
+    obtivel: nao
+    razao: Nenhum dos dois botões (Exportar PDF, Ver Factura) existe na vista de
+      detalhe implementada; só há o botão 'Voltar'.
+  - descricao: Acesso SQLcl à BD QUA (GESTCONFER.TDCFFACTURASICAD, TRCFESTADO) para
+      cruzamento e identificação de massa específica
+    obtivel: bd
+    razao: Fora do alcance da tela; requer as credenciais do ficheiro local
+      db/conexao-qua.local.md, não versionado.
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-08
+      procurei:
+        - Filtrei a pesquisa de facturas do Programa Troca de Seringas por
+          Estado = 'Recepcionada com Erros' para obter a massa do caso (fatura
+          com erros)
+        - Abri o detalhe da fatura E010-49 (id 584, uma das 7 devolvidas pelo
+          filtro) à procura de uma tabela/secção 'Erros' com Cód. Erro, Tipo,
+          Desc. Erro, Linha
+        - Repeti o mesmo padrão (filtrar por estado de erro e abrir o detalhe)
+          nos ecrãs de Facturas de Medicamentos, MCDT, Cuidados Continuados e
+          Dispensa em Proximidade, para ver se a tabela Erros vive noutra tela
+          da mesma secção de menu
+      onde:
+        - http://localhost:4174/troca-seringas/factura (filtro
+          Estado='Recepcionada com Erros', 7 resultados) e detalhe
+          http://localhost:4174/troca-seringas/factura/584
+        - http://localhost:4174/medicamentos/factura (filtro
+          Estado='Recepcionada com Erros', 9 resultados) e detalhe
+          http://localhost:4174/medicamentos/factura/580679 (E017-391, estado
+          ERRO_RECEPCAO)
+        - http://localhost:4174/dispensa-proximidade/factura e detalhe
+          http://localhost:4174/dispensa-proximidade/factura/24461 (E015-543)
+        - http://localhost:4174/mcdts/factura (testei Estado='Recepcionada com
+          Erros' e 'Verificada'; sem massa disponível em nenhum dos dois)
+      resultado: encontrado
+      accao: erros-detalhe-factura-outras-areas
+      captura: medicamentos-erros-secao-viewport.png
+    - alvo: CT-09
+      procurei:
+        - Procurei um botão 'Exportar PDF' no detalhe da factura de Troca de
+          Seringas e nos detalhes de outras telas de Facturas da mesma secção de
+          menu (Medicamentos, Cuidados Continuados, Dispensa em Proximidade)
+        - Procurei um botão/modal 'Ver Factura' no detalhe da factura de Troca
+          de Seringas e nas mesmas telas
+        - Abri o detalhe de facturas reais nessas telas para confirmar
+          visualmente a presença ou ausência dos botões (não cliquei em nada que
+          alterasse estado)
+      onde:
+        - http://localhost:4174/troca-seringas/factura/584 e
+          http://localhost:4174/troca-seringas/factura/68334 (só botão 'Voltar')
+        - http://localhost:4174/medicamentos/factura/580679 (painel com abas
+          'Factura'/'Resumo', sem 'Exportar PDF')
+        - http://localhost:4174/cuidados-continuados/factura/127573 (botão 'Ver
+          Factura' presente, desativado)
+        - http://localhost:4174/dispensa-proximidade/factura/24461 (botão 'Ver
+          Factura' presente, desativado)
+      resultado: encontrado
+      accao: ver-factura-outras-areas
+      captura: dispensa-proximidade-ver-factura-e-erros-tab.png
+    - alvo: "[insumo] Conteúdo do Certificado de Submissão, Documentos Eletrónicos e
+        secção Erros de uma fatura"
+      procurei:
+        - Procurei uma secção 'Certificado de Submissão' distinta (além do campo
+          'Nº Certificado' já existente em Identificação da Factura) no detalhe
+          de Troca de Seringas e nas outras telas de Facturas visitadas
+        - Procurei uma secção 'Documentos Eletrónicos' (lista de documentos) no
+          detalhe de Troca de Seringas e nas outras telas
+        - Procurei uma secção/tabela 'Erros' preenchida com dados reais de erro,
+          incluindo em facturas no estado 'Recepcionada com Erros'
+      onde:
+        - http://localhost:4174/troca-seringas/factura/584 (estado 'Recepcionada
+          com Erros') e http://localhost:4174/troca-seringas/factura/68334
+        - http://localhost:4174/medicamentos/factura/580679 (secção 'Erros'
+          presente, vazia; sem 'Certificado de Submissão' nem 'Documentos
+          Eletrónicos')
+        - http://localhost:4174/dispensa-proximidade/factura/24461 (aba 'Erros'
+          presente, vazia; secção 'Identificadores' com GUID Factura/GUID
+          Resumo, mas sem 'Certificado de Submissão')
+        - http://localhost:4174/mcdts/factura (colunas de lista 'Ficheiro
+          Electrónico' e 'Factura Papel', sugerindo algum controlo documental,
+          mas sem massa de facturas disponível em nenhum estado testado para
+          confirmar num detalhe)
+      resultado: encontrado
+      accao: erros-secao-outras-areas
+      captura: dispensa-proximidade-erros-tab-conteudo.png
+    - alvo: "[insumo] PDF exportado do detalhe da fatura e imagem digitalizada (modal
+        Ver Factura)"
+      procurei:
+        - Procurei o botão 'Exportar PDF' no detalhe de facturas reais em Troca
+          de Seringas, Medicamentos, Cuidados Continuados e Dispensa em
+          Proximidade
+        - Procurei o botão/modal 'Ver Factura' e tentei confirmar se ficava
+          ativo nalguma factura consultada
+        - Verifiquei se existe um visualizador de documento equivalente noutra
+          forma (painel embutido em vez de modal)
+      onde:
+        - http://localhost:4174/troca-seringas/factura/584 e
+          http://localhost:4174/troca-seringas/factura/68334
+        - http://localhost:4174/medicamentos/factura/580679 (painel com abas
+          'Factura'/'Resumo', 'Documento não disponível para esta factura')
+        - http://localhost:4174/cuidados-continuados/factura/127573 (botão 'Ver
+          Factura' desativado)
+        - http://localhost:4174/dispensa-proximidade/factura/24461 (botão 'Ver
+          Factura' desativado)
+      resultado: encontrado
+      accao: ver-factura-massa-outras-areas
+      captura: cuidados-continuados-ver-factura-button.png

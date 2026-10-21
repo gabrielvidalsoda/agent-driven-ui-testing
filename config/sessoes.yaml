@@ -1,0 +1,57 @@
+# Uma sessao e uma seccao de topo do menu do front (MainLayout.tsx). O perfil descreve quem o
+# agente e quando abre a tela; contra a UI local, que nao tem autenticacao, fica vazio.
+#
+# `paralelo` diz se os documentos da sessao podem correr ao mesmo tempo. So esta em true onde
+# a massa dos documentos e disjunta; em caso de duvida fica em false, porque agentes a
+# colidirem na mesma massa produzem vermelhos que se leem de manha como defeitos de produto.
+#
+# `concorrencia` limita quantos correm ao mesmo tempo numa sessao paralela. O limite nao e da
+# maquina: os agentes partilham a base de dev, que devolve ORA-12516 sob carga. Omitido, vale
+# o limite por omissao do executor (4).
+sessoes:
+  dados-referencia:
+    titulo: Dados de Referência
+    paralelo: false
+    perfil: {}
+  consulta-area-prestacao:
+    titulo: Consulta por Área de Prestação
+    paralelo: true
+    # 25 telas de pesquisa sobre a mesma base de dev. Lancadas todas de uma vez a base cede.
+    concorrencia: 4
+    perfil: {}
+  gestao-armazem:
+    titulo: Gestão de Armazém
+    paralelo: false
+    perfil: {}
+  controlo-contabilizacao:
+    titulo: Controlo e Contabilização
+    paralelo: false
+    perfil: {}
+  conferencia:
+    titulo: Conferência
+    paralelo: false
+    perfil: {}
+  controlo-qualidade:
+    titulo: Controlo de Qualidade
+    paralelo: false
+    perfil: {}
+  controlo-qualidade-novo:
+    titulo: Controlo de Qualidade (redesenho)
+    paralelo: false
+    perfil: {}
+  fecho:
+    titulo: Fecho
+    paralelo: false
+    perfil: {}
+  reclamacoes:
+    titulo: Reclamações
+    paralelo: false
+    perfil: {}
+  dashboards:
+    titulo: Dashboards
+    paralelo: false
+    perfil: {}
+  alarmistica:
+    titulo: Alarmística
+    paralelo: false
+    perfil: {}

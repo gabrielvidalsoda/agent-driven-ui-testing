@@ -1,0 +1,338 @@
+documento: gestao-armazem/preparacao.md
+rota: /armazem/preparacao
+mapeado_em: 2026-09-03 — exploração ao vivo em
+  http://localhost:4174/armazem/preparacao (UI) + leitura estática do bundle
+  assets/index-CNfGctei.js servido pela mesma origem
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: acc-01
+    tipo: consulta
+    nome: Identificação do operador por crachá
+    como: Preencher o campo 'Código do operador / crachá' (placeholder 'Pistolar
+      crachá ou digitar código…') e premir Enter. Não há botão de submissão, só
+      Enter.
+    promessa: "Se o operador estiver livre, a tela pede a caixa para iniciar; se já
+      tiver uma preparação em curso, mostra-a com as opções
+      Encerrar/Pausar-Retomar/Cancelar (texto de ajuda no cabeçalho: 'cada
+      operador identifica-se com o crachá para iniciar ou encerrar a preparação
+      de uma caixa')."
+    entradas:
+      - campo: Código do operador / crachá
+        obrigatorio: true
+        origem_valores: texto livre ou leitor de código de barras; sem combobox/autocomplete
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-09
+    ressalva: "Confirmado ao vivo: código desconhecido dispara GET
+      /ccmsns/api/armazem/preparacoes/atual?operador=X (404) seguido de GET
+      /ccmsns/api/armazem/operadores/X (404) e mostra o alerta 'Operador não
+      encontrado(a) com id: X'; input vazio + Enter não dispara nenhum pedido
+      (ignorado silenciosamente); o valor é normalizado no cliente com
+      trim()+toUpperCase() antes de qualquer chamada (ex.: '  abc123  ' vira
+      'ABC123'), portanto a comparação de crachá é, pelo menos do lado do
+      browser, insensível a maiúsculas/minúsculas e a espaços — responde
+      diretamente à dúvida do CT-09. Não foi possível obter um crachá válido no
+      ambiente (testados: utilizador de sessão 'PRRmanta_dev' e nomes de
+      preparadores históricos como 'nelia.coelho', ambos 404), pelo que os ramos
+      'livre' e 'ocupado' não foram observados ao vivo — descritos a partir do
+      código-fonte do bundle (funções tN/oFe)."
+  - id: acc-02
+    tipo: consulta
+    nome: Tabela 'Caixas em preparação'
+    como: "Sem ação do utilizador: carrega ao abrir a tela (GET
+      /ccmsns/api/armazem/preparacoes?ativas=true) e volta a pedir
+      automaticamente."
+    promessa: Cabeçalho 'Caixas em preparação' com contador '<n> em curso'; colunas
+      Caixa, Área, Operador, Estado (badge 'Em preparação' ou 'Pausada'), Hora
+      início, Duração; estado vazio mostra 'Sem caixas em preparação.
+      Identifique-se para iniciar.'
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+      - CT-10
+      - CT-11
+    ressalva: No arranque desta exploração a tabela estava vazia (0 em curso),
+      confirmando as colunas só pelo cabeçalho e pelo código, não por dados
+      reais. Pelo código-fonte, o refetch automático desta grelha corre a cada
+      60s (refetchInterval=60000ms), enquanto o relógio da duração no ecrã de
+      identificação atualiza a cada 15s a partir dos mesmos dados em cache — ou
+      seja, uma segunda estação pode só ver uma alteração feita na primeira até
+      60s depois, o que é relevante para os tours de concorrência (CT-06,
+      CT-11). A duração é calculada e apresentada em minutos inteiros ('< 1 min'
+      ou 'N min'), sem segundos — limita a precisão observável nos tours de
+      medição de tempos (CT-03, CT-04, CT-10). Sem filtros, sem paginação, sem
+      exportação nesta grelha.
+  - id: acc-03
+    tipo: criacao
+    nome: Iniciar preparação
+    como: Com o operador identificado e livre, preencher 'Código da caixa'
+      (placeholder 'Pistolar caixa…') e clicar 'Iniciar preparação' (botão fica
+      desativado até haver texto).
+    promessa: "POST /ccmsns/api/armazem/preparacoes {operador, caixa em maiúsculas};
+      sucesso mostra 'Caixa <caixa>: preparação iniciada por <operador>.' e a
+      tela volta a pedir identificação; erro mostra a mensagem devolvida pelo
+      backend ou, na sua falta, 'Não foi possível iniciar a preparação.'"
+    entradas:
+      - campo: Código da caixa
+        obrigatorio: true
+        origem_valores: texto livre ou leitor de código de barras
+    casos_documento:
+      - CT-01
+      - CT-06
+    ressalva: Não exercida ao vivo (sem crachá de operador válido no ambiente para
+      chegar ao estado 'livre'); comportamento descrito a partir do bundle JS e
+      das chamadas de rede da rota de identificação. O texto específico de erro
+      'caixa em preparação por outro operador' (CT-06) não está no frontend — é
+      responsabilidade da mensagem devolvida pelo backend, que o frontend apenas
+      repassa (função Hz).
+  - id: acc-04
+    tipo: edicao
+    nome: Pausar preparação
+    como: Com uma preparação 'Em preparação' (operador ocupado, não pausado), clicar
+      'Pausar'.
+    promessa: "PATCH /ccmsns/api/armazem/preparacoes/{id}/pausar {operador}; sucesso
+      mostra 'Caixa <caixa>: preparação pausada. Identifique-se de novo para
+      retomar.' e a identificação do operador é limpa no ecrã (é preciso
+      identificar-se outra vez)."
+    casos_documento:
+      - CT-03
+      - CT-10
+    ressalva: Não exercida ao vivo por falta de massa (crachá válido + preparação em
+      curso); confirmada por leitura do bundle.
+  - id: acc-05
+    tipo: edicao
+    nome: Retomar preparação
+    como: Com uma preparação 'Pausada', clicar 'Retomar' (substitui o botão 'Pausar'
+      nesse estado).
+    promessa: "PATCH /ccmsns/api/armazem/preparacoes/{id}/retomar {operador};
+      sucesso mostra 'Caixa <caixa>: preparação retomada. A contagem continua.'
+      e limpa a identificação (pede novo crachá)."
+    casos_documento:
+      - CT-04
+      - CT-10
+    ressalva: Não exercida ao vivo por falta de massa; confirmada por leitura do
+      bundle. O congelamento da duração durante a pausa é feito no cliente
+      (função que calcula a duração usa 'duracaoSegundos' fixo do servidor
+      quando o estado não é EM_CURSO, em vez de recalcular a partir da hora
+      atual).
+  - id: acc-06
+    tipo: edicao
+    nome: Encerrar preparação
+    como: Clicar 'Encerrar preparação'.
+    promessa: "PATCH /ccmsns/api/armazem/preparacoes/{id}/encerrar {operador};
+      sucesso mostra 'Caixa <caixa>: preparação concluída (duração de trabalho
+      <X> min). A caixa segue para Digitalização.' mais eventuais avisos
+      devolvidos pelo backend, e limpa a identificação."
+    casos_documento:
+      - CT-05
+      - CT-07
+    ressalva: "CT-05 confirmado diretamente no código-fonte, sem precisar de massa:
+      o botão 'Encerrar preparação' é renderizado com disabled=true sempre que o
+      estado da sessão é 'PAUSADA' (ou enquanto outra ação está a decorrer),
+      obrigando a Retomar primeiro — coerente com a promessa do documento. A
+      mensagem de sucesso revela que o estado pós-encerramento da caixa é 'segue
+      para Digitalização', útil para o CT-07. Fluxo de sucesso não exercido ao
+      vivo por falta de massa."
+  - id: acc-07
+    tipo: navegacao
+    nome: Botão 'Cancelar' (limpar identificação)
+    como: Clicar 'Cancelar', disponível tanto quando o operador está 'livre' (a
+      aguardar código de caixa) como quando está 'ocupado' (preparação em curso,
+      ao lado de Encerrar/Pausar/Retomar).
+    promessa: "Rótulo do botão: 'Cancelar', posicionado junto das ações de gestão da
+      preparação, sugerindo cancelamento da preparação em curso."
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "Divergência confirmada por leitura do bundle JS: em ambos os estados
+      ('livre' e 'ocupado') o botão 'Cancelar' chama exatamente o mesmo handler
+      local (limpa o campo de identificação e devolve o foco ao campo de crachá)
+      — não existe nenhuma chamada de rede associada a este clique. Os únicos
+      endpoints de escrita do módulo são POST /preparacoes (iniciar), PATCH
+      .../pausar, PATCH .../retomar e PATCH .../encerrar; não há nenhum DELETE
+      nem endpoint 'cancelar'. Ou seja, clicar 'Cancelar' com uma preparação em
+      curso não a cancela no backend — apenas esconde-a do ecrã até o operador
+      se identificar de novo (voltará a aparecer como 'ocupado'). Os efeitos que
+      o CT-08 espera verificar por SQL (registo cancelado/apagado, caixa
+      disponível de novo) não têm nenhuma ação correspondente nesta tela."
+  - id: arquivo-corrigir-caixa-em-preparacao
+    tipo: edicao
+    nome: Corrigir localização/estado da caixa (Localizar / Corrigir)
+    como: "Menu Gestão de Armazém > Localizar / Corrigir; Tipo = Caixa; digitar o
+      código da caixa (ex.: 102516, confirmada ao vivo com 'De (atual):
+      Localização = Em preparação') e clicar Localizar; o combo 'Localização
+      (estado)' de destino oferece então 'Aguardando preparação' (reverter) ou
+      'Em digitalização' (avançar); selecionar 'Aguardando preparação' habilita
+      o botão 'Guardar correção' (não foi clicado nesta exploração, para não
+      alterar estado)."
+    promessa: Reverte manualmente o estado/localização de uma caixa presa em 'Em
+      preparação' para 'Aguardando preparação', devolvendo-a à disponibilidade
+      para nova preparação — o desfecho que CT-08 pede para a caixa.
+    rota: /arquivo
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "O caso CT-08 (Cancelar preparação a partir da própria tela de
+      Preparação) continua por cobrir com uma ação exata: o botão 'Cancelar'
+      visível no código fonte do painel do operador ocupado não pôde ser
+      confirmado ao vivo (sem massa de operadores válida no ambiente) e, pela
+      leitura do código, parece ser um mero fecho de painel local sem chamada ao
+      backend — não uma ação de cancelamento real. O que se confirmou ao vivo,
+      com captura, foi um caminho aproximado: corrigir manualmente o estado da
+      caixa em 'Localizar / Corrigir', que reverte 'Em preparação' para
+      'Aguardando preparação'."
+insumos_necessarios:
+  - descricao: Crachá/código de operador de armazém válido, reconhecido por GET
+      /ccmsns/api/armazem/operadores/{codigo}
+    obtivel: bd
+    razao: Testados ao vivo o utilizador de sessão logado ('PRRmanta_dev') e nomes
+      de preparadores citados na massa histórica do documento ('nelia.coelho'),
+      ambos devolveram 404 'Operador não encontrado'. A tela de Preparação não
+      tem ecrã de criação/consulta de operadores — só valida contra o que já
+      existe na BD; GET /ccmsns/api/armazem/operadores (sem id) devolve 500,
+      confirmando que não há uma listagem exposta para descobrir códigos
+      válidos.
+  - descricao: Segundo crachá de operador válido, para os cenários de alternância e
+      concorrência (CT-02, CT-06, CT-11)
+    obtivel: bd
+    razao: Mesma limitação do insumo anterior, multiplicada por dois operadores
+      distintos.
+  - descricao: Caixa no estado 'Aguardando preparação'
+    obtivel: tela
+    razao: Segundo o documento, é produzida ao encerrar o processo no ecrã
+      'Associação à Caixa' do mesmo módulo Gestão de Armazém (item de menu
+      confirmado nesta sessão); não foi verificado nesta passagem, que ficou
+      circunscrita à tela de Preparação.
+  - descricao: Segunda estação/sessão de browser autenticada, para testar
+      concorrência entre postos
+    obtivel: tela
+    razao: Não depende de massa de dados — basta abrir uma segunda sessão
+      autenticada da aplicação.
+  - descricao: Leitor de crachá/código de barras físico
+    obtivel: nao
+    razao: "A tela aceita digitação manual como alternativa (confirmado: o campo
+      funciona normalmente com texto digitado + Enter), portanto não é
+      indispensável para exercer as ações; mas o comportamento real de um leitor
+      físico (Enter automático, carateres extra) não pode ser simulado neste
+      ambiente e teria de ser validado com hardware do armazém, como o próprio
+      documento assinala."
+  - descricao: Acesso SQL read-only à BD QUA (SQLcl) para confirmar
+      GESTARMAZEM.TDREGISTOPREPARACAO e GESTARMAZEM.TDCAIXA após cada ação
+    obtivel: bd
+    razao: Pré-condição citada no documento; a própria tela não expõe nenhuma forma
+      de verificar o efeito em BD além do que mostra na grelha em ecrã.
+casos_sem_accao:
+  - CT-08
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: "CT-08: Cancelar preparação"
+      procurei:
+        - Um botão/ação 'Cancelar' na tela de Preparação, tentando
+          identificar-me com vários crachás (PRRmanta_dev, JJF, NELIA.COELHO,
+          ABC123) para chegar ao painel do operador ocupado (com
+          Encerrar/Pausar/Cancelar) — todas as tentativas devolveram 404
+          'Operador não encontrado(a)', tal como já tinha acontecido na primeira
+          passagem.
+        - Leitura do código fonte do ecrã
+          (ccmsns-novo/ccmsns-ui/src/pages/armazem/PreparacaoPage/PreparacaoPage.tsx
+          e PainelOperador.tsx) para perceber se o botão 'Cancelar' existe no
+          painel do operador ocupado e o que a sua ação executa.
+        - Leitura do backend
+          (ccmsns-novo/ccmsns-core-api/.../preparacao/controller/PreparacaoController.java)
+          à procura de um endpoint de cancelamento, para além de
+          iniciar/pausar/retomar/encerrar já documentados.
+        - Verificação da tabela de seed GESTARMAZEM.TROPERADOR
+          (ccm-script-banco/062-create_troperador.sql) para perceber se há
+          operadores pré-carregados neste ambiente que permitissem chegar ao
+          estado ocupado.
+        - O ecrã 'Localizar / Corrigir' (Tipo = Caixa) à procura de uma correção
+          de estado que revertesse uma caixa 'Em preparação' para 'Aguardando
+          preparação', como efeito indireto equivalente a cancelar (testado com
+          as caixas C24035 e 102516, documentadas em §5.1 do plano).
+        - As restantes telas da secção Gestão de Armazém (Associação à Caixa,
+          Associação à Caixa — Listagem, Faturas com Incidência, Libertar
+          Arquivo Temporário, Picking para Expedição, Registo de Entrada,
+          Registo de Entrada ANF, Transferência para Arquivo Temporário) à
+          procura de um botão ou menu com efeito de cancelamento de preparação —
+          nenhuma tem esse assunto no seu menu/ecrã principal.
+      onde:
+        - http://localhost:4174/armazem/preparacao
+        - http://localhost:4174/arquivo (Localizar / Corrigir, Tipo=Caixa,
+          códigos C24035 e 102516)
+        - ccmsns-novo/ccmsns-ui/src/pages/armazem/PreparacaoPage/PainelOperador.tsx
+        - ccmsns-novo/ccmsns-ui/src/pages/armazem/PreparacaoPage/PreparacaoPage.tsx
+        - ccmsns-novo/ccmsns-core-api/src/main/java/pt/spms/ccmsns/coreapi/armazem/preparacao/controller/PreparacaoController.java
+        - ccmsns-novo/ccm-script-banco/062-create_troperador.sql
+        - menu Gestão de Armazém (submenu completo, para as 8 telas associadas)
+      resultado: encontrado
+      accao: arquivo-corrigir-caixa-em-preparacao
+      equivalente_aproximado: true
+      captura: CT-08_localizar-corrigir_caixa-102516_em-preparacao-para-aguardando.png
+      nota: "O caso CT-08 (Cancelar preparação a partir da própria tela de Preparação)
+        continua por cobrir com uma ação exata: o botão 'Cancelar' visível no
+        código fonte do painel do operador ocupado não pôde ser confirmado ao
+        vivo (sem massa de operadores válida no ambiente) e, pela leitura do
+        código, parece ser um mero fecho de painel local sem chamada ao backend
+        — não uma ação de cancelamento real. O que se confirmou ao vivo, com
+        captura, foi um caminho aproximado: corrigir manualmente o estado da
+        caixa em 'Localizar / Corrigir', que reverte 'Em preparação' para
+        'Aguardando preparação'."
+    - alvo: Leitor de crachá/código de barras físico
+      procurei:
+        - Digitação de vários códigos de operador plausíveis (PRRmanta_dev, JJF,
+          NELIA.COELHO, ABC123) no campo 'Código do operador / crachá' da tela
+          de Preparação, para confirmar se algum é reconhecido — todos
+          devolveram 404 'Operador não encontrado(a)'.
+        - A tabela de seed GESTARMAZEM.TROPERADOR
+          (ccm-script-banco/062-create_troperador.sql) para perceber se existe
+          massa de operadores válidos neste ambiente; o script só cria o schema,
+          sem nenhum INSERT de seed.
+        - Um simulador de software, endpoint de simulação, 'modo de teste' ou
+          dispositivo de leitura disponibilizado à equipa de QA, tanto no código
+          fonte (ccmsns-novo) como na documentação de testes
+          (ccmsns-automated-tests, ccmsns_docs, ccmsns-docs-code) — pesquisa
+          dedicada por 'simulad*', 'leitor de crach*', 'barcode reader',
+          'keyboard wedge', 'scanner', 'dispositivo de leitura'.
+        - As restantes telas da secção Gestão de Armazém (Associação à Caixa,
+          Faturas com Incidência, Libertar Arquivo Temporário,
+          Localizar/Corrigir, Picking para Expedição, Registo de Entrada,
+          Registo de Entrada ANF, Transferência para Arquivo Temporário) à
+          procura de um campo equivalente de leitura de crachá/código de barras
+          com alguma alternativa de simulação que a tela de Preparação não
+          tivesse.
+        - Resultado de uma repescagem anterior sobre um insumo semelhante
+          (leitor de código de barras físico) no documento
+          gestao-armazem/picking-expedicao.yaml e na corrida de 2026-08-18, para
+          ver se ali se tinha chegado a alguma alternativa não encontrada nesta
+          tela.
+      onde:
+        - http://localhost:4174/armazem/preparacao (campo Código do operador /
+          crachá)
+        - ccmsns-novo/ccm-script-banco/062-create_troperador.sql
+        - "ccmsns-novo (árvore de código fonte completa: ccmsns-ui,
+          ccmsns-core-api, ccmsns-common)"
+        - ccmsns-automated-tests (mapas/, corridas/), ccmsns_docs,
+          ccmsns-docs-code
+        - menu Gestão de Armazém (submenu completo, para as 8 telas associadas)
+        - ccmsns-automated-tests/mapas/gestao-armazem/picking-expedicao.yaml e
+          corridas/2026-08-18/.../resultado.json
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma-se a conclusão da primeira passagem e amplia-se a prova: a
+        tabela GESTARMAZEM.TROPERADOR não tem nenhum registo semente neste
+        ambiente (script de criação sem INSERTs), pelo que nenhum código de
+        operador — nem sequer o do próprio utilizador da sessão (PRRmanta_dev) —
+        é reconhecido; a API responde sempre 404 'Operador não encontrado(a)'.
+        Não existe, em lado nenhum do repositório, um simulador de software,
+        endpoint de simulação ou modo de teste para o leitor físico; a única
+        alternativa documentada é a digitação manual do código + Enter, que já
+        estava identificada e não constitui 'obter' o insumo, apenas
+        contorná-lo. Uma repescagem anterior sobre um insumo semelhante (leitor
+        de código de barras físico, em picking-expedicao) chegou à mesma
+        conclusão de não obtível por depender de hardware real."

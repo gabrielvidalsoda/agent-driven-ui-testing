@@ -1,0 +1,478 @@
+documento: gestao-armazem/picking-expedicao.md
+rota: /picking-expedicao
+mapeado_em: 2026-09-02
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: ACC-01
+    tipo: consulta
+    nome: Lista de Ordens de Picking (Agrupamento)
+    como: Abrir /picking-expedicao; a grelha lista Ordem, Ciclo, Área, Estado, Nº
+      Documentos, Data, com paginação e um botão de ação por linha.
+    promessa: "Cabeçalho 'Agrupamento de Ordens de Picking' com contagem total de
+      ordens (testado: 10 ordens); colunas Ordem/Ciclo/Área/Estado/Nº
+      Documentos/Data."
+    rota: /picking-expedicao
+    casos_documento:
+      - CT-01
+  - id: ACC-02
+    tipo: filtro
+    nome: Filtrar lista por Ciclo e Área
+    como: Selecionar um mês/ano no combobox Ciclo (lista de Janeiro 2009 a Dezembro
+      2027) e/ou uma Área; botão 'Limpar' repõe os dois filtros.
+    promessa: "Restringe as ordens mostradas ao ciclo/área escolhidos e atualiza o
+      contador de ordens (testado: 'Todos' → 10 ordens; 'Julho 2026' → 1
+      ordem)."
+    rota: /picking-expedicao
+    entradas:
+      - campo: Ciclo
+        obrigatorio: false
+        origem_valores: combobox com meses/anos de Janeiro 2009 a Dezembro 2027
+      - campo: Área
+        obrigatorio: false
+        origem_valores: "combobox: Medicamentos, MCDT, CRD, Cuidados Termais, Saúde Oral
+          (SISO)"
+    casos_documento:
+      - CT-01
+  - id: ACC-03
+    tipo: navegacao
+    nome: Abrir/Ver ordem de picking
+    como: Botão 'Abrir' (ordens Nova/Em Andamento/Aguardando expedição) ou 'Ver'
+      (ordens Expedido) na última coluna de cada linha da lista.
+    promessa: Abre o detalhe da ordem em /picking-expedicao/{id}, com cabeçalho
+      (área, ciclo, número, estado) e a grelha de documentos.
+    rota: /picking-expedicao/{id}
+    casos_documento:
+      - CT-01
+      - CT-02
+  - id: ACC-04
+    tipo: navegacao
+    nome: Voltar à lista
+    como: Botão 'Voltar' no cabeçalho do detalhe da ordem.
+    promessa: Regressa a /picking-expedicao.
+    casos_documento:
+      - CT-02
+  - id: ACC-05
+    tipo: consulta
+    nome: Grelha 'Documentos a recolher' com colunas por área
+    como: No detalhe da ordem, a tabela lista os documentos com um conjunto de
+      colunas que varia por área.
+    promessa: "Testado em MCDT (ordem 24): Cod Convenção, Id Factura, Prestador, N.º
+      Factura, Tipo, Lote, Num Requisição, Cod Erro, Lugar, Caixa, Pasta,
+      Prescrição. Testado em áreas base — CRD (ordem 3) e Saúde Oral/SISO (ordem
+      22): Id Factura, Prestador, Tipo Lote, Num Lote, Num Receita, Via, Cod
+      Erro, Seq, Lugar, Caixa, Pasta, Prescrição. Confirma a promessa de 'Num
+      Receita/Via' nas áreas base e 'Cod Convenção/Num Requisição' em MCDT."
+    casos_documento:
+      - CT-05
+  - id: ACC-06
+    tipo: filtro
+    nome: Filtrar documentos da ordem (detalhe)
+    como: Campos de texto Id Factura, Num Receita, Caixa, Cod Erro acima da grelha
+      do detalhe; filtragem instantânea à digitação; botão 'Limpar' repõe.
+    promessa: "Cada campo filtra a grelha por correspondência parcial (testado: Cod
+      Erro 'D068' reduziu de 18 para 5 linhas; Caixa 'B25243' reduziu para 1
+      linha)."
+    entradas:
+      - campo: Id Factura
+        obrigatorio: false
+      - campo: Num Receita
+        obrigatorio: false
+      - campo: Caixa
+        obrigatorio: false
+      - campo: Cod Erro
+        obrigatorio: false
+    casos_documento:
+      - CT-06
+    ressalva: O contador 'N documentos' do cabeçalho da secção não acompanha o
+      filtro aplicado — mantém sempre o total da ordem, só a contagem de linhas
+      visíveis na tabela muda.
+  - id: ACC-07
+    tipo: exportacao
+    nome: Relatório 'Listar de Caixas'
+    como: Botão 'Listar de Caixas' no detalhe da ordem; abre modal com botão
+      'Imprimir'.
+    promessa: "Lista as caixas da ordem ordenadas por Localização, com total de
+      caixas (testado: MCDT ordem 24 → 'Total: 9 caixas', colunas
+      Localização/Caixa)."
+    casos_documento:
+      - CT-03
+  - id: ACC-08
+    tipo: exportacao
+    nome: Relatório 'Ordens de Picking' (por prestador)
+    como: Botão 'Ordens de Picking' no detalhe da ordem; abre modal com botão
+      'Imprimir'.
+    promessa: "Uma página por prestador, agrupado 'para o despacho pelo correio'
+      (testado: MCDT ordem 24 → 'Prestador: FARMACIA BORRALHO' etc., 9
+      prestador(es), com tabela de documentos e um identificador tipo código de
+      barras junto ao Nº de Factura."
+    casos_documento:
+      - CT-04
+    equivalente_aproximado: true
+    ressalva: "O elemento que a UI usa junto ao Nº de Factura para simular o 'código
+      de barras' é texto simples entre asteriscos (ex.: *1065536*), não uma
+      barra 1D/2D renderizada (0 <img>, apenas 1 <svg> no modal inteiro). Não
+      foi possível confirmar leitura por leitor físico nesta passagem (sem
+      hardware disponível)."
+  - id: ACC-09
+    tipo: consulta
+    nome: Visualizador de prescrição digitalizada
+    como: Botão-ícone 'Ver prescrição digitalizada' na coluna Prescrição de cada
+      linha da grelha; abre modal com zoom, rotação e 'Guardar imagem'.
+    promessa: Mostra a imagem digitalizada da prescrição do documento, com controlos
+      de zoom/rotação/gravação e título 'Prescrição · Nº <num>'.
+    casos_documento:
+      - CT-07
+    ressalva: Nesta build, o pedido à API de imagem (GET
+      /ccmsns/api/documentos/{...}) devolveu 502 Bad Gateway para todos os
+      documentos testados; o modal mostra o ícone de imagem quebrada em vez de
+      imagem ou de uma mensagem amigável. Não foi possível observar o caso 'com
+      imagem' nem confirmar se existe uma mensagem de degradação dedicada para
+      'sem imagem' — o erro observado parece de infraestrutura (502), não
+      necessariamente ausência de imagem.
+  - id: ACC-10
+    tipo: navegacao
+    nome: Continuar Picagem
+    como: Botão 'Continuar Picagem' no detalhe da ordem.
+    promessa: Abre o ecrã de picagem da ordem em /picking-expedicao/{id}/picagem.
+    rota: /picking-expedicao/{id}/picagem
+    casos_documento:
+      - CT-08
+    ressalva: Só aparece em ordens com documentos e estado Nova/Em Andamento; ordens
+      com 0 documentos e ordens Expedido não mostram este botão. Navegação
+      direta ao URL .../picagem de uma ordem Expedido redireciona de volta ao
+      detalhe (testado com a ordem 22).
+  - id: ACC-11
+    tipo: consulta
+    nome: Ecrã de Picagem — KPIs e grelha de estado
+    como: "Ecrã /picking-expedicao/{id}/picagem: mostra TOTAL A CONFIRMAR,
+      CONFIRMADAS (com barra de progresso) e EM FALTA, mais a grelha 'Documentos
+      da ordem' com coluna Estado (Pendente/Confirmado)."
+    promessa: "Os KPIs refletem o estado real dos documentos da ordem (testado:
+      total 18, valores de Confirmadas/Em falta mudaram ao longo da
+      exploração)."
+    casos_documento:
+      - CT-08
+  - id: ACC-12
+    tipo: filtro
+    nome: Filtrar documentos no ecrã de picagem
+    como: Mesmos campos Id Factura/Num Receita/Caixa/Cod Erro da grelha do detalhe,
+      mais um combobox 'Estado'.
+    promessa: Filtra a lista de documentos por qualquer combinação dos campos,
+      incluindo por estado de confirmação.
+    entradas:
+      - campo: Id Factura
+        obrigatorio: false
+      - campo: Num Receita
+        obrigatorio: false
+      - campo: Caixa
+        obrigatorio: false
+      - campo: Cod Erro
+        obrigatorio: false
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: "combobox: Pendente, Confirmado"
+    casos_documento:
+      - CT-06
+  - id: ACC-13
+    tipo: edicao
+    nome: Confirmar documento por leitura de código de barras / número
+    como: Campo 'Pistolar ou digitar o Nº da Receita' no topo do ecrã de picagem;
+      aceita leitura de leitor ou digitação seguida de Enter.
+    promessa: Confirma o documento cujo número de receita/requisição corresponde ao
+      valor lido, atualizando KPIs e o estado da linha ('Aguardando leitura.
+      Pistole o código de barras da receita ou digite o Nº e prima Enter.').
+    casos_documento:
+      - CT-08
+      - CT-09
+      - CT-10
+    ressalva: "Comportamentos observados: número que não pertence à ordem devolve
+      'Receita \"<valor>\" não pertence a esta ordem de picking.' sem alterar
+      KPIs; número já confirmado devolve 'Receita <num> já tinha sido
+      confirmada.' sem alterar KPIs. Um SUFIXO de 6 dígitos de uma requisição
+      pendente ('655341', final de 9010000010655341) foi aceite e CONFIRMOU o
+      documento de imediato, sem pedir desambiguação — mensagem 'OK · Receita
+      655341 confirmada.' Isto contraria a hipótese do CT-10 de que sufixos
+      seriam bloqueados/pedidos mais dígitos; ficou por verificar o que acontece
+      quando o sufixo é partilhado por dois documentos da mesma ordem. Esta
+      leitura de teste, feita para sondar o comportamento do campo, acabou por
+      confirmar de facto o documento 1065534/FARMACIA MARTINS da ordem 24
+      (passou de Pendente a Confirmado) — não foi uma submissão intencional de
+      ação irreversível, mas o valor testado revelou-se um sufixo válido; fica
+      registado por transparência."
+  - id: ACC-14
+    tipo: edicao
+    nome: Confirmar documento pelo botão da linha
+    como: Botão 'Confirmar' na última coluna de cada linha em estado Pendente da
+      grelha de picagem (não acionado nesta passagem).
+    promessa: O rótulo promete confirmar o documento da linha sem usar o campo
+      principal de leitura/digitação.
+    casos_documento: []
+    ressalva: Nenhum CT do documento descreve explicitamente esta via alternativa de
+      confirmação (o documento só fala de leitura/digitação do número); é uma
+      promessa da tela sem caso escrito correspondente.
+  - id: ACC-15
+    tipo: edicao
+    nome: Anular confirmação de documento
+    como: Botão 'Anular' na última coluna de cada linha em estado Confirmado da
+      grelha de picagem (não acionado nesta passagem).
+    promessa: O rótulo promete reverter a confirmação de um documento já confirmado.
+    casos_documento: []
+    ressalva: Sem caso escrito correspondente no documento; não acionado nesta
+      passagem para não alterar mais estado do ambiente.
+  - id: ACC-16
+    tipo: edicao
+    nome: Confirmar Expedição
+    como: Botão 'Confirmar Expedição' no detalhe da ordem (só visível quando Em
+      falta = 0); abre modal com campo 'Data da expedição' e checkbox 'Enviar
+      email a confirmar a expedição', botões Cancelar/'Confirmar expedição' (não
+      acionado).
+    promessa: "'Vai marcar as facturas da ordem <id> como expedida.' A confirmar, a
+      ordem passaria a Expedido com a data indicada e dispararia (ou não) o
+      email consoante a checkbox."
+    entradas:
+      - campo: Data da expedição
+        obrigatorio: true
+        origem_valores: "date picker, pré-preenchido com a data atual (testado: 02/09/2026)"
+      - campo: Enviar email a confirmar a expedição
+        obrigatorio: false
+        origem_valores: checkbox, ligada por defeito
+    casos_documento:
+      - CT-11
+    ressalva: Testado na ordem 3 (Aguardando expedição, Em falta = 0); modal aberto
+      e fechado com 'Cancelar', sem submeter, para não expedir a ordem nem
+      disparar o email.
+  - id: ACC-17
+    tipo: consulta
+    nome: Consulta de ordem Expedido
+    como: Abrir uma ordem em estado Expedido (botão 'Ver' na lista).
+    promessa: "Mostra um alerta 'Expedida em <data>. Email de confirmação:
+      enviado/não enviado.' (testado na ordem 22: 'Expedida em 18/08/2026. Email
+      de confirmação: não enviado.'); os botões 'Continuar Picagem' e 'Confirmar
+      Expedição' desaparecem, restando só os relatórios (Listar de Caixas,
+      Ordens de Picking)."
+    casos_documento:
+      - CT-12
+  - id: ACC-18
+    tipo: consulta
+    nome: Paginação e resultados por página (lista)
+    como: "Combobox 'Resultados por página' (valor testado: 10) e navegação de
+      páginas por baixo da tabela da lista de ordens."
+    promessa: Controla quantas ordens são mostradas por página e permite navegar
+      entre páginas.
+    casos_documento: []
+insumos_necessarios:
+  - descricao: Ordens de picking geradas, cobrindo várias áreas (Medicamentos, MCDT,
+      CRD, Cuidados Termais, Saúde Oral) e estados (Nova, Em Andamento,
+      Aguardando expedição, Expedido), algumas com 2+ prestadores e 10+
+      documentos
+    obtivel: tela
+    razao: "Nesta build (2026-09-02) o ambiente já vem seedado com 10 ordens
+      cobrindo todas as áreas e estados relevantes (ex.: ordem 24 MCDT/Em
+      Andamento/18 docs/9 prestadores, ordem 4 Cuidados Termais/20 docs); ao
+      contrário do que o documento descreve para QUA (massa quase inexistente),
+      aqui não foi preciso gerar nada por fecho de conferência."
+  - descricao: Ordem pequena dedicada (5 documentos ou menos) com Em falta = 0, para
+      exercitar o fluxo de Confirmar Expedição
+    obtivel: tela
+    razao: A ordem 3 (CRD, Aguardando expedição, 10 docs, Em falta = 0) já serve
+      para abrir o modal; a ordem 22 (Saúde Oral, 3 docs) já está Expedido e
+      serve para o CT-12.
+  - descricao: Caixa em estado 'Aguardando preparação' ou documento com
+      localização/pasta conhecida para cruzar com o relatório 'Listar de Caixas'
+    obtivel: tela
+    razao: Os dados de Lugar/Caixa/Pasta já vêm na grelha da ordem e no relatório;
+      basta abrir uma ordem existente.
+  - descricao: Documento com imagem digitalizada real (para validar o caminho 'com
+      imagem' do CT-07)
+    obtivel: nao
+    razao: Todos os documentos testados devolveram 502 Bad Gateway do endpoint
+      /ccmsns/api/documentos/{...} nesta build; parece falha de
+      infraestrutura/serviço de imagens, não ausência de imagem por caixa não
+      digitalizada — não há forma de obter este insumo só pela tela.
+  - descricao: Documento comprovadamente sem imagem digitalizada (para validar a
+      mensagem de degradação do CT-07)
+    obtivel: nao
+    razao: Como o endpoint de imagem está a devolver 502 para tudo, não é possível
+      distinguir na tela 'sem imagem' de 'erro de serviço'; precisaria de
+      confirmação por BD (GESTARMAZEM.TDDOCUMENTOFISICO) de qual documento não
+      tem imagem associada, e mesmo assim o sintoma visual seria igual ao erro
+      de infraestrutura.
+  - descricao: Par de documentos da mesma ordem cujo número de receita/requisição
+      partilhe um sufixo comum, para validar desambiguação (CT-10)
+    obtivel: tela
+    razao: Pode ser identificado visualmente comparando a coluna Num Receita/Num
+      Requisição da grelha da ordem; não foi encontrado nenhum par assim na
+      ordem 24 nesta passagem, mas o processo de procura é possível só com a
+      tela.
+  - descricao: Segundo operador com perfil de armazém e segundo posto/browser, para
+      o tour de concorrência (CT-13)
+    obtivel: nao
+    razao: Esta passagem correu numa única sessão de browser autenticada como
+      'Manta'; não há um segundo utilizador nem segundo posto disponível no
+      ambiente de exploração.
+  - descricao: Leitor de código de barras físico para validar a leitura do relatório
+      'Ordens de Picking' impresso
+    obtivel: nao
+    razao: Ambiente de exploração é só browser automatizado; sem hardware de leitura
+      disponível. Além disso o elemento mostrado no relatório é texto
+      (*NNNNNNN*), não uma barra codificada, o que por si só levanta dúvida
+      sobre se há algo para o leitor ler.
+  - descricao: Acesso a SQLcl/BD (GESTARMAZEM.TDPICKING, TDPALETE) para verificar
+      por SQL o resultado das picagens e da expedição
+    obtivel: nao
+    razao: Esta passagem não teve VPN/SQLcl ligados; toda a verificação foi feita
+      pela UI (KPIs, mensagens, alerta de expedição), não por consulta direta à
+      BD.
+casos_sem_accao:
+  - CT-13
+repescagem:
+  feita_em: 2026-09-02
+  alvos:
+    - alvo: "[caso] CT-13 — Tour de concorrência na mesma ordem"
+      procurei:
+        - Alternador de utilizador ou de sessão junto ao perfil (canto superior)
+          que permitisse trocar de identidade sem sair da sessão 'Manta'
+        - Indicador de bloqueio/concorrência ('em uso por', 'bloqueado', aviso
+          de outro operador) ao abrir uma ordem já 'Em Andamento' com picagens
+          de sessão anterior (ordem 23, 3/6 confirmadas)
+        - Réplica do modelo de identificação por crachá do ecrã de Preparação
+          (que é uma 'estação partilhada') no ecrã de Picagem, como via
+          alternativa para simular dois operadores no mesmo posto
+        - Lista de utilizadores/contas de teste na página inicial ou noutro
+          ponto da navegação
+      onde:
+        - http://localhost:4174/picking-expedicao/23/picagem
+        - http://localhost:4174/armazem/preparacao
+        - http://localhost:4174/
+      resultado: nao_existe
+      accao: null
+      nota: "A app está acedida com sessão única autenticada como 'Manta' /
+        PRRmanta_dev, sem alternador de utilizador nem lista de contas visível
+        na página inicial. A ordem 23 (Em Andamento, com 3 de 6 documentos já
+        confirmados de uma sessão anterior) abriu sem qualquer aviso de bloqueio
+        ou de 'outro operador em curso'. O ecrã de Preparação usa um modelo de
+        'estação partilhada por crachá' ('cada operador identifica-se com o
+        crachá para iniciar ou encerrar a preparação de uma caixa'), mas isso
+        vive noutro ecrã com outro fluxo (início/fim de preparação de caixa) e
+        não corresponde a picar a mesma ordem em simultâneo em dois postos — não
+        é a mesma coisa. Confirma a conclusão da primeira passagem: o tour de
+        concorrência não é executável com uma única sessão de browser."
+    - alvo: "[insumo] Documento com imagem digitalizada real (para validar o caminho
+        'com imagem' do CT-07)"
+      procurei:
+        - Botão 'Ver prescrição digitalizada' em documentos de áreas e ordens
+          diferentes (MCDT ordem 24 e Medicamentos ordem 23), inspecionando o
+          pedido de rede subjacente para distinguir 502 de imagem ausente
+        - "Pré-visualização de imagem digitalizada por outro caminho, fora do
+          modal de picking: ecrãs de Associação à Caixa e de Localizar/Corrigir,
+          que lidam com documentos físicos noutras etapas do fluxo"
+      onde:
+        - http://localhost:4174/picking-expedicao/24 (linha Fatura 1065532,
+          prescrição 9010000010655321)
+        - http://localhost:4174/picking-expedicao/23 (linha Fatura 603533,
+          prescrição 8010000060353301)
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo
+      resultado: nao_existe
+      accao: null
+      nota: "Confirmado com captura (imagem partida no modal) e rede: GET
+        /ccmsns/api/documentos/%7BTESTE-MCDT-1065532%7D e GET
+        /ccmsns/api/documentos/%7BTESTE-MED-603533%7D devolveram ambos 502 Bad
+        Gateway, em áreas diferentes (MCDT e Medicamentos) e ordens diferentes.
+        O próprio padrão do id do documento ('TESTE-MCDT-...', 'TESTE-MED-...')
+        sugere massa sintética de teste, reforçando que a falha é de
+        infraestrutura/serviço de imagens nesta build, não de caixa não
+        digitalizada. Nenhum outro ecrã da secção mostra pré-visualização
+        alternativa de imagem digitalizada."
+    - alvo: "[insumo] Documento comprovadamente sem imagem digitalizada (para validar
+        a mensagem de degradação do CT-07)"
+      procurei:
+        - Diferença visual na grelha de documentos (ícone diferente, estado,
+          botão desativado) que distinguisse documentos sem imagem associada dos
+          restantes, em ambas as ordens abertas (24 e 23)
+        - Indicação de 'sem imagem' nos ecrãs de Associação à Caixa e
+          Localizar/Corrigir, como via alternativa de identificar
+          caixas/documentos não digitalizados
+      onde:
+        - http://localhost:4174/picking-expedicao/24 (grelha completa, 18 linhas)
+        - http://localhost:4174/picking-expedicao/23 (grelha completa, 6 linhas)
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo
+      resultado: nao_existe
+      accao: null
+      nota: "Todas as linhas de ambas as ordens mostram o mesmo botão 'Ver prescrição
+        digitalizada', sem qualquer variação de ícone, estado ou desativação que
+        distinguisse 'sem imagem' de 'com imagem'. Como o endpoint de imagem
+        devolve 502 para todos os documentos testados (ver alvo anterior), o
+        sintoma visual de 'sem imagem' seria idêntico ao de erro de
+        infraestrutura — não há como a tela por si só provar qual documento não
+        tem imagem associada. Confirma a conclusão da primeira passagem: só
+        seria possível distinguir por consulta a GESTARMAZEM.TDDOCUMENTOFISICO."
+    - alvo: "[insumo] Segundo operador com perfil de armazém e segundo posto/browser,
+        para o tour de concorrência (CT-13)"
+      procurei:
+        - Alternador de conta, lista de utilizadores ou modo de troca de
+          identidade junto ao perfil 'Manta' / PRRmanta_dev
+        - Segunda sessão dentro do mesmo browser via nova aba (que herdaria as
+          mesmas cookies/sessão, não constituindo um segundo operador real)
+        - Referência a outro utilizador de teste em qualquer ecrã da secção
+          Gestão de Armazém (Preparação, Registo de Entrada, etc.) que sugerisse
+          uma segunda conta disponível no ambiente
+      onde:
+        - http://localhost:4174/ (área de perfil, canto superior)
+        - http://localhost:4174/armazem/preparacao
+        - http://localhost:4174/picking-expedicao
+      resultado: nao_existe
+      accao: null
+      nota: "Não existe alternador de conta nem lista de utilizadores visível na
+        aplicação; abrir uma nova aba no mesmo browser partilharia a sessão de
+        'Manta', não simulando um segundo operador real. Nenhum ecrã da secção
+        revelou uma segunda conta de teste com perfil de armazém. Confirma a
+        conclusão da primeira passagem: este insumo depende de infraestrutura
+        (segundo posto/browser com login distinto) fora do alcance da exploração
+        pela tela."
+    - alvo: "[insumo] Leitor de código de barras físico para validar a leitura do
+        relatório 'Ordens de Picking' impresso"
+      procurei:
+        - Renderização real do relatório 'Ordens de Picking' (botão homónimo no
+          detalhe da ordem) para verificar se o elemento '*NNNNNNN*' é texto
+          simples ou usa fonte/imagem de código de barras
+        - Qualquer outro elemento gráfico de código de barras (imagem, SVG,
+          canvas) nos ecrãs irmãos da secção que pudesse ser lido por um leitor
+          físico
+      onde:
+        - http://localhost:4174/picking-expedicao/23 → botão 'Ordens de Picking'
+          (modal 'Ordens de Picking', 3 prestadores)
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/arquivo
+      resultado: nao_existe
+      accao: null
+      nota: "Captura do modal 'Ordens de Picking' confirma visualmente que '*603533*'
+        e equivalentes são texto simples em fonte normal, sem barras nem fonte
+        de código de barras (ex.: Code 39) — não há elemento gráfico para um
+        leitor físico ler nesta build. Não foi encontrado nenhum código de
+        barras real noutro ecrã da secção. Confirma a conclusão da primeira
+        passagem, agora com prova visual direta."
+    - alvo: "[insumo] Acesso a SQLcl/BD (GESTARMAZEM.TDPICKING, TDPALETE) para
+        verificar por SQL o resultado das picagens e da expedição"
+      procurei:
+        - Qualquer funcionalidade na aplicação (exportação, detalhe técnico, log
+          de auditoria) que expusesse os registos brutos de
+          GESTARMAZEM.TDPICKING ou TDPALETE sem passar por SQL
+        - Ecrãs irmãos da secção (Localizar/Corrigir, Faturas com Incidência)
+          como via indireta de consulta a dados de armazém equivalentes aos da
+          BD
+      onde:
+        - http://localhost:4174/picking-expedicao (KPIs e grelhas da ordem)
+        - http://localhost:4174/arquivo
+        - http://localhost:4174/gestao-armazem/faturas-incidencia
+      resultado: nao_existe
+      accao: null
+      nota: "Nenhum ecrã expõe os registos brutos de TDPICKING/TDPALETE (utilizador,
+        hora, ids internos) — a UI mostra apenas estado agregado
+        (Confirmado/Pendente, KPIs). Este ambiente de exploração continua sem
+        VPN/SQLcl ligados, pelo que a verificação continua limitada à UI.
+        Confirma a conclusão da primeira passagem: este insumo é estritamente de
+        acesso à BD, não obtível pela tela."

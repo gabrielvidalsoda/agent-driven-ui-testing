@@ -1,0 +1,392 @@
+documento: consulta-area-prestacao/saude-oral-facturas.md
+rota: /saude-oral/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: ac-01
+    tipo: consulta
+    nome: Pesquisar Factura
+    como: Preencher um ou mais campos do cartão 'Pesquisa Factura' e clicar
+      'Pesquisar'
+    promessa: Grelha 'Resultado da Pesquisa' com colunas Cod. Prestador, NIF
+      Prestador, Desc. Prestador, N. Factura, N. Ped. Pagamento, Data
+      Facturação, Estado, Total Factura (Comunicado) e Total Factura Apurado;
+      contagem 'N resultados' e linha de totais no rodapé da tabela
+    rota: /saude-oral/factura
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: calendário, formato DD/MM/YYYY
+      - campo: Data da Facturação
+        obrigatorio: false
+        origem_valores: calendário, formato DD/MM/YYYY
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Cod. Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Estado
+        obrigatorio: false
+        origem_valores: "combobox com o catálogo real: Aguarda Comunicação de
+          Correcções, Aguarda Regularização, Anulada, Comunicada Informação Não
+          Conferida, Conferida Com Erros, Conferida Sem Erros, Em Reconferência,
+          Processamento Concluído, Recepcionada, Recepcionada com Erros,
+          Verificada"
+      - campo: Número de Pedido Pagamento
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-09
+      - CT-10
+    ressalva: "A grelha real tem só estas 9 colunas: não existe coluna 'Data
+      Factura', nem 'Nº de Cheques'/'Nº Cheques Apurado', nem 'Desc. EFR' que o
+      documento descreve para a vista lista. Pesquisar com todos os campos em
+      branco devolve 'Nenhum resultado encontrado...' (0 resultados), não a
+      listagem completa dos ~104 mil registos. Verificado com dados reais:
+      FT2026-8 (prestador 10431374, NIF 504772325, estado CSE, 180,00) e, por
+      NIF+Estado CSE, FT2025-564 (1080,00) e FT2025-531 (540,00) batem
+      exatamente com o documento."
+  - id: ac-02
+    tipo: filtro
+    nome: Limpar filtros
+    como: Clicar no botão 'Limpar' do cartão de pesquisa
+    promessa: Repõe os 7 campos de filtro em branco e limpa a grelha de resultados
+    rota: /saude-oral/factura
+    casos_documento: []
+  - id: ac-03
+    tipo: filtro
+    nome: Ordenar colunas da grelha
+    como: Clicar no cabeçalho de qualquer uma das 9 colunas ordenáveis ('Ordenar por
+      X')
+    promessa: Reordena os resultados da pesquisa atual pela coluna escolhida
+    rota: /saude-oral/factura
+    casos_documento: []
+    ressalva: "Testado com 'Ordenar por Data Facturação' sobre pesquisa por NIF
+      504772325: a grelha reordenou corretamente (mais antiga primeiro), sem
+      alterar a query string visível."
+  - id: ac-04
+    tipo: consulta
+    nome: Paginação e resultados por página
+    como: Escolher 10/15/20/50 em 'Resultados por página' e/ou navegar pelos
+      controlos de paginação (primeira, anterior, número de página, seguinte,
+      última)
+    promessa: Contagem real de resultados, navegação efetiva entre páginas e ajuste
+      do tamanho de página
+    rota: /saude-oral/factura
+    casos_documento:
+      - CT-09
+    ressalva: "Testado com Estado=Conferida Com Erros isolado: 10.854 resultados,
+      1.086 páginas, com reticências (…) e atalho para a última página —
+      confirma o volume real de dezenas/centenas de milhares mencionado no
+      documento."
+  - id: ac-05
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Clicar no botão 'Exportar XLSX' acima da grelha de resultados (só aparece
+      quando há pelo menos 1 resultado)
+    promessa: Transfere um ficheiro 'facturas-saude-oral.xlsx' com os resultados da
+      pesquisa atual
+    rota: /saude-oral/factura
+    casos_documento: []
+    ressalva: Ação não prevista em nenhum CT do documento; download confirmado
+      (facturas-saude-oral.xlsx) para a pesquisa por FT2026-8.
+  - id: ac-06
+    tipo: navegacao
+    nome: Ver detalhe da factura
+    como: Clicar no ícone/botão 'Ver detalhe da factura <número>' na linha da grelha
+    promessa: "Abre a vista de detalhe (/saude-oral/factura/{id}) com as secções
+      Detalhe Factura (nº, pedido de pagamento, datas, estado, prestador,
+      adquirente, IRS, Factura de Recibos Verdes, Valores: Total Factura / Total
+      Factura Apurado / Total Retenção), Erros de Fatura, Prestações, Notas
+      Crédito/Débito e Expedições"
+    rota: /saude-oral/factura/{id}
+    casos_documento:
+      - CT-03
+      - CT-04
+      - CT-05
+    ressalva: "Confirmado com FT2026-8 (PIID 124192): 4 cheques de 18 dígitos (ex.
+      190000000110882417), todos 45,00, somando 180,00 = total da fatura, sem
+      truncar. Numa fatura CCE real (FTATSIRE01FT-8, Total Factura 430,00 /
+      Apurado 0,00) as secções 'Erros de Fatura' e 'Prestações' mostraram-se
+      ambas vazias ('Sem erros' / 'Sem prestações'), apesar do estado e da
+      divergência Comunicado vs Apurado — a promessa de 'listar os erros reais
+      da conferência' (CT-04) não se confirmou nesta amostra."
+  - id: ac-07
+    tipo: consulta
+    nome: Ver Factura
+    como: No detalhe da factura, clicar no botão 'Ver Factura' (quando não está
+      desativado)
+    promessa: Abre modal 'Factura' com visualizador de imagem (zoom -/+, repor
+      vista, rodar 90º esquerda/direita, guardar imagem) e botões de fecho (X e
+      'Voltar')
+    rota: /saude-oral/factura/{id}
+    casos_documento:
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: "Em FT2026-8 (tem documento associado) a imagem não carregou: aparece
+      um ícone de imagem partida e um erro de consola, sem mensagem textual
+      clara. Em FTATSIRE01FT-8 (CCE, sem documento aparente) o próprio botão
+      'Ver Factura' surge desativado, pelo que o modal nunca abre e nenhuma
+      mensagem é mostrada. Em nenhuma das duas amostras a promessa do documento
+      ('se não houver imagem, mensagem clara') se confirmou tal e qual."
+  - id: ac-08
+    tipo: navegacao
+    nome: Ver detalhe da prestação (cheque)
+    como: Na secção 'Prestações' do detalhe da factura, clicar no botão 'Ver detalhe
+      da prestação' de uma linha
+    promessa: Abre o ecrã de detalhe da prestação/cheque
+      (/saude-oral/prestacoes/{id}) com dados do utente, prescritor, localização
+      do arquivo, Detalhe Prestação (incluindo 'N. Factura'), Valores, Linhas
+      Prestação e Erros
+    rota: /saude-oral/prestacoes/{id}
+    casos_documento: []
+    ressalva: "Este ecrã relacionado mostra 'N. Factura: FT2026-8' como texto
+      simples, sem link nem botão 'Ir para Fatura' — a ação que o documento
+      descreve em CT-08 não existe neste ecrã."
+  - id: ac-09
+    tipo: navegacao
+    nome: Voltar (detalhe da factura)
+    como: No detalhe da factura, clicar no botão 'Voltar' no rodapé
+    promessa: Regressa à lista de faturas
+    rota: /saude-oral/factura
+    casos_documento:
+      - CT-05
+    ressalva: "Confirmado: devolve exatamente a mesma query string (filtros
+      NIF/Estado e página) que estava ativa antes de entrar no detalhe."
+  - id: ac-10
+    tipo: navegacao
+    nome: Breadcrumb 'Facturas'
+    como: No detalhe da factura, clicar no link 'Facturas' do breadcrumb
+    promessa: Regressa à lista de faturas
+    rota: /saude-oral/factura
+    casos_documento:
+      - CT-05
+    ressalva: O segmento 'Detalhe factura' do breadcrumb é texto estático, não é
+      clicável — só o segmento 'Facturas' é um link.
+  - id: ac-11
+    tipo: navegacao
+    nome: Reclamações (a partir do detalhe da factura)
+    como: Botão 'Reclamações' no rodapé do detalhe da factura
+    promessa: Rótulo 'Reclamações' com selo 'Em construção'
+    rota: /saude-oral/factura/{id}
+    casos_documento: []
+    ressalva: Botão sempre desativado ('Em construção'); não foi exercido por não
+      ser clicável.
+insumos_necessarios:
+  - descricao: Fatura Saúde Oral em estado CSE (Conferida Sem Erros), com Pedido de
+      Pagamento e cheques associados, valores Comunicado = Apurado
+    obtivel: tela
+    razao: Massa real acessível por pesquisa (ex. FT2026-8, FT2025-564, FT2025-531
+      do NIF 504772325); cobre CT-01, CT-02, CT-03, CT-05
+  - descricao: Fatura Saúde Oral em estado CCE (Conferida Com Erros), com
+      divergência entre Total Factura (Comunicado) e Total Factura Apurado
+    obtivel: tela
+    razao: "Filtro Estado='Conferida Com Erros' devolve milhares de registos com
+      divergência visível na grelha e no bloco 'Valores' do detalhe (ex.
+      FTATSIRE01FT-8: 430,00 vs 0,00)"
+  - descricao: Fatura cuja secção 'Erros de Fatura' liste pelo menos um erro real de
+      conferência
+    obtivel: bd
+    razao: As duas amostras CSE e CCE exploradas pela tela mostraram sempre 'Sem
+      erros'; é preciso identificar via BD um registo com erro efetivamente
+      associado
+  - descricao: Fatura cujo documento digitalizado carregue com sucesso no modal 'Ver
+      Factura'
+    obtivel: nao
+    razao: Nas duas amostras testadas pela tela o botão estava desativado ou a
+      imagem falhou a carregar (ícone partido); não há garantia, só pela tela,
+      de encontrar um registo com imagem funcional
+  - descricao: Fatura com Notas Crédito/Débito associadas
+    obtivel: bd
+    razao: Ambas as amostras exploradas mostraram 'Sem notas de crédito/débito'; a
+      tela não oferece filtro para isolar este caso
+  - descricao: Fatura com Expedição registada
+    obtivel: bd
+    razao: Ambas as amostras exploradas mostraram 'Sem expedições'; a tela não
+      oferece filtro para isolar este caso
+  - descricao: Acesso ao ecrã de execuções de conferência de uma fatura (para
+      'Detalhe conferência', CT-07)
+    obtivel: nao
+    razao: O botão 'Detalhe conferência' não existe em lado nenhum do detalhe da
+      factura testado
+  - descricao: Ação 'Ir para Fatura' a partir do detalhe de uma prestação/cheque (CT-08)
+    obtivel: nao
+    razao: O ecrã de detalhe da prestação (/saude-oral/prestacoes/{id}) mostra o
+      número da fatura como texto simples, sem link nem botão de navegação
+casos_sem_accao:
+  - CT-07
+  - CT-08
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: CT-07
+      procurei:
+        - "Botão 'Detalhe conferência' no cabeçalho e em todas as secções do
+          detalhe da fatura FT2026-8 (PIID 124192): Detalhe Factura, Erros de
+          Fatura, Prestações, Notas Crédito/Débito, Expedições"
+        - "Rótulos alternativos para a mesma ação: 'Ver conferência',
+          'Execuções', 'Auditoria', 'Log', junto dos botões existentes ('Ver
+          Factura', 'Voltar', 'Reclamações')"
+        - Ícones sem texto, menus de três pontos ou menus de contexto nas linhas
+          e cabeçalhos das tabelas do detalhe
+        - Rota direta adivinhada /conferencia/logs (deu 404); rota real do menu
+          'Logs de Conferência' identificada como /motor-regras/execucoes
+        - "No ecrã 'Logs de Conferência' (Pesquisa de Execuções): filtro 'Área
+          de Conferência' = PNPSO + pesquisa sem outros filtros"
+        - "No mesmo ecrã: bloco 'Filtros de negócio' (Nº da Fatura, Prestador
+          NIF, Nº do Lote, Nº da Prestação) com Área = PNPSO selecionada"
+        - "Ecrã 'Cockpit de Conferência' (/conferencia/cockpit): cartão 'Saúde
+          Oral / PNPSO' entre as 'Áreas de conferência'"
+        - "Ecrã 'Conferência Manual: Worklist' (/conferencia/worklist): filtro
+          'Nº Fatura' = FT2026-8"
+      onde:
+        - http://localhost:4174/saude-oral/factura/124192 (detalhe da fatura,
+          todas as secções)
+        - http://localhost:4174/motor-regras/execucoes (Logs de Conferência,
+          menu Conferência)
+        - http://localhost:4174/conferencia/cockpit
+        - http://localhost:4174/conferencia/worklist
+      resultado: nao_existe
+      accao: null
+      nota: "Não existe qualquer botão, ícone ou menu 'Detalhe conferência' no detalhe
+        da fatura FT2026-8, em nenhuma das suas secções. Investigando o menu
+        'Conferência' inteiro: o cartão 'Saúde Oral / PNPSO' no Cockpit está
+        marcado 'No sistema atual' (não clicável, 0 faturas/prestações) — ou
+        seja, PNPSO ainda corre no sistema legado e não está migrado para o novo
+        módulo de conferência. Em 'Logs de Conferência', ao selecionar Área =
+        PNPSO o campo 'Nº da Fatura' permanece desativado (só ativa para
+        Medicamentos, MCDT ou CRD, conforme aviso no próprio ecrã) e a pesquisa
+        por Área = PNPSO devolve 0 execuções (confirmei que a pesquisa funciona:
+        Área = Medicamentos devolve 197411 resultados). Em 'Conferência Manual:
+        Worklist', pesquisar por Nº Fatura = FT2026-8 devolve 'Nenhum resultado
+        encontrado'. Conclusão: não há, presentemente, nenhum caminho no ecrã
+        para chegar a uma execução de conferência de uma fatura de Saúde Oral —
+        a funcionalidade parece não estar coberta pelo módulo de conferência
+        atual para esta área."
+    - alvo: CT-08
+      procurei:
+        - Botão/link 'Ir para Fatura' no detalhe da prestação (cheque
+          190000000110882417, da fatura FT2026-8), junto do campo 'N. Factura'
+        - Inspeção do DOM do campo 'N. Factura' (valor 'FT2026-8') para
+          confirmar se é texto simples ou um elemento clicável (link/botão)
+        - Ícones sem texto ou menu de contexto junto ao campo N. Factura e no
+          cabeçalho 'Detalhe Prescrição' / 'Detalhe Prestação'
+        - Ação adicional na linha da lista de Prestações (para além do ícone
+          'Ver detalhe')
+        - Comparação com o ecrã irmão Medicamentos > Prestações (detalhe de uma
+          prestação real, E016-289) para confirmar se o padrão 'Ir para Factura'
+          existe na aplicação
+      onde:
+        - http://localhost:4174/saude-oral/prestacoes (lista, filtro Número do
+          Cheque = 190000000110882417)
+        - http://localhost:4174/saude-oral/prestacoes/2402079 (detalhe da
+          prestação)
+        - http://localhost:4174/medicamentos/prestacoes/7784931377 (ecrã irmão,
+          para comparação)
+      resultado: nao_existe
+      accao: null
+      nota: No detalhe da prestação de Saúde Oral, 'N. Factura' (FT2026-8) é um
+        elemento <p> puro (MuiTypography), sem href nem role de link/botão —
+        confirmado por inspeção do DOM. Os únicos botões do ecrã são 'Ver
+        Documento' e 'Voltar'; a lista de Prestações só tem o ícone 'Ver
+        detalhe' por linha. Por comparação, o ecrã irmão Medicamentos >
+        Prestações TEM um botão 'Ir para Factura' visível no detalhe da
+        prescrição (screenshot
+        medicamentos-prestacoes-7784931377-ir-para-factura.png), o que confirma
+        que o padrão de navegação existe na aplicação mas não foi implementado
+        (ainda) no ecrã de Saúde Oral.
+    - alvo: Fatura cujo documento digitalizado carregue com sucesso no modal 'Ver
+        Factura'
+      procurei:
+        - Abrir o modal 'Ver Factura' na fatura FT2026-8 (PIID 124192) e ler a
+          mensagem de erro na consola do browser
+        - Repetir o mesmo teste nas faturas FT2025-564 (PIID 120966) e
+          FT2025-531 (PIID 118286), do mesmo prestador
+        - Verificar se a falha é específica de Saúde Oral, testando o
+          visualizador de documento equivalente noutra área (Medicamentos >
+          Facturas, fatura E016-289, PIID 580882)
+      onde:
+        - http://localhost:4174/saude-oral/factura/124192
+        - http://localhost:4174/saude-oral/factura/120966
+        - http://localhost:4174/saude-oral/factura/118286
+        - http://localhost:4174/medicamentos/factura/580882 (comparação)
+      resultado: nao_existe
+      accao: null
+      nota: "Nas 3 faturas de Saúde Oral testadas o ícone da imagem aparece partido e
+        a consola regista sempre 'Failed to load resource: the server responded
+        with a status of 502 (Bad Gateway)' em /ccmsns/api/documentos/{guid}.
+        Testei também o visualizador de documento equivalente em Medicamentos
+        (fatura E016-289) e obtive o mesmo 502 Bad Gateway para um GUID de
+        documento diferente. Com 4 documentos distintos, em 2 áreas diferentes,
+        todos a falhar com o mesmo código de erro no mesmo endpoint, isto não
+        parece ser falta de imagem num registo específico, mas sim uma falha
+        sistémica do backend/gateway de documentos neste ambiente — não há,
+        presentemente, forma de obter pela tela uma fatura de Saúde Oral com
+        documento a carregar com sucesso; capturas de evidência guardadas
+        (saude-oral-factura-124192-ver-factura.png,
+        medicamentos-factura-580882-documento.png)."
+    - alvo: Acesso ao ecrã de execuções de conferência de uma fatura (para 'Detalhe
+        conferência', CT-07)
+      procurei:
+        - Rota /conferencia/logs adivinhada diretamente (deu 404); localizada a
+          rota real /motor-regras/execucoes a partir do link do menu 'Logs de
+          Conferência'
+        - "No ecrã 'Pesquisa de Execuções': selecionar Área de Conferência =
+          PNPSO e pesquisar sem outros filtros"
+        - Confirmar se o filtro de negócio 'Nº da Fatura' fica ativo com Área =
+          PNPSO selecionada
+        - Confirmar que a pesquisa em si funciona, testando Área = Medicamentos
+          (controlo positivo)
+        - Cartão 'Saúde Oral / PNPSO' no 'Cockpit de Conferência', para perceber
+          se dá acesso a execuções por fatura
+        - "Ecrã 'Conferência Manual: Worklist', filtro Nº Fatura = FT2026-8"
+      onde:
+        - http://localhost:4174/motor-regras/execucoes (Logs de Conferência)
+        - http://localhost:4174/conferencia/cockpit
+        - http://localhost:4174/conferencia/worklist
+      resultado: nao_existe
+      accao: null
+      nota: "O filtro 'Nº da Fatura' em Logs de Conferência só ativa para Área =
+        Medicamentos, MCDT ou CRD (mensagem explícita no ecrã: 'Selecione a Área
+        (Medicamentos, MCDT ou CRD) para usar estes filtros'); com Área = PNPSO
+        o campo permanece desativado e a pesquisa por essa área devolve 0
+        execuções (contra 197411 para Medicamentos, confirmando que a pesquisa
+        funciona). No Cockpit, o cartão de Saúde Oral/PNPSO está identificado
+        como 'No sistema atual' (0 faturas, não clicável) — isto é, ainda no
+        sistema legado, fora do módulo de conferência novo. Na Worklist manual,
+        a fatura FT2026-8 também não devolve tarefas. Não há, presentemente, um
+        ecrã de execuções de conferência acessível para uma fatura de Saúde
+        Oral."
+    - alvo: Ação 'Ir para Fatura' a partir do detalhe de uma prestação/cheque (CT-08)
+      procurei:
+        - "Botão/link com esse rótulo (ou equivalentes: Ver Fatura, Consultar
+          Fatura, Abrir Fatura) no detalhe da prestação do cheque
+          190000000110882417"
+        - Inspeção do DOM do campo 'N. Factura' para confirmar ausência de
+          href/role de link
+        - Ícone sem texto ou menu de contexto no cabeçalho 'Detalhe
+          Prescrição'/'Detalhe Prestação'
+        - Presença do mesmo botão no ecrã irmão Medicamentos > Prestações, para
+          confirmar se o padrão existe na aplicação e apenas falta em Saúde Oral
+      onde:
+        - http://localhost:4174/saude-oral/prestacoes/2402079 (detalhe da
+          prestação, fatura FT2026-8)
+        - http://localhost:4174/medicamentos/prestacoes/7784931377 (ecrã irmão,
+          para comparação)
+      resultado: nao_existe
+      accao: null
+      nota: Confirmado por inspeção do DOM que 'FT2026-8' é um <p> sem href/role de
+        link no detalhe da prestação de Saúde Oral; os únicos botões do ecrã são
+        'Ver Documento' e 'Voltar'. Em Medicamentos > Prestações existe de facto
+        um botão 'Ir para Factura' equivalente (screenshot
+        medicamentos-prestacoes-7784931377-ir-para-factura.png), o que mostra
+        que o padrão de navegação está implementado na aplicação mas não chegou
+        (ainda) ao ecrã de Saúde Oral — mesmo achado do alvo CT-08.

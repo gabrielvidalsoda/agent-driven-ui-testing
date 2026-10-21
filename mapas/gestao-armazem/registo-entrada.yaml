@@ -1,0 +1,430 @@
+documento: gestao-armazem/registo-entrada.md
+rota: /armazem/registo-entrada
+mapeado_em: 2026-08-19
+mapeado_contra:
+  ui: origin/develop 30446d5, build de 2026-08-16
+  api: jar de feature/cockpit-disparar 25a869e, construido a 2026-08-12
+accoes:
+  - id: ac-consulta-lista-registos
+    tipo: consulta
+    nome: Listar registos de entrada (ciclo x área)
+    como: "Ecrã inicial /armazem/registo-entrada; tabela 'Registos de Entrada' com
+      colunas Ciclo, Área, Nº Faturas, Nº Lotes, Atualizado, Ações. No ambiente
+      atual mostra 7 linhas: CRD, MCDT e Medicamentos em Setembro/Agosto 2026 e
+      Medicamentos em Julho 2026. Não há paginação visível (todas as linhas
+      aparecem de uma vez)."
+    promessa: Uma linha por combinação ciclo x área, com contadores de faturas e
+      lotes coerentes com o que está registado.
+    casos_documento:
+      - CT-01
+      - CT-04
+  - id: ac-filtro-ciclo
+    tipo: filtro
+    nome: Filtrar lista por Ciclo
+    como: "Combobox 'Ciclo' no topo da lista; ao escolher um valor (ex.: Setembro
+      2026) a URL passa a ?ciclo=2026-9 e a tabela mostra só as linhas desse
+      ciclo. Opções observadas: Todos, Setembro 2026, Agosto 2026, Julho 2026
+      (só os ciclos que já têm registo aparecem na lista de opções)."
+    promessa: A tabela mostra apenas os registos do ciclo escolhido.
+    entradas:
+      - campo: Ciclo
+        origem_valores: combobox com os ciclos que já têm pelo menos um registo criado na lista
+    casos_documento:
+      - CT-01
+  - id: ac-filtro-area
+    tipo: filtro
+    nome: Filtrar lista por Área
+    como: "Combobox 'Área'; ao escolher um valor a URL passa a ?area=MEDICAMENTOS
+      (ou CRD, MCDT, SISO...) e a tabela filtra. Opções observadas: Todas,
+      Medicamentos, MCDT, CRD, Cuidados Termais, Saúde Oral (SISO) — coincide
+      com as 5 áreas do documento. Combina-se com o filtro de Ciclo.
+      Selecionando 'Saúde Oral (SISO)' (sem registos no ambiente) mostra o
+      estado vazio 'Sem registos — Não há registos de entrada para os filtros
+      selecionados.'"
+    promessa: A tabela mostra apenas os registos da área escolhida; combinação com
+      Ciclo é aditiva (AND).
+    entradas:
+      - campo: Área
+        origem_valores: "combobox fixo com as 5 áreas: Medicamentos, MCDT, CRD, Cuidados
+          Termais, Saúde Oral (SISO)"
+    casos_documento:
+      - CT-01
+      - CT-10
+  - id: ac-limpar-filtros
+    tipo: filtro
+    nome: Limpar filtros da lista
+    como: Botão 'Limpar' junto aos filtros; ao clicar remove ciclo, área e nº de
+      fatura da URL e devolve a lista completa (7 linhas no ambiente atual).
+    promessa: Reset total dos filtros da lista, volta ao estado inicial.
+    casos_documento:
+      - CT-01
+  - id: ac-localizar-fatura
+    tipo: consulta
+    nome: Localizar fatura em todos os ciclos e áreas
+    como: "Campo 'Nº de Fatura' (placeholder 'Localizar em todos os ciclos') + botão
+      'Localizar Fatura'. Testado com 'E023-8' (fatura real citada no documento,
+      tabela GESTARMAZEM.TDFACTURAPRESTADOR): resultado 'Fatura não encontrada —
+      Não existe nenhum registo de entrada com o nº de fatura «E023-8» em nenhum
+      ciclo.' Isto sugere que esta pesquisa corre sobre os registos criados
+      nesta tela (ciclo x área), não diretamente sobre TDFACTURAPRESTADOR —
+      faturas reais da BD legada podem não aparecer aqui se nunca tiverem
+      passado por um registo de entrada desta aplicação."
+    promessa: Mostra as ocorrências da fatura pesquisada em todos os ciclos e áreas
+      ('Ocorrências da fatura «X» em todos os ciclos e áreas.').
+    entradas:
+      - campo: Nº de Fatura
+        origem_valores: texto livre
+    casos_documento: []
+  - id: ac-novo-ciclo
+    tipo: criacao
+    nome: Criar novo registo ciclo x área ('Novo Ciclo')
+    como: "Botão 'Novo Ciclo' abre modal com combobox Área (5 opções fixas) e
+      combobox Ciclo (desativado até escolher Área; depois lista só os ciclos
+      AINDA sem registo para essa área — para CRD apareceram 10 opções: Jan a
+      Dez 2026 exceto Setembro e Agosto, já usados). Botões 'Cancelar' e 'Criar
+      ciclo'. NÃO CLICADO EM 'Criar ciclo' (ação irreversível/cria estado).
+      Achado: com Área='CRD' escolhida e Ciclo ainda em 'Selecione…' (não
+      escolhido), o botão 'Criar ciclo' já está habilitado (disabled=false),
+      divergindo do que o documento espera em CT-02 ('o botão só ativa depois de
+      escolhido o ciclo')."
+    promessa: "Texto do modal: 'Abre um novo registo de entrada para a área
+      selecionada.' — cria um registo ciclo x área novo, que passaria a aparecer
+      na lista com 0 faturas e 0 lotes."
+    entradas:
+      - campo: Área
+        obrigatorio: true
+        origem_valores: combobox fixo com as 5 áreas
+      - campo: Ciclo
+        origem_valores: "lista dinâmica: só ciclos ainda sem registo para a área escolhida"
+    casos_documento:
+      - CT-02
+      - CT-03
+  - id: ac-abrir-registo
+    tipo: navegacao
+    nome: Abrir detalhe de um registo ciclo x área
+    como: Botão 'Abrir' em cada linha da lista; navega para
+      /armazem/registo-entrada/detalhe?ano=AAAA&mes=M&area=CODIGO. Testado em
+      CRD/Setembro 2026, Medicamentos/Julho e Agosto 2026, MCDT/Setembro 2026 —
+      todos abriram com Estado 'Em aberto'.
+    promessa: Abre o detalhe do registo escolhido, mostrando cabeçalho com Ciclo,
+      Área, Estado, Localização (fixa) e Operador, e a linha de captura ativa.
+    casos_documento:
+      - CT-04
+      - CT-05
+  - id: ac-voltar-pesquisa
+    tipo: navegacao
+    nome: Voltar à lista a partir do detalhe
+    como: Botão 'Voltar à pesquisa' no cabeçalho do detalhe; navega de volta para
+      /armazem/registo-entrada.
+    promessa: Regressa à lista de registos.
+    casos_documento: []
+  - id: ac-capturar-fatura
+    tipo: criacao
+    nome: Inserir linha de fatura no registo (captura de faturas)
+    como: "Secção 'Captura de facturas' no detalhe, com texto de ajuda 'registe as
+      faturas e prima Enter para passar à seguinte'. Campos em sequência: Código
+      (rótulo varia por área — 'Código da convenção' em CRD/MCDT, 'Código da
+      farmácia' em Medicamentos), Prestador/Farmácia/Laboratório (rótulo também
+      varia; placeholder '(preenchido pelo sistema)', readonly), Nº Fatura, Nº
+      Lotes (input tipo texto, sem validação HTML nativa de número), Observação
+      (opcional) e botão 'Adicionar (Enter)'. Testado: código real '30100113'
+      (CRD) + Enter preencheu automaticamente 'Acail Gás, S.A - ULS Alto Minho'
+      no campo Prestador e moveu o foco. Testado código inexistente '9999999' +
+      Enter: o campo Prestador ficou vazio e o foco avançou para Nº Fatura sem
+      qualquer mensagem de erro visível na tela (nenhum texto com 'não
+      encontrado', 'inválido' ou 'erro' apareceu). NÃO FOI CLICADO 'Adicionar'
+      nem completada a cadeia até ao fim (ação cria estado)."
+    promessa: Ao terminar os campos (Enter no último ou clique em Adicionar), a
+      linha entra na tabela de Faturas, o foco volta ao código e os totais
+      (Faturas/Lotes) atualizam.
+    entradas:
+      - campo: Código (convenção/farmácia/laboratório, rótulo varia por área)
+        origem_valores: código real de prestador/farmácia/convenção existente na BD
+      - campo: Prestador/Farmácia/Laboratório (nome)
+        origem_valores: preenchido automaticamente pelo sistema a partir do código;
+          campo readonly
+      - campo: Nº Fatura
+        origem_valores: texto livre
+      - campo: Nº Lotes
+        origem_valores: campo texto (não é input numérico nativo)
+      - campo: Observação
+        obrigatorio: false
+        origem_valores: texto livre opcional
+    casos_documento:
+      - CT-06
+      - CT-07
+      - CT-08
+      - CT-09
+      - CT-10
+      - CT-11
+      - CT-13
+      - CT-14
+  - id: ac-remover-fatura
+    tipo: remocao
+    nome: Remover fatura já inserida no registo
+    como: Botão 'Remover factura {Nº Fatura}' em cada linha da tabela de Faturas do
+      detalhe. NÃO CLICADO (ação irreversível). Inspeção do DOM mostra um par de
+      botões 'Não'/'Sim' associado a este fluxo (diálogo de confirmação), ainda
+      que não visível sem acionar o 'Remover'.
+    promessa: Remove a linha selecionada, mediante confirmação, e atualiza os totais
+      do detalhe (e presumivelmente da lista).
+    casos_documento:
+      - CT-12
+  - id: ac-consulta-faturas-detalhe
+    tipo: consulta
+    nome: Listar faturas já registadas no registo aberto
+    como: "Secção 'Faturas' no detalhe, com contadores '{n} faturas' e '{n} lotes
+      (página)', tabela com colunas Código, Nome, Nº Fatura, Nº Lotes,
+      Localização, Operador, Hora, Observação, e paginação ('Resultados por
+      página: 10'). No registo CRD/Setembro 2026 mostrava 1 fatura (código
+      30100113, FT2026/9201, 4 lotes, localização CASS-C4, operador
+      DEMO-ARMAZEM, hora 10:46)."
+    promessa: Reflete exatamente as faturas inseridas nesse registo, com operador e
+      hora de inserção — suporta rastreabilidade (quem inseriu o quê).
+    casos_documento:
+      - CT-04
+      - CT-05
+      - CT-12
+  - id: ac-filtro-faturas-detalhe
+    tipo: filtro
+    nome: Filtrar/limpar a tabela de faturas do detalhe
+    como: "Campos 'Código' e 'Nº Fatura' (placeholder 'Filtrar…') acima da tabela de
+      Faturas, mais botão 'Limpar'. Testado: filtro 'Código'='XXXXX' (sem
+      correspondência) devolveu a linha 'Sem faturas neste registo.' e '0
+      resultados'; botão 'Limpar' repôs a listagem completa."
+    promessa: Restringe as linhas visíveis da tabela de faturas do registo aberto,
+      sem afetar os dados gravados.
+    entradas:
+      - campo: Código
+        origem_valores: texto livre
+      - campo: Nº Fatura
+        origem_valores: texto livre
+    casos_documento:
+      - CT-12
+insumos_necessarios:
+  - descricao: Registo ciclo x área em aberto, para exercer a captura de faturas
+      (CT-06 a CT-11, CT-13, CT-14)
+    obtivel: tela
+    razao: Basta abrir 'Novo Ciclo', escolher Área e um Ciclo ainda não usado por
+      essa área, e confirmar; já existem 7 registos em aberto no ambiente (CRD,
+      MCDT, Medicamentos).
+  - descricao: Registo ciclo x área CONCLUÍDO, para validar o modo só consulta (CT-05)
+    obtivel: nao
+    razao: Não foi encontrada nenhuma ação, botão ou rótulo
+      'Concluir'/'Terminar'/'Fechar'/'Finalizar' em nenhum registo aberto
+      (procurado por texto e por regex no DOM); os 7 registos existentes no
+      ambiente estão todos com Estado 'Em aberto'. A tela, tal como está, não
+      parece oferecer forma de produzir este estado.
+  - descricao: Área sem nenhum ciclo disponível no modal 'Novo Ciclo' (CT-03)
+    obtivel: tela
+    razao: "Tecnicamente possível criando manualmente todos os ciclos em falta para
+      uma área (ex.: os ~10 ciclos ainda livres para CRD) através de repetidas
+      confirmações de 'Novo Ciclo', mas é trabalhoso e altera o ambiente."
+  - descricao: Faturas PP (pedido de pagamento) da área Saúde Oral (SISO), viáveis e
+      não viáveis (CT-09)
+    obtivel: nao
+    razao: Não existe nenhum registo para a área SISO no ambiente ('Sem registos' ao
+      filtrar); sem abrir um registo SISO não é possível confirmar se/como o
+      campo PP aparece, e mesmo abrindo, a viabilidade do PP depende de dados
+      PNPSO que este ecrã não permite criar.
+  - descricao: Códigos reais de prestador/farmácia/convenção por área, para testar o
+      preenchimento automático e os rótulos (CT-06, CT-10)
+    obtivel: bd
+    razao: "O documento já lista códigos reais (ex.: 30100113 CRD, confirmado nesta
+      exploração); códigos adicionais só são identificáveis por consulta
+      read-only à BD QUA."
+  - descricao: Segundo operador e segundo posto, para os cenários de concorrência (CT-14)
+    obtivel: nao
+    razao: Depende de uma segunda sessão/conta real em paralelo; esta tela sozinha
+      não simula um segundo utilizador. Adicionalmente, a parte do cenário que
+      envolve 'concluir' esbarra na mesma limitação da ação de concluir, que não
+      foi encontrada na tela.
+  - descricao: Nº de fatura duplicado (mesmo código de prestador + mesmo nº) dentro
+      do mesmo registo, para testar o bloqueio (CT-13)
+    obtivel: tela
+    razao: Basta inserir a mesma combinação código+nº fatura duas vezes na mesma
+      sessão de captura.
+casos_sem_accao:
+  - CT-05
+  - CT-14
+repescagem:
+  feita_em: 2026-08-19
+  alvos:
+    - alvo: CT-05 — Registo concluído abre em só consulta
+      procurei:
+        - Rótulos alternativos para a ação
+          (Concluir/Terminar/Fechar/Finalizar/Encerrar/Submeter/Validar/Confirmar/Arquivar)
+          por texto e por regex no DOM, na lista e no detalhe do Registo de
+          Entrada
+        - Ícones sem rótulo ou menu de contexto por linha da tabela da lista (só
+          existe o botão 'Abrir' + ícone decorativo 'external-reference'); e por
+          linha da tabela de faturas do detalhe (só 'Remover factura', com
+          confirmação Sim/Não)
+        - Botão de cabeçalho com aria-label 'Mais ações' encontrado por inspeção
+          do DOM — verificado que é chrome genérico do layout da aplicação
+          (bounding box 0x0 nesta resolução, partilhado por todas as telas), não
+          uma ação desta tela
+        - "Chamadas às APIs desta tela via fetch:
+          /ccmsns/api/armazem/registos-entrada (lista, 7 registos) e
+          /ccmsns/api/armazem/registos-entrada/faturas (detalhe) — nenhuma
+          devolve um campo 'estado' com valor diferente do texto 'Em aberto'
+          mostrado no ecrã; a lista nem tem esse campo"
+        - As 8 outras telas da secção Gestão de Armazém, uma a uma, à procura de
+          uma ação que feche/conclua o registo ciclo x área do Registo de
+          Entrada, como efeito colateral (abrir caixa, iniciar/encerrar
+          preparação, abrir ordem de picking, etc.)
+        - "Rota direta: reabertura do detalhe
+          (/armazem/registo-entrada/detalhe?ano=&mes=&area=) para todos os 7
+          registos existentes no ambiente, para confirmar se algum já aparece
+          como 'Concluído'"
+      onde:
+        - http://localhost:4174/armazem/registo-entrada
+        - http://localhost:4174/armazem/registo-entrada/detalhe?ano=2026&mes=7&area=MEDICAMENTOS
+          (e os restantes 6 registos existentes)
+        - http://localhost:4174/armazem/associacao-caixa
+        - http://localhost:4174/armazem/associacao-caixa/listagem
+        - http://localhost:4174/armazem/preparacao
+        - http://localhost:4174/armazem/transferencia-arquivo-temporario
+        - http://localhost:4174/picking-expedicao
+        - http://localhost:4174/gestao-armazem/faturas-incidencia
+        - http://localhost:4174/arquivo
+        - http://localhost:4174/armazem/libertar-arquivo-temporario
+        - http://localhost:4174/armazem/guia-anf
+        - /ccmsns/api/armazem/registos-entrada e
+          /ccmsns/api/armazem/registos-entrada/faturas (chamadas diretas via
+          fetch no browser)
+      resultado: nao_existe
+      accao: null
+      nota: "Confirma a conclusão da primeira passagem com mais evidência: em nenhuma
+        das 9 telas da secção (a própria + as 8 associadas) existe uma ação,
+        rótulo, ícone ou efeito colateral que feche/conclua um registo ciclo x
+        área do Registo de Entrada. A própria API não expõe um campo de estado
+        para o registo — o texto 'Em aberto' parece ser fixo no frontend. Os
+        estados 'Concluída'/'Por fazer' encontrados em Associação à Caixa —
+        Listagem e os estados 'Nova/Em Andamento/Aguardando expedição/Expedido'
+        do Picking para Expedição pertencem a entidades diferentes (associação
+        fatura-caixa; ordem de picking), não ao registo ciclo x área desta
+        tela."
+    - alvo: CT-14 — Concorrência no mesmo registo (dois operadores/dois postos)
+      procurei:
+        - "Mecanismo de troca de utilizador ou segundo posto dentro da própria
+          aplicação: verificado o cabeçalho (utilizador fixo 'Manta /
+          PRRmanta_dev'), sem seletor de utilizador nem ecrã de login"
+        - Abertura de um novo separador do browser para a mesma URL, para
+          confirmar se criava uma sessão distinta — reautenticou automaticamente
+          como o mesmo utilizador 'Manta / PRRmanta_dev', ou seja, é a mesma
+          sessão/identidade, não um segundo operador real
+        - "Padrão análogo de multi-operador nas telas associadas da secção: a
+          tela Preparação descreve explicitamente uma 'Estação partilhada: cada
+          operador identifica-se com o crachá para iniciar ou encerrar a
+          preparação de uma caixa' — mecanismo de múltiplos operadores existe no
+          produto, mas aplica-se à entidade Caixa/Preparação, não ao registo
+          ciclo x área do Registo de Entrada"
+        - "Ação de concluir como parte do cenário de concorrência: já coberta
+          pela busca do alvo CT-05 acima — não encontrada em lado nenhum, o que
+          também bloqueia a parte do CT-14 que depende de concluir"
+      onde:
+        - http://localhost:4174/armazem/registo-entrada (cabeçalho de utilizador)
+        - http://localhost:4174/armazem/preparacao
+        - novo separador do browser para
+          http://localhost:4174/armazem/registo-entrada
+      resultado: nao_existe
+      accao: null
+      nota: Sem uma segunda conta/credencial real, e sem um ecrã de troca de sessão na
+        aplicação, não há forma de simular no ecrã um segundo operador genuíno.
+        A tela Preparação mostra que o produto tem o conceito de múltiplos
+        crachás/operadores partilhando um posto, mas essa mecânica não está
+        ligada ao Registo de Entrada.
+    - alvo: "[insumo] Registo ciclo x área CONCLUÍDO, para validar o modo só consulta
+        (CT-05)"
+      procurei:
+        - Filtragem da lista de Registo de Entrada pelos 7 registos existentes
+          no ambiente — todos mostram Estado 'Em aberto' no cabeçalho do detalhe
+        - Procura de uma forma de produzir esse estado por qualquer ação nesta
+          tela ou nas 8 telas associadas da secção (ver alvo CT-05 acima para o
+          detalhe da busca)
+        - Inspeção das respostas de API desta tela (lista e faturas) à procura
+          de um campo de estado que pudesse assumir outro valor — não encontrado
+      onde:
+        - http://localhost:4174/armazem/registo-entrada
+        - os 7 detalhes de registo existentes
+        - as 8 telas associadas listadas no alvo CT-05
+      resultado: nao_existe
+      accao: null
+      nota: "Consistente com o alvo CT-05: não existe hoje, nesta entrega, massa nem
+        ação que produza um registo concluído. Não é possível obter esta massa
+        nem pela tela nem por efeito de outra ação encontrada."
+    - alvo: "[insumo] Faturas PP (pedido de pagamento) da área Saúde Oral (SISO),
+        viáveis e não viáveis (CT-09)"
+      procurei:
+        - Filtro Área = 'Saúde Oral (SISO)' na lista de Registo de Entrada —
+          confirma 'Sem registos' (nenhuma linha SISO nos 7 registos existentes)
+        - Abertura do modal 'Novo Ciclo' e inspeção do combobox Área — confirma
+          que 'Saúde Oral (SISO)' é uma área válida e selecionável (não é
+          preciso adivinhar o nome)
+        - Chamada direta à API
+          /ccmsns/api/armazem/registos-entrada/ciclos?area=SISO — devolve os 12
+          meses de 2026 como ciclos disponíveis, ou seja, nenhum ciclo SISO foi
+          usado/criado neste ambiente
+        - "Rota direta ao detalhe sem passar pelo botão 'Abrir' (que não existe
+          para SISO na lista):
+          http://localhost:4174/armazem/registo-entrada/detalhe?ano=2026&mes=7&\
+          area=SISO — a rota EXISTE e renderiza normalmente, mesmo sem o registo
+          aparecer na lista"
+        - "Nessa tela SISO: confirmado visualmente que o campo de código muda de
+          rótulo para 'Código da convenção' (em vez de 'Código da farmácia') e
+          que aparece um campo 'PP' dedicado na captura e como coluna filtrável
+          na tabela de faturas — ou seja, o mecanismo do campo PP existe e é
+          visível na tela, mesmo sem dados"
+        - Inspeção do payload da API de faturas
+          (/ccmsns/api/armazem/registos-entrada/faturas) de um registo não-SISO
+          — confirma que o modelo de dados já tem os campos 'pp' e 'ppViavel'
+          (ambos null fora da área SISO), suportando a hipótese de que a
+          viabilidade é um booleano calculado no backend
+        - "Verificação cruzada em Picking para Expedição: existem ordens de
+          picking para SISO (ex. Ordem 22, Maio 2026, SISO, estado 'Expedido', 3
+          documentos; Ordem 5, Junho 2026, SISO, 'Nova'), mas é uma entidade
+          distinta (ordem de picking, não fatura do Registo de Entrada) e não dá
+          acesso a faturas PP viáveis/não viáveis"
+      onde:
+        - http://localhost:4174/armazem/registo-entrada (filtro Área=SISO e
+          modal Novo Ciclo)
+        - http://localhost:4174/armazem/registo-entrada/detalhe?ano=2026&mes=7&area=SISO
+        - /ccmsns/api/armazem/registos-entrada/ciclos?area=SISO
+        - /ccmsns/api/armazem/registos-entrada/faturas?ano=2026&mes=7&area=MEDICAMENTOS
+          (payload de referência para os campos pp/ppViavel)
+        - http://localhost:4174/picking-expedicao
+      resultado: nao_existe
+      accao: null
+      nota: A MASSA (faturas PP viáveis e não viáveis) continua sem existir neste
+        ambiente — 0 registos SISO em todos os 12 ciclos de 2026. Mas a busca
+        desta passagem confirma, por rota direta, que a tela e o campo PP
+        existem e funcionam para a área SISO (rótulo do código muda,
+        coluna/campo PP aparece), o que a primeira passagem não tinha conseguido
+        verificar por a área não aparecer na lista. Continua a não ser possível
+        confirmar a validação de viabilidade sem dados PNPSO reais, que este
+        ecrã não permite criar; ficheiro de captura
+        registo-entrada-siso-campo-pp.png junto como prova.
+    - alvo: "[insumo] Segundo operador e segundo posto, para os cenários de
+        concorrência (CT-14)"
+      procurei:
+        - Procura de um seletor de utilizador ou segunda credencial de acesso na
+          aplicação — não existe; o cabeçalho mostra sempre 'Manta /
+          PRRmanta_dev'
+        - Abertura de um segundo separador do browser para a mesma tela —
+          confirma que reutiliza a mesma sessão/utilizador, não simula um
+          segundo posto
+        - "Procura de um mecanismo de múltiplos crachás/operadores nas telas
+          associadas — encontrado em Preparação ('Estação partilhada: cada
+          operador identifica-se com o crachá'), mas aplicado à entidade
+          Caixa/Preparação, não ao Registo de Entrada"
+      onde:
+        - http://localhost:4174/armazem/registo-entrada
+        - http://localhost:4174/armazem/preparacao
+        - novo separador do browser
+      resultado: nao_existe
+      accao: null
+      nota: Sem uma segunda conta real e sem mecanismo de troca de sessão na
+        aplicação, este insumo continua fora de alcance só com o ecrã. Precisa
+        de coordenação com a equipa para obter uma segunda credencial de
+        operador.

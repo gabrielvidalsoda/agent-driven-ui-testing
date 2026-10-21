@@ -1,0 +1,363 @@
+documento: consulta-area-prestacao/uts-facturas.md
+rota: /uts/factura
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: pesquisa-facturas
+    tipo: consulta
+    nome: Pesquisar Facturas de UTS
+    como: Preencher um ou mais dos 4 campos do formulário 'Pesquisa Facturas' e
+      clicar em 'Pesquisar'. Os parâmetros ficam na query string (ex.
+      ?numeroFactura=..., ?nifPrestador=..., ?codigoPrestador=...).
+    promessa: Devolve a(s) factura(s) de UTS que correspondem aos filtros, numa
+      grelha com Cód. Prestador, NIF Prestador, Descrição Prestador, Nº Factura,
+      Data Factura, NIF Adquirente e Total Factura; quando não há
+      correspondência mostra 'Nenhuma factura corresponde aos filtros
+      aplicados.' e mantém os valores dos filtros.
+    rota: /uts/factura
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre (placeholder 'Ex. 00000000000')
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: texto livre DD/MM/YYYY ou seletor de calendário (grid de dias,
+          navegação por mês/ano)
+      - campo: NIF do Prestador
+        obrigatorio: false
+        origem_valores: texto livre (placeholder 'Ex. 00000000000')
+      - campo: Código do Prestador
+        obrigatorio: false
+        origem_valores: texto livre (placeholder 'Ex. 00000000000')
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-04
+    ressalva: "Confirmada a ausência de um filtro Estado (só existem os 4 campos
+      citados), tal como o documento antecipa em CT-04. Clicar em 'Pesquisar'
+      com todos os campos vazios não dispara pedido nem mostra erro de
+      validação: o ecrã fica no estado inicial 'Sem resultados / Utilize os
+      filtros acima e clique em pesquisar.'. Testado com FAC-UTS-001 (1
+      resultado), NIF 123456789 (1 resultado), Código UTS001 (1 resultado) e NIF
+      504134353 (0 resultados)."
+  - id: limpar-filtros
+    tipo: filtro
+    nome: Limpar formulário de pesquisa
+    como: Clicar no botão 'Limpar' junto a 'Pesquisar'.
+    promessa: Repõe os 4 campos do formulário e remove os parâmetros da query
+      string, voltando ao estado 'Sem resultados'.
+    rota: /uts/factura
+    casos_documento:
+      - CT-02
+  - id: ordenar-colunas-lista
+    tipo: consulta
+    nome: Ordenar a grelha de resultados
+    como: Clicar no cabeçalho de uma coluna ordenável (ícone de ordenação em Cód.
+      Prestador, NIF Prestador, Descrição Prestador, Nº Factura, Data Factura,
+      NIF Adquirente, Total Factura).
+    promessa: Reordena os resultados pela coluna escolhida; o estado fica refletido
+      na query string (ex. &ordenar=numeroFactura,asc).
+    rota: /uts/factura
+    casos_documento: []
+    ressalva: Não é referida em nenhum CT do documento; só pôde ser confirmada a
+      mudança de parâmetro na URL, não a confirmação visual da reordenação (a
+      massa tem apenas 1 registo).
+  - id: selecionar-resultados-por-pagina
+    tipo: consulta
+    nome: Escolher quantidade de resultados por página
+    como: Abrir o combobox 'Resultados por página' e escolher um valor.
+    promessa: Oferece as opções 10, 20, 25 e 50 resultados por página.
+    rota: /uts/factura
+    casos_documento: []
+  - id: exportar-xlsx
+    tipo: exportacao
+    nome: Exportar resultados para XLSX
+    como: Clicar em 'Exportar XLSX' por cima da grelha de resultados.
+    promessa: "Descarrega um ficheiro (confirmado: facturas-uts.xlsx) com os
+      resultados da pesquisa corrente; fica desabilitado quando a pesquisa
+      devolve 0 resultados."
+    rota: /uts/factura
+    casos_documento: []
+    ressalva: Ação não mencionada em nenhum CT do documento — é uma promessa
+      adicional da tela (rótulo do botão) sem cenário escrito que a exercite.
+  - id: ver-detalhe-factura
+    tipo: navegacao
+    nome: Ver detalhe de uma factura
+    como: Clicar no botão/ícone 'Ver detalhe da factura {número}' na primeira coluna
+      da linha de resultado.
+    promessa: Abre /uts/factura/{id} com o cabeçalho (Número, Data, Estado, NIF
+      Prestador, Desc. Prestador, Código Prestador, Valor Total Factura,
+      Entidade Adquirente) e a secção 'Linhas da factura'.
+    rota: /uts/factura/{id}
+    casos_documento:
+      - CT-05
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: O documento (CT-05) espera abrir o detalhe 'por ícone e por clique na
+      linha'; testado clicar diretamente numa célula da linha (fora do ícone) e
+      a navegação NÃO ocorre — só o botão/ícone funciona. Para CT-06 (coerência
+      ecrã vs BD), o ecrã fornece os valores mas a comparação campo a campo com
+      TDCFFACTURAUTS exige acesso a BD, fora do alcance desta tela. Na factura
+      de teste (FAC-UTS-001), o campo Estado aparece como '—' (sem valor) e a
+      secção 'Linhas da factura' tem 5 linhas cujo somatório (1360,00) diverge
+      do 'Valor Total Factura' do cabeçalho (1250,50) — mais massa do que o
+      documento previa (que assumia 0 linhas).
+  - id: ver-factura-documento-modal
+    tipo: consulta
+    nome: Ver Factura (visualizador de documento)
+    como: No detalhe da factura, clicar no botão 'Factura' junto ao título 'Factura
+      de UTSs'; fechar pelo botão 'Fechar visualizador de documento'.
+    promessa: Abre um modal com separador 'Factura' para visualizar o documento da
+      factura.
+    rota: /uts/factura/{id}
+    casos_documento:
+      - CT-07
+    ressalva: Para o registo de teste, o modal mostra 'Documento não disponível para
+      esta factura.' em vez de uma imagem — comportamento explícito para
+      ausência de documento, sem erro.
+  - id: navegar-prescricoes-da-factura
+    tipo: navegacao
+    nome: Ver prescrições associadas à factura
+    como: No detalhe da factura, clicar no botão 'Prescrições'.
+    promessa: Navega para /uts/prestacao já filtrado pelo Número da Factura,
+      listando as prescrições associadas.
+    rota: /uts/prestacao
+    casos_documento: []
+    ressalva: "Não está descrita como ação neste documento (pertence ao ecrã
+      relacionado 'Prestações de UTS'), mas concretiza a navegação que a secção
+      5.2 do documento dava como bloqueada por falta de massa: FAC-UTS-001 tem 3
+      prescrições associadas nesta massa, contrariando a premissa de '0
+      prescrições/prestações' do documento."
+  - id: ver-detalhe-prestacao-linha
+    tipo: navegacao
+    nome: Ver detalhe da prestação de uma linha da factura
+    como: Na secção 'Linhas da factura', clicar no botão 'Ver detalhe da prestação'
+      de uma linha.
+    promessa: Navega para /uts/prestacao/{id}, ecrã 'Prescrição de UTS' com dados da
+      prescrição (Número, Data, Prescritor, Local, Número Utente) e detalhe de
+      justificação por UTS.
+    rota: /uts/prestacao/{id}
+    casos_documento: []
+    ressalva: Ecrã de destino pertence à área de Prestações de UTS, fora do escopo
+      deste documento; incluído aqui só como navegação disponível a partir de
+      Facturas.
+  - id: voltar-lista
+    tipo: navegacao
+    nome: Voltar à lista de facturas
+    como: No detalhe da factura, clicar no botão 'Voltar'.
+    promessa: Regressa a /uts/factura preservando os filtros e a ordenação da
+      pesquisa anterior.
+    rota: /uts/factura
+    casos_documento:
+      - CT-07
+  - id: navegar-breadcrumb
+    tipo: navegacao
+    nome: Navegar pelo breadcrumb
+    como: No detalhe da factura, clicar no link 'Facturas' do breadcrumb (Consulta
+      por Área de Prestação / Unidades Terapêuticas de Sangue / Facturas).
+    promessa: Regressa a /uts/factura.
+    rota: /uts/factura
+    casos_documento:
+      - CT-07
+    ressalva: Ao contrário do botão 'Voltar', o breadcrumb repõe o ecrã de pesquisa
+      sem os filtros/ordenação anteriores.
+  - id: uts-facturas-contagem-massa-por-prefixo
+    tipo: consulta
+    nome: Pesquisa por prefixo comum nos ecrãs de Facturas e Prestações de UTS, como
+      proxy visual à contagem de BD
+    como: "Nos ecrãs /uts/factura e /uts/prestacao, em vez de indicar o valor exacto
+      de um filtro, preencher apenas o prefixo comum aos identificadores (ex.:
+      'FAC-UTS' em Número da Factura, 'PUTS' em Número Prescrição) e pesquisar;
+      o rodapé da tabela mostra '<n> resultados', dando a contagem total de
+      registos existentes sem necessidade de acesso à BD."
+    promessa: Confirma visualmente quantos registos de facturas e de
+      prescrições/prestações de UTS existem no ambiente, cobrindo o mesmo
+      objectivo das queries de contagem da secção 5 quando a BD não está
+      acessível.
+    rota: /uts/prestacao
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "O acesso à BD não foi possível nesta sessão: scripts/bd.sh depende do
+      contentor docker 'ccmsns-oracle', e o Docker Desktop não está a correr
+      (docker ps falhou com 'failed to connect to the docker API'). Pela via
+      alternativa (contagem por ecrã), a pesquisa por 'FAC-UTS' devolve sempre
+      '1 resultado' (confirma a factura única). Mas a pesquisa por 'PUTS' no
+      ecrã de Prestações devolve '3 resultados' (PUTS-2026-000001/000002/000003)
+      — o que contradiz a afirmação do documento de que as tabelas de
+      prescrições/prestações UTS têm 0 registos. As 3 prescrições pertencem
+      todas à mesma e única factura FAC-UTS-001, pelo que a limitação de massa
+      relevante para paginação/segunda factura mantém-se, mas a contagem de
+      prescrições/prestações do documento parece desactualizada face ao ambiente
+      actual."
+insumos_necessarios:
+  - descricao: Factura de UTS existente com Número da Factura, NIF e Código do
+      Prestador válidos (ex. FAC-UTS-001)
+    obtivel: bd
+    razao: O ecrã é read-only e não tem ação de criação; a massa já existe em QUA (1
+      registo de teste).
+  - descricao: Factura de UTS com Linhas da Factura preenchidas (Descrição UTS,
+      Subsistema Saúde, Nº Utente, Quantidade, Preço Unitário, Nº Prescrição, Nº
+      Fact. Aquisição, Valor)
+    obtivel: bd
+    razao: Já observado 1 registo com 5 linhas nesta massa; não há tela de criação,
+      depende de carga oficial de dados.
+  - descricao: Segunda factura de UTS (ou mais), idealmente em estados diferentes,
+      para validar paginação real e ordenação com múltiplas linhas
+    obtivel: nao
+    razao: Não há tela de criação nem carga adicional disponível no ambiente;
+      depende de carga oficial via circuito de faturação, fora do alcance do
+      testador.
+  - descricao: Factura de UTS com valor de Estado preenchido no catálogo TRCFESTADO
+      (a factura de teste mostra Estado '—')
+    obtivel: bd
+    razao: O campo Estado não é editável na tela; depende do valor trazido pelo
+      registo de BD/carga.
+  - descricao: Factura de UTS com execução de conferência associada, para exercitar
+      uma eventual navegação 'Detalhe conferência'
+    obtivel: nao
+    razao: O botão 'Detalhe conferência' referido no documento não existe nesta
+      versão do ecrã de detalhe; não há ação de tela que produza ou consuma este
+      insumo.
+  - descricao: NIF real de outra área sem facturas UTS (ex. 504134353), para
+      pesquisa sem resultados
+    obtivel: bd
+    razao: Valor já indicado no documento; só requer confirmação de que continua sem
+      facturas UTS associadas.
+  - descricao: Prescrições/prestações associadas a uma factura de UTS, para
+      exercitar o botão 'Prescrições' e a navegação por linha
+    obtivel: bd
+    razao: Já existem 3 prescrições associadas a FAC-UTS-001 nesta massa; casos
+      adicionais (mais prescrições, outras facturas) exigem carga oficial.
+casos_sem_accao:
+  - CT-08
+repescagem:
+  feita_em: 2026-09-03
+  alvos:
+    - alvo: "CT-08: Verificação da limitação de massa (contagens em
+        GESTCONFER.TDCFFACTURAUTS e prescrições/prestações UTS)"
+      procurei:
+        - Tentar correr as queries de contagem da secção 5 (SELECT COUNT(*) FROM
+          GESTCONFER.TDCFFACTURAUTS; contagem de prescrições/prestações UTS)
+          através do runner scripts/bd.sh consultar, usando as credenciais de
+          perfis/bd.env
+        - Verificar se o Docker Desktop e o contentor ccmsns-oracle (exigido por
+          scripts/bd.sh) estavam disponíveis nesta sessão
+        - "Como via alternativa sem BD: pesquisar no ecrã de Facturas de UTS por
+          um prefixo parcial do número ('FAC-UTS', sem completar o número
+          exacto) para contar quantos registos de factura existem"
+        - Pesquisar no ecrã de Prestações de UTS por um prefixo parcial do
+          número de prescrição ('PUTS') para contar quantas
+          prescrições/prestações existem
+        - Abrir o detalhe de cada prescrição encontrada
+          (PUTS-2026-000001/000002/000003) para confirmar a que factura cada uma
+          pertence
+      onde:
+        - scripts/bd.sh consultar "SELECT COUNT(*) FROM
+          GESTCONFER.TDCFFACTURAUTS" + perfis/bd.env (docker exec ccmsns-oracle)
+        - http://localhost:4174/uts/factura?numeroFactura=FAC-UTS
+        - http://localhost:4174/uts/prestacao?numPrescricao=PUTS
+        - http://localhost:4174/uts/prestacao/1, /uts/prestacao/2,
+          /uts/prestacao/3
+      resultado: encontrado
+      accao: uts-facturas-contagem-massa-por-prefixo
+      equivalente_aproximado: true
+      captura: uts-prestacao-3-resultados-ct08.png
+      nota: "O acesso à BD não foi possível nesta sessão: scripts/bd.sh depende do
+        contentor docker 'ccmsns-oracle', e o Docker Desktop não está a correr
+        (docker ps falhou com 'failed to connect to the docker API'). Pela via
+        alternativa (contagem por ecrã), a pesquisa por 'FAC-UTS' devolve sempre
+        '1 resultado' (confirma a factura única). Mas a pesquisa por 'PUTS' no
+        ecrã de Prestações devolve '3 resultados'
+        (PUTS-2026-000001/000002/000003) — o que contradiz a afirmação do
+        documento de que as tabelas de prescrições/prestações UTS têm 0
+        registos. As 3 prescrições pertencem todas à mesma e única factura
+        FAC-UTS-001, pelo que a limitação de massa relevante para
+        paginação/segunda factura mantém-se, mas a contagem de
+        prescrições/prestações do documento parece desactualizada face ao
+        ambiente actual."
+    - alvo: Segunda factura de UTS (ou mais), idealmente em estados diferentes, para
+        validar paginação real e ordenação com múltiplas linhas
+      procurei:
+        - Pesquisar no ecrã de Facturas de UTS por número de factura com o
+          prefixo parcial 'FAC-UTS' (sem indicar o número completo), para ver se
+          existe mais do que uma factura a começar por esse prefixo
+        - Pesquisar com o formulário totalmente vazio para perceber o
+          comportamento nesse caso
+        - Comparar as 3 prescrições/prestações de UTS existentes no ambiente
+          (encontradas ao pesquisar por 'PUTS' no ecrã de Prestações) para ver
+          se alguma delas está associada a uma factura diferente de FAC-UTS-001
+        - Confirmar, a partir do detalhe de cada prescrição (via chamada JSON já
+          carregada pela própria página, GET /ccmsns/api/uts/prestacoes/2 e /3),
+          a que factura cada uma pertence
+        - Tentar aceder à massa em BD (GESTCONFER.TDCFFACTURAUTS) via
+          scripts/bd.sh, para despistar se existe uma segunda factura visível
+          apenas por SQL e não pela tela
+      onde:
+        - http://localhost:4174/uts/factura?numeroFactura=FAC-UTS
+        - http://localhost:4174/uts/factura (pesquisa vazia)
+        - http://localhost:4174/uts/prestacao?numPrescricao=PUTS
+        - http://localhost:4174/uts/prestacao/2 e /uts/prestacao/3
+        - scripts/bd.sh consultar + perfis/bd.env (docker ccmsns-oracle,
+          indisponível nesta sessão)
+      resultado: nao_existe
+      accao: null
+      nota: "A pesquisa por prefixo parcial no ecrã de Facturas devolve sempre '1
+        resultado' (FAC-UTS-001). O ambiente tem, de facto, mais massa do que o
+        documento indica (3 prescrições/prestações de UTS: PUTS-2026-000001,
+        000002 e 000003, com 5 linhas de factura no total), mas todas pertencem
+        à mesma e única factura — não existe uma segunda factura, nem por essa
+        via nem por outra encontrada na tela. O acesso a BD para confirmar de
+        forma independente não foi possível nesta sessão (Docker Desktop parado,
+        sem o contentor ccmsns-oracle que scripts/bd.sh exige). Mantém-se a
+        conclusão da primeira passagem: sem carga oficial adicional, não há
+        segunda factura disponível para testar paginação/ordenação com múltiplas
+        facturas."
+    - alvo: Factura de UTS com execução de conferência associada, para exercitar uma
+        eventual navegação 'Detalhe conferência'
+      procurei:
+        - Abrir o detalhe da factura FAC-UTS-001 (/uts/factura/1) e procurar um
+          botão ou link rotulado Detalhe conferência, Ver conferência, Execução
+          de conferência, Estado de conferência ou similar
+        - Clicar no único botão de acção do cabeçalho da factura, rotulado
+          'Factura', para confirmar se corresponde a essa navegação ou apenas ao
+          modal 'Ver Factura' (visualizador de documento)
+        - "Abrir o detalhe de cada uma das 3 prescrições associadas à factura
+          (Prescrição de UTS: /uts/prestacao/1, /2 e /3, incluindo o botão 'Ver
+          detalhe da prestação' a partir da própria factura) à procura do mesmo
+          botão nesse ecrã irmão"
+        - Revisitar o ecrã irmão Prestações de UTS (/uts/prestacao) pesquisando
+          pelas mesmas prescrições, para ver se o botão vive aí em vez de na
+          Factura
+        - Explorar a secção de menu Conferência > Cockpit para perceber se a
+          ligação à execução de conferência se faz por esse caminho em vez de um
+          botão na ficha da factura
+        - Inspeccionar os pedidos de rede (network requests) feitos pelas
+          páginas de factura e de prestação de UTS à procura de qualquer
+          endpoint relacionado com conferência/execução
+      onde:
+        - http://localhost:4174/uts/factura/1
+        - http://localhost:4174/uts/prestacao/1, /uts/prestacao/2,
+          /uts/prestacao/3
+        - http://localhost:4174/uts/prestacao (lista)
+        - http://localhost:4174/conferencia/cockpit
+        - Network requests capturados pelo browser nas páginas acima (nenhum
+          endpoint /conferencia ou /execucao chamado)
+      resultado: nao_existe
+      accao: null
+      nota: Não existe, em nenhuma destas telas, um botão ou link com o rótulo
+        'Detalhe conferência' ou equivalente. O único botão de acção no
+        cabeçalho da factura e da prescrição chama-se 'Factura' e abre um
+        visualizador de documento ('Ver Factura'), que neste registo mostra
+        sempre 'Documento não disponível para esta factura' (consistente com
+        idDocumentoFactura nulo nas 3 prescrições). Os pedidos de rede das
+        páginas de factura/prestação de UTS não incluem nenhum endpoint de
+        conferência ou execução — isto é apenas um indício, não uma confirmação
+        por código-fonte, mas reforça a hipótese de que a navegação não existe
+        nesta versão. O Cockpit de Conferência é um ecrã genérico organizado por
+        Ciclo, sem pesquisa directa por factura ou prestação, pelo que não
+        constitui um caminho alternativo viável para chegar a este insumo a
+        partir da factura de UTS.

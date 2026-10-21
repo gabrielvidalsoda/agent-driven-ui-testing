@@ -1,0 +1,389 @@
+documento: gestao-armazem/libertar-arquivo-temporario.md
+rota: /armazem/libertar-arquivo-temporario
+mapeado_em: 2026-09-02, exploração manual via browser (Playwright) em
+  http://localhost:4174/armazem/libertar-arquivo-temporario, sessão como
+  Manta/PRRmanta_dev
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: A01
+    tipo: consulta
+    nome: Histórico de libertações
+    como: "Ecrã principal /armazem/libertar-arquivo-temporario: tabela com contagem
+      '0 libertações' e estado vazio 'Sem libertações / Não há libertações para
+      os filtros selecionados'. Chama GET
+      /ccmsns/api/armazem/libertacoes-arquivo-temporario."
+    promessa: "Cabeçalho: 'Histórico de libertações. Exporte o relatório de uma
+      libertação para o operador remover fisicamente as caixas, ou inicie uma
+      nova libertação.'"
+    rota: /armazem/libertar-arquivo-temporario
+    casos_documento:
+      - CT-01
+    ressalva: Ambiente sem libertações registadas; só foi possível confirmar o
+      estado vazio, não as colunas preenchidas (data, faixa, área, nº caixas,
+      supervisor) nem a ordenação por data.
+  - id: A02
+    tipo: filtro
+    nome: Filtro de Área no histórico
+    como: Combobox 'Área' no histórico; abri o dropdown.
+    promessa: Rótulo 'Área' com opção por omissão 'Todas'.
+    rota: /armazem/libertar-arquivo-temporario
+    entradas:
+      - campo: Área
+        obrigatorio: false
+        origem_valores: Lista dinâmica — no ambiente atual (sem libertações) só oferece
+          'Todas'; presume-se que populem com as áreas distintas das libertações
+          existentes.
+    casos_documento:
+      - CT-02
+    equivalente_aproximado: true
+    ressalva: Sem libertações no ambiente, o combobox só mostra 'Todas'; não foi
+      possível confirmar o comportamento com múltiplas áreas nem libertações
+      multiárea.
+  - id: A03
+    tipo: filtro
+    nome: Filtro de datas no histórico (De / Até)
+    como: Dois campos de texto com placeholder DD/MM/YYYY, cada um com botão que
+      abre um calendário (mês/ano navegável); botão 'Limpar' repõe os filtros.
+    promessa: Rótulos 'De' e 'Até' ao lado do filtro de Área, com botão 'Limpar'.
+    rota: /armazem/libertar-arquivo-temporario
+    entradas:
+      - campo: De
+        obrigatorio: false
+        origem_valores: Calendário popup ou digitação DD/MM/YYYY
+      - campo: Até
+        obrigatorio: false
+        origem_valores: Calendário popup ou digitação DD/MM/YYYY
+    ressalva: Não há CT dedicado a este filtro no documento; só CT-02 fala de filtro
+      de área.
+  - id: A04
+    tipo: navegacao
+    nome: Nova libertação
+    como: Botão 'Nova libertação' no topo do histórico; navega para
+      /armazem/libertar-arquivo-temporario/nova.
+    promessa: Rótulo do botão 'Nova libertação'.
+    rota: /armazem/libertar-arquivo-temporario/nova
+  - id: A05
+    tipo: navegacao
+    nome: Voltar ao histórico
+    como: Botão 'Voltar ao histórico' no ecrã de Nova Libertação; regressa a
+      /armazem/libertar-arquivo-temporario.
+    promessa: Rótulo do botão 'Voltar ao histórico'.
+    rota: /armazem/libertar-arquivo-temporario
+  - id: A06
+    tipo: consulta
+    nome: Pesquisar faixa de localizações
+    como: Campos 'Localização Inicial' e 'Localização Final' (texto numérico, filtra
+      letras ao digitar, máscara limita a 4 dígitos) + botão 'Pesquisar'. Chama
+      GET
+      /ccmsns/api/armazem/arquivo-temporario/caixas?localizacaoInicio=&localizacaoFim=.
+    promessa: "Placeholder 'Ex.: 1800' / 'Ex.: 1950'; mensagem de validação
+      observada: 'A localização inicial não pode ser superior à final.'"
+    rota: /armazem/libertar-arquivo-temporario/nova
+    entradas:
+      - campo: Localização Inicial
+        obrigatorio: true
+        origem_valores: Texto livre numérico, só dígitos aceites, máscara limita a 4 caracteres
+      - campo: Localização Final
+        obrigatorio: true
+        origem_valores: Texto livre numérico, só dígitos aceites, máscara limita a 4 caracteres
+    casos_documento:
+      - CT-03
+      - CT-04
+    ressalva: "Confirmado: faixa invertida (1100/800) é bloqueada com mensagem
+      clara; letras (ex. '8AB') são filtradas já na digitação, não chegam a ser
+      submetidas; mais de 4 dígitos é truncado pela máscara do campo. Faixa
+      válida 800-1100 devolveu 10 caixas reais, incluindo C08130 (loc. 0842) e
+      C08182 (loc. 1006), como esperado no documento."
+  - id: A07
+    tipo: filtro
+    nome: Pesquisa local na grelha (caixa ou localização)
+    como: Campo de texto 'Localizar caixa ou localização…' acima da grelha; filtra
+      as linhas visíveis em memória (sem nova chamada à API).
+    promessa: Placeholder 'Localizar caixa ou localização…'.
+    rota: /armazem/libertar-arquivo-temporario/nova
+    entradas:
+      - campo: Localizar caixa ou localização
+        obrigatorio: false
+        origem_valores: Texto livre; testado com código de caixa exato (C08130),
+          devolveu 1 linha
+    casos_documento:
+      - CT-05
+  - id: A08
+    tipo: edicao
+    nome: Seleção de caixas na grelha (checkbox individual, cabeçalho, 'Selecionar
+      tudo', 'Limpar seleção')
+    como: Checkbox por linha; checkbox de cabeçalho 'Selecionar/limpar os
+      filtrados'; botões 'Selecionar tudo' e 'Limpar seleção'; contador 'X de Y
+      selecionadas' (mais '· N no filtro' quando o filtro local está ativo).
+    promessa: Contador de seleção e rótulo dinâmico do botão 'Libertar Arquivo
+      Temporário (N)'.
+    rota: /armazem/libertar-arquivo-temporario/nova
+    casos_documento:
+      - CT-05
+      - CT-07
+    ressalva: "Confirmado: (1) a pesquisa inicial já vem com todas as 10 caixas
+      pré-selecionadas; (2) com o filtro local ativo (1 caixa visível),
+      desmarcar o checkbox de cabeçalho só desselecionou essa 1 caixa (10→9),
+      respeitando o filtro, exatamente como o CT-05 espera; (3) a seleção
+      persiste ao mudar de página e ao limpar o filtro (manteve 9 de 10,
+      incluindo a caixa da página 2)."
+  - id: A09
+    tipo: navegacao
+    nome: Paginação da grelha de caixas
+    como: Botões '‹ Anterior' / 'Próxima ›' e texto 'Página X de Y' abaixo da tabela.
+    promessa: Texto 'Página 1 de 2' / 'Página 2 de 2' com botões desativados nos
+      extremos.
+    rota: /armazem/libertar-arquivo-temporario/nova
+    casos_documento:
+      - CT-04
+      - CT-05
+  - id: A10
+    tipo: criacao
+    nome: Libertar Arquivo Temporário
+    como: Botão 'Libertar Arquivo Temporário (N)' abaixo da grelha; abre modal de
+      confirmação com botões 'Cancelar' e 'Confirmar libertação'.
+    promessa: "Modal: 'Vai libertar N caixa(s) do arquivo temporário (localizações
+      XXXX a YYYY). As caixas são movidas para o Arquivo Definitivo e as
+      localizações libertadas. Confirmar?'"
+    rota: /armazem/libertar-arquivo-temporario/nova
+    casos_documento:
+      - CT-06
+      - CT-07
+    ressalva: "NÃO EXECUTADA (ação irreversível, fora do âmbito desta passagem).
+      Observado sem confirmar: (1) com seleção >0, abre modal com o texto acima
+      e o botão não fica desabilitado; (2) com 0 caixas selecionadas, o botão
+      continua clicável (não fica disabled) mas ao clicar NÃO abre o modal —
+      mostra mensagem inline 'Selecione pelo menos uma caixa.' junto ao botão.
+      Isto satisfaz a intenção do CT-07 ('sem operação vazia') mas por um
+      mecanismo diferente do que o documento presumia ('botão inativo').
+      Novidade relevante para o cruzamento: o texto do modal fala em mover as
+      caixas para o 'Arquivo Definitivo', enquanto o documento e o texto de
+      ajuda do histórico descrevem a libertação como preparação para remoção
+      física pelo operador — os dois discursos (mover para Arquivo Definitivo
+      vs. liberar para remoção física) convivem no mesmo ecrã e merecem
+      esclarecimento."
+  - id: A11
+    tipo: exportacao
+    nome: Exportar relatório de uma libertação
+    como: "Não observado diretamente: o histórico está vazio no ambiente (0
+      libertações), pelo que nenhuma linha com ação de exportar chegou a ser
+      renderizada."
+    promessa: "Texto de ajuda do cabeçalho do histórico: 'Exporte o relatório de uma
+      libertação para o operador remover fisicamente as caixas'."
+    rota: /armazem/libertar-arquivo-temporario
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: A promessa foi lida apenas do texto de ajuda da página, não de um
+      botão/ícone visível na grelha, porque não existe nenhuma linha de
+      histórico no ambiente para revelar esse controlo. Só é observável depois
+      de uma libertação real ser confirmada (ação irreversível, não executada
+      nesta passagem).
+insumos_necessarios:
+  - descricao: Caixas de teste em arquivo temporário, numa faixa de localizações
+      dedicada (10+ caixas), distinta de C08130 (loc. 0842) e C08182 (loc. 1006)
+    obtivel: tela
+    razao: Existe o ecrã 'Transferência para Arquivo Temporário' no mesmo menu
+      (Gestão de Armazém) para arquivar caixas; não testado nesta passagem por
+      não fazer parte do ecrã em análise.
+  - descricao: Utilizador com perfil de supervisor para executar a libertação
+    obtivel: tela
+    razao: Já usado nesta exploração (Manta / PRRmanta_dev); o perfil efetivo
+      associado não foi confirmado por não haver indicação de papel visível no
+      ecrã.
+  - descricao: Utilizador com perfil de operador (sem permissão de supervisor), para
+      validar RBAC (CT-08)
+    obtivel: nao
+    razao: Não há segunda credencial disponível nesta sessão nem ecrã de troca de
+      perfil; depende de um segundo utilizador fora do alcance desta exploração.
+  - descricao: Libertações já executadas em pelo menos duas áreas distintas, para
+      exercer o filtro de Área do histórico com dados reais e casos multiárea
+      (CT-02)
+    obtivel: tela
+    razao: Requer confirmar libertações reais (ação irreversível de A10) sobre
+      caixas de áreas diferentes; não executado nesta passagem por ser
+      destrutivo.
+  - descricao: Segunda sessão/utilizador supervisor em paralelo, a operar a mesma
+      faixa de localizações, para o cenário de concorrência (CT-10)
+    obtivel: nao
+    razao: Exige duas sessões simultâneas com o mesmo acesso; não disponível nesta
+      exploração de um único browser/sessão.
+  - descricao: Confirmação por SQL (read-only) da faixa de localizações livre de
+      conflito com trabalhos de outras equipas antes de escolher a faixa de
+      teste dedicada
+    obtivel: bd
+    razao: O documento recomenda validar por SQL a massa de
+      GESTARMAZEM.TDCAIXA/TRPRATELEIRA antes de qualquer libertação real; não
+      executado nesta passagem (sem SQLcl configurado no ambiente desta
+      análise).
+  - descricao: Volume de histórico com milhares de libertações, para testar
+      desempenho/paginação do histórico a escala realista
+    obtivel: nao
+    razao: O próprio documento marca isto como fora do âmbito da primeira sessão,
+      dependente de carga dedicada.
+casos_sem_accao:
+  - CT-08
+  - CT-10
+repescagem:
+  feita_em: 2026-09-02
+  alvos:
+    - alvo: "CT-08: RBAC - operador sem perfil de supervisor"
+      procurei:
+        - Botão/dropdown de troca de conta ou perfil junto ao avatar do
+          utilizador (Manta / PRRmanta_dev)
+        - Conteúdo de localStorage, sessionStorage e document.cookie, para ver
+          se o papel do utilizador está exposto e comutável no browser
+        - Um selector de perfil 'Perfil (demo)' (Operador/Supervisor) encontrado
+          na tela de Transferência para Arquivo Temporário, testando se altera o
+          comportamento de Libertar Arquivo Temporário
+        - Acesso direto por URL a /armazem/libertar-arquivo-temporario e
+          /armazem/libertar-arquivo-temporario/nova, para ver se surge um ecrã
+          de acesso negado com a sessão atual
+        - Regex 'perfil|permiss|supervisor|operador' nas 8 telas da secção
+          Gestão de Armazém
+      onde:
+        - http://localhost:4174/armazem/libertar-arquivo-temporario (área do
+          avatar; acesso direto)
+        - http://localhost:4174/armazem/libertar-arquivo-temporario/nova (acesso
+          direto)
+        - http://localhost:4174/armazem/transferencia-arquivo-temporario
+          (selector 'Perfil (demo)')
+        - localStorage/sessionStorage/cookies via avaliação JS no browser
+        - http://localhost:4174/armazem/associacao-caixa,
+          /gestao-armazem/faturas-incidencia, /arquivo, /picking-expedicao,
+          /armazem/preparacao, /armazem/guia-anf, /armazem/registo-entrada
+      resultado: nao_existe
+      accao: null
+      nota: "O único utilizador desta sessão é 'Manta' (PRRmanta_dev); não há dropdown
+        de conta, só o botão 'Sair'. localStorage, sessionStorage e cookies
+        estão vazios (sessão não expõe token/role manipulável no cliente). A
+        única coisa parecida com um seletor de perfil em toda a secção é 'Perfil
+        (demo)' (Operador/Supervisor) na tela de Transferência para Arquivo
+        Temporário — testei mudar para 'Supervisor': não dispara nenhuma chamada
+        de rede (só o pedido habitual de contadores de aprovações, sem relação)
+        e não persiste ao navegar para Libertar Arquivo Temporário (o controlo
+        nem existe lá); é estado local dessa página, não afeta em nada a tela
+        alvo. O acesso direto às rotas de Libertar Arquivo Temporário com a
+        sessão atual não mostrou qualquer ecrã de bloqueio - esta conta já opera
+        com plenos poderes. Confirma a conclusão da primeira passagem: não há
+        forma, nesta sessão, de operar como operador sem permissão de
+        supervisor."
+    - alvo: "CT-10: concorrência entre dois supervisores na mesma faixa de
+        localizações"
+      procurei:
+        - Indicadores de edição concorrente, bloqueio otimista ou conflito ('em
+          uso por', 'bloqueado', 'conflito') em toda a secção Gestão de Armazém
+        - Botão de atualizar/revalidar a grelha de caixas na tela Nova Libertação
+        - Pesquisa real da faixa 800-1100 na Nova Libertação, para ver se a
+          grelha exibe algum aviso de 'já libertada por outro utilizador' ou
+          marca de tempo de verificação
+        - Regex 'bloque|conflito|concorren|em uso por' nas 8 telas da secção
+        - Mecanismo de segunda sessão/utilizador supervisor em paralelo (ver
+          alvo de insumo relacionado, mesma conclusão)
+      onde:
+        - http://localhost:4174/armazem/libertar-arquivo-temporario/nova
+          (pesquisa da faixa 800-1100, grelha de 10 caixas)
+        - http://localhost:4174/armazem/associacao-caixa,
+          /gestao-armazem/faturas-incidencia, /arquivo, /picking-expedicao,
+          /armazem/preparacao, /armazem/guia-anf, /armazem/registo-entrada,
+          /armazem/transferencia-arquivo-temporario
+      resultado: nao_existe
+      accao: null
+      nota: Nenhuma das 8 telas mostra aviso de edição concorrente, bloqueio otimista,
+        ou necessidade de refrescar antes de submeter. A grelha da Nova
+        Libertação para a faixa 800-1100 (10 caixas, 2 páginas) não tem qualquer
+        marca de 'em uso' ou conflito. Sem segunda credencial de supervisor
+        disponível e sem mecanismo de troca de perfil que persista entre telas
+        (ver insumo relacionado), não há como esta exploração de uma única
+        sessão/browser reproduzir duas execuções simultâneas sobre a mesma
+        faixa. Confirma a conclusão da primeira passagem.
+    - alvo: Utilizador com perfil de operador (sem permissão de supervisor), para
+        validar RBAC (CT-08)
+      procurei:
+        - Ecrã de troca de conta/perfil, dropdown do avatar do utilizador atual
+        - localStorage, sessionStorage, cookies do browser à procura de um papel
+          comutável
+        - "Selector 'Perfil (demo)' (Operador/Supervisor) na tela de
+          Transferência para Arquivo Temporário: testado clique em 'Supervisor',
+          verificado via browser_network_requests se dispara alguma chamada de
+          API, e verificado se o valor sobrevive à navegação para Libertar
+          Arquivo Temporário"
+        - Campo de 'Identificação do operador / crachá' na tela de Preparação,
+          para ver se essa identificação concede/nega acesso a outras telas
+        - Regex 'perfil|permiss|supervisor|operador' nas 8 telas relacionadas
+      onde:
+        - http://localhost:4174/armazem/libertar-arquivo-temporario
+        - "http://localhost:4174/armazem/transferencia-arquivo-temporario
+          (Perfil (demo): Operador/Supervisor)"
+        - http://localhost:4174/armazem/preparacao (Identificação do operador /
+          crachá)
+        - http://localhost:4174/armazem/associacao-caixa,
+          /gestao-armazem/faturas-incidencia, /arquivo, /picking-expedicao,
+          /armazem/guia-anf, /armazem/registo-entrada
+      resultado: nao_existe
+      accao: null
+      nota: "O selector 'Perfil (demo)' (Operador/Supervisor) da tela de Transferência
+        para Arquivo Temporário é o candidato mais próximo, mas confirmei que é
+        estado puramente local dessa página: não dispara chamada de rede ao
+        mudar de opção e não persiste nem aparece ao navegar para Libertar
+        Arquivo Temporário. Não serve como forma de obter uma sessão com perfil
+        de operador para este ecrã. O crachá de operador na tela de Preparação
+        identifica quem opera aquela estação partilhada, mas não é um mecanismo
+        de autenticação/autorização que se propague a Libertar Arquivo
+        Temporário. Não há, dentro desta exploração de sessão única, forma de
+        obter um utilizador com perfil de operador restrito para o ecrã alvo —
+        segue por confirmar a conclusão da primeira passagem, precisa de um
+        segundo utilizador/credencial fora do alcance desta sessão."
+    - alvo: Segunda sessão/utilizador supervisor em paralelo, a operar a mesma faixa
+        de localizações, para o cenário de concorrência (CT-10)
+      procurei:
+        - Ecrã ou mecanismo de troca de conta/perfil que permitisse simular um
+          segundo utilizador supervisor na mesma sessão de browser
+        - Segunda aba/sessão simultânea com a mesma conta, à procura de aviso de
+          sessão duplicada ou de bloqueio de recurso partilhado
+        - Indicadores de lock/edição concorrente na grelha da Nova Libertação e
+          nas restantes telas da secção
+        - Regex 'concorren|bloque|conflito|em uso por' nas 8 telas relacionadas
+      onde:
+        - http://localhost:4174/armazem/libertar-arquivo-temporario/nova
+        - http://localhost:4174/armazem/associacao-caixa,
+          /gestao-armazem/faturas-incidencia, /arquivo, /picking-expedicao,
+          /armazem/preparacao, /armazem/guia-anf, /armazem/registo-entrada,
+          /armazem/transferencia-arquivo-temporario
+      resultado: nao_existe
+      accao: null
+      nota: Não existe, em nenhuma das telas da secção, um mecanismo de troca de
+        perfil que sobreviva à navegação (o único encontrado, 'Perfil (demo)' em
+        Transferência para Arquivo Temporário, é local a essa página e não gera
+        nenhuma credencial de sessão). Sem essa credencial não é possível abrir
+        uma segunda sessão supervisor autenticada dentro desta exploração de um
+        único browser. Confirma a conclusão da primeira passagem.
+    - alvo: Volume de histórico com milhares de libertações, para testar
+        desempenho/paginação do histórico a escala realista
+      procurei:
+        - Funcionalidade de importação/carga em massa (import, carga, seed) em
+          todas as 8 telas da secção Gestão de Armazém
+        - Botão de geração de dados de teste ou modo demo com volume elevado
+        - Se seria viável obter o volume por uso legítimo repetido do fluxo real
+          (Transferência para Arquivo Temporário seguida de Libertar Arquivo
+          Temporário) em escala de milhares
+        - Regex 'import|carga|seed' nas 8 telas relacionadas
+      onde:
+        - http://localhost:4174/armazem/libertar-arquivo-temporario e /nova
+        - http://localhost:4174/armazem/associacao-caixa,
+          /gestao-armazem/faturas-incidencia, /arquivo, /picking-expedicao,
+          /armazem/preparacao, /armazem/guia-anf, /armazem/registo-entrada,
+          /armazem/transferencia-arquivo-temporario
+      resultado: nao_existe
+      accao: null
+      nota: "Nenhuma das 8 telas da secção tem funcionalidade de importação, carga em
+        massa ou geração de dados de demonstração. A única via teórica seria
+        repetir manualmente o fluxo real (pistolar caixas para arquivo
+        temporário e depois libertá-las) milhares de vezes, o que é impraticável
+        numa exploração normal, ou uma carga dedicada diretamente na base de
+        dados — e o próprio plano (§2) restringe o acesso à BD desta exploração
+        a leitura estrita, proibindo DML/DDL. Confirma a conclusão da primeira
+        passagem: fica dependente de carga dedicada fora do âmbito desta
+        sessão."

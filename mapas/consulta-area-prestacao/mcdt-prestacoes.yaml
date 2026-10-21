@@ -1,0 +1,352 @@
+documento: consulta-area-prestacao/mcdt-prestacoes.md
+rota: /mcdts/prescricao
+mapeado_em: 2026-09-03
+mapeado_contra:
+  ui: origin/develop 8e570ce, build de 2026-09-02
+  api: jar de origin/develop 0c4e07d, construido a 2026-09-02
+accoes:
+  - id: filtro-numero-factura
+    tipo: filtro
+    nome: Pesquisar por Número da Factura
+    como: Preencher o campo 'Número da Factura' e clicar em Pesquisar.
+    promessa: Placeholder 'Insira o número da factura'; segundo a mensagem de
+      validação do formulário, este é o único campo que basta preencher sozinho
+      para pesquisar.
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: "texto livre — espera o número comercial da fatura (ex.:
+          FTLFLPNF2025-105), não o ID interno"
+    casos_documento:
+      - CT-01
+      - CT-03
+    equivalente_aproximado: true
+    ressalva: O documento identifica a factura de referência pelo identificador
+      interno 1036726 (secção 5, 'factura 1036726'). Pesquisar literalmente por
+      '1036726' neste campo devolve 'Nenhum resultado encontrado...'; só devolve
+      resultados (178) com o número comercial 'FTLFLPNF2025-105', que só se
+      descobre por drill a partir do detalhe ou da API. A API devolve
+      facturaId=1036726 e numeroFactura='FTLFLPNF2025-105' como campos
+      distintos.
+  - id: filtro-numero-lote
+    tipo: filtro
+    nome: Pesquisar por Número de Lote
+    como: Preencher 'Número de Lote'. Sozinho é recusado pela validação — tem de vir
+      acompanhado de Data da Factura.
+    promessa: Placeholder 'Insira o número do lote'.
+    entradas:
+      - campo: Número de Lote
+        obrigatorio: false
+        origem_valores: "texto livre — compara com o 'Nº lote' de negócio exibido na
+          grelha/detalhe (ex.: '1'), não com o loteId interno"
+    casos_documento:
+      - CT-01
+    equivalente_aproximado: true
+    ressalva: O documento usa 'lote 9673174' como identificador (secção 2 e 5), mas
+      esse é o loteId interno — o mesmo valor que aparece na URL de drill
+      (/mcdts/lote/9673174). A grelha e o detalhe mostram 'Nº lote' = '1' para
+      os mesmos registos (campo de negócio 'numeroLote' da API, distinto de
+      'loteId'). Pesquisar com 9673174 neste campo (mesmo combinado com Número
+      da Factura) devolve 'Nenhum resultado encontrado...'; só com '1' (+ um
+      critério do grupo) os registos aparecem.
+  - id: filtro-data-factura
+    tipo: filtro
+    nome: Selecionar Data da Factura
+    como: Abrir o calendário (ícone) e clicar no dia pretendido; existe navegação
+      por mês, atalho 'Selecionar ano' e botão 'Limpar data' depois de
+      preenchido.
+    promessa: Placeholder 'DD/MM/YYYY'; é um dos critérios do grupo que, combinado
+      com NIF/Convenção/Lote/Área, satisfaz a validação mínima.
+    entradas:
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: seleção no calendário (dd/mm/aaaa)
+    casos_documento:
+      - CT-01
+      - CT-06
+      - CT-07
+    ressalva: Escrever a data diretamente no campo de texto (testado com fill() e
+      também carácter-a-carácter) não preenche o valor — o campo permanece vazio
+      e a pesquisa é recusada com a mensagem de critérios mínimos. Só funciona
+      selecionando o dia no calendário.
+  - id: filtro-nif-prestador
+    tipo: filtro
+    nome: Pesquisar por NIF Prestador
+    como: Preencher 'NIF Prestador' combinado com Data da Factura e clicar em
+      Pesquisar.
+    promessa: Placeholder 'Insira o NIF Prestador'; parte do grupo de critérios
+      combináveis com a data.
+    entradas:
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre — NIF
+    casos_documento:
+      - CT-06
+    ressalva: "Testado com NIF 501319956 + Data 31/10/2025: devolveu os mesmos 178
+      resultados que a pesquisa isolada por Número da Factura, ou seja, funciona
+      como esperado quando combinado com a data."
+  - id: filtro-codigo-convencao
+    tipo: filtro
+    nome: Pesquisar por Código da Convenção
+    como: Preencher 'Código da Convenção' combinado com Data da Factura e clicar em
+      Pesquisar.
+    promessa: Placeholder 'Insira o código da convenção'; parte do grupo de
+      critérios combináveis com a data.
+    entradas:
+      - campo: Código da Convenção
+        obrigatorio: false
+        origem_valores: texto livre — código de convenção
+    casos_documento:
+      - CT-06
+    ressalva: "Testado com '01532M21N' + Data 31/10/2025: devolveu os mesmos 178
+      resultados, comportamento consistente com NIF e Número da Factura."
+  - id: filtro-area-prestacao
+    tipo: filtro
+    nome: Filtrar por Área da Prestação
+    como: Abrir o combobox 'Área da Prestação' e escolher uma opção; combinado com
+      Data da Factura e Pesquisar. Uma vez escolhida uma área, não há opção
+      'Selecione' na lista para voltar ao vazio — só o botão 'Limpar' do
+      formulário inteiro reinicia o campo.
+    promessa: Combobox com 16 opções (Análises Clínicas, Anatomia Patológica,
+      Cardiologia, Medicina Nuclear, Electroencefalografia, Endoscopia
+      Gastroent., Medicina Física e Reabilit., Otorrinolaringologia, Pneumo e
+      Imunoalerg., Urologia, Neurofisiologia, Radiologia, Consultas, Psicologia,
+      Análises Clínicas - Atos não Convencionados, IPATIMUP), correspondendo à
+      promessa do documento de refletir o catálogo TRAREAMCDT.
+    entradas:
+      - campo: Área da Prestação
+        obrigatorio: false
+        origem_valores: GET /ccmsns/api/mcdt/areas — 16 opções carregadas da API
+    casos_documento:
+      - CT-06
+    ressalva: "Testado 'Radiologia' (código enviado na URL: areaPrestacao=M) + Data
+      31/10/2025: devolveu 0 resultados para os registos usados neste
+      mapeamento, porque esses registos têm 'Área prestação' nula tanto na
+      grelha ('—') como na API (codAreaPrestacao=null). Não foi possível
+      confirmar neste ambiente um registo com área preenchida; não valida a
+      correspondência letra-a-letra A a Y do documento."
+  - id: filtro-numero-requisicao
+    tipo: filtro
+    nome: Pesquisar por Número da Requisição
+    como: Preencher 'Número da Requisição' (até 19 carateres) e clicar em Pesquisar;
+      funciona isolado.
+    promessa: Placeholder 'Insira o número da requisição'; campo com maxlength=19,
+      coerente com requisições de 19 dígitos.
+    entradas:
+      - campo: Número da Requisição
+        obrigatorio: false
+        origem_valores: texto livre, até 19 carateres
+    casos_documento:
+      - CT-02
+      - CT-07
+      - CT-09
+    ressalva: "Testado com '1001000015779658404' (19 dígitos): encontrou exatamente
+      a prestação 312988558 esperada, com o valor 34,42 igual ao documento.
+      Testado com '9999999999999999999' (inexistente): devolveu 'Nenhum
+      resultado encontrado...' sem truncar o número na URL. Não foi testado
+      colar o valor com espaços à volta (tolerância a espaços acidentais,
+      mencionada no CT-02)."
+  - id: filtro-linha-rsp
+    tipo: filtro
+    nome: Pesquisar por Nº Linha RSP
+    como: Preencher 'Nº Linha RSP' e clicar em Pesquisar; funciona isolado (não
+      exige combinação).
+    promessa: Placeholder 'Insira o número da Linha RSP'.
+    entradas:
+      - campo: Nº Linha RSP
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-09
+    ressalva: "O campo tem maxlength=20 no DOM. A Linha RSP real observada no
+      detalhe de um registo tem 22 carateres (ex.: '1001000015779658400001'); o
+      campo truncou silenciosamente para os primeiros 20
+      ('10010000157796584000') e a pesquisa devolveu 0 resultados. Não é
+      possível, através da UI, pesquisar pelo valor completo de uma Linha RSP
+      com mais de 20 carateres — coincide com o risco já sinalizado no documento
+      (secção 6: 'confirmar o formato real e a semântica do filtro')."
+  - id: accao-pesquisar-validacao
+    tipo: consulta
+    nome: Submeter pesquisa / validação de critérios mínimos
+    como: Clicar em Pesquisar sem preencher nada, ou preenchendo isoladamente um
+      campo do grupo dependente (Data, NIF, Convenção, Lote ou Área sem os
+      outros).
+    promessa: 'Alerta: "Deverá estar preenchido, pelo menos, um dos seguintes
+      critérios: número da factura; ou data da factura com NIF do prestador,
+      código da convenção, número de lote ou área da prestação; ou número da
+      requisição; ou nº linha RSP."'
+    casos_documento:
+      - CT-09
+  - id: accao-limpar-formulario
+    tipo: filtro
+    nome: Limpar filtros
+    como: Clicar em 'Limpar'.
+    promessa: Botão 'Limpar' junto a 'Pesquisar'; repõe todos os campos, incluindo o
+      combobox 'Área da Prestação' de volta a 'Selecione'.
+    casos_documento: []
+  - id: consulta-listagem-resultados
+    tipo: consulta
+    nome: Listar resultados da pesquisa
+    como: Após uma pesquisa válida, a grelha 'Resultados da Pesquisa' apresenta as
+      linhas encontradas.
+    promessa: "Colunas: Cód. Convenção, NIF Prestador, Descrição, Nº da Factura,
+      Data Factura, Área prest., Nº lote, Nº requisição, Total (Comunicado),
+      Total sem taxa (Comunicado), Total domicílios (Comunicado), Total
+      (Apurado), Total sem taxa (Apurado), Total domicílios (Apurado), mais a
+      ação 'Ver detalhe' por linha. Estado vazio: 'Nenhum resultado
+      encontrado...'."
+    casos_documento:
+      - CT-01
+      - CT-05
+      - CT-09
+    ressalva: A grelha não tem coluna explícita 'Taxa moderadora' (só é vista no
+      detalhe da prestação); nos registos testados, os valores '0,00' aparecem
+      formatados corretamente (não vazios/null), consistente com o CT-05. Existe
+      uma barra '0 itens selecionados' / 'Limpar seleção' acima da tabela, mas
+      não há checkboxes nas linhas nem no cabeçalho — parece um componente de
+      seleção partilhado sem função nesta grelha.
+  - id: accao-ordenar-colunas
+    tipo: consulta
+    nome: Ordenar por coluna
+    como: "Clicar no cabeçalho de uma coluna (ex.: 'Ordenar por Total
+      (Comunicado)')."
+    promessa: Cada cabeçalho de coluna tem o rótulo acessível 'Ordenar por <coluna>'
+      e cursor de clique, prometendo reordenar os resultados.
+    casos_documento: []
+    ressalva: "Testado no cabeçalho 'Total (Comunicado)' com 178 resultados: o
+      clique não disparou nova chamada à API (só existe o pedido inicial da
+      pesquisa) nem alterou a ordem das linhas visíveis (14,50 / 23,17 / 7,00 /
+      9,29 / 23,22 / ... manteve-se igual antes e depois do clique). A promessa
+      do rótulo não parece ter efeito observável."
+  - id: accao-paginacao
+    tipo: navegacao
+    nome: Paginar resultados / alterar resultados por página
+    como: Usar a navegação de páginas (primeira, anterior, números, seguinte,
+      última) e/ou o combobox 'Resultados por página'.
+    promessa: Paginação server-side (parâmetros 'pagina' e 'tamanho' na URL);
+      combobox 'Resultados por página' com opções 10, 15, 20, 50; contador '<n>
+      resultados'.
+    casos_documento:
+      - CT-01
+    ressalva: "Testado com 178 resultados: 18 páginas de 10, numeração com
+      reticências a partir da página 7 até à 18, coerente com o volume."
+  - id: accao-exportar-xlsx
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Após uma pesquisa com resultados, clicar em 'Exportar XLSX'. Fica
+      desabilitado sem resultados.
+    promessa: Botão 'Exportar XLSX' no cabeçalho da secção de resultados.
+    casos_documento:
+      - CT-08
+    ressalva: "Ficheiro 'prestacoes-mcdt.xlsx' descarregado e inspecionado: a coluna
+      de 'Nº requisição' é gravada como célula de texto (inlineStr), ex.
+      '1001000016682751404', preservando os 19 dígitos sem truncar e sem notação
+      científica — coerente com a expectativa do CT-08. O NIF Prestador surge
+      formatado com espaços ('501 319 956') no XLSX, diferente da grelha do ecrã
+      ('501319956')."
+  - id: consulta-detalhe-prestacao
+    tipo: consulta
+    nome: Ver detalhe da prestação (página corrida)
+    como: Clicar em 'Ver detalhe' numa linha da grelha, ou aceder diretamente a
+      /mcdts/prestacoes/{id} (deep link funciona).
+    promessa: "Página corrida com as secções: 'Prescrição de MCDTs' (Dados da
+      Prescrição), 'Prestação de MCDTs' (Dados da Prestação), 'Informação
+      Comunicada', 'Informação Conferida', 'Detalhe da prescrição', 'Detalhe da
+      prestação', 'Erros'."
+    rota: /mcdts/prestacoes/{id}
+    casos_documento:
+      - CT-03
+      - CT-04
+      - CT-05
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: "O documento (secção 1 e CT-04) espera, pela ordem, 8 secções: Dados
+      da Prescrição, Localização dos arquivos, Dados da Prestação, Informação
+      Comunicada, Informação Conferida, Detalhe Prescrição/Prestação, Erros,
+      Reclamações. A tela real tem apenas 7 blocos e faltam por completo as
+      secções 'Localização dos arquivos' e 'Reclamações' — não há nenhum heading
+      nem texto com essas palavras na página (confirmado por busca full-text).
+      Testado com a prestação 312988558: requisição, data de prestação
+      (03/05/2025), NIF, convenção, factura e valores (34,42) batem certo com a
+      massa do documento (secção 5, Q1)."
+  - id: accao-ver-prestacao-imagem
+    tipo: consulta
+    nome: Ver Prestação (imagem digitalizada)
+    como: Botão 'Ver Prestação' no topo do detalhe, junto ao título 'Prescrição de
+      MCDTs'.
+    promessa: Ícone de 'olho' (view); pelo nome e posição, parece ser a ação de
+      'visualizar a imagem digitalizada' referida na secção 1 do documento.
+    rota: /mcdts/prestacoes/{id}
+    casos_documento: []
+    ressalva: "No único registo exercitado (312988558) o botão está desabilitado; a
+      API devolve 'guidDocumento': null para essa prestação, sugerindo que o
+      botão só fica ativo quando existe imagem associada. Não foi possível
+      localizar, nesta passagem, um registo com guidDocumento preenchido para
+      exercer a ação a sério."
+  - id: navegacao-drill-lote
+    tipo: navegacao
+    nome: Ir para o Lote (drill ascendente)
+    como: No rodapé do detalhe da prestação, clicar no botão 'Lote'.
+    promessa: Botão 'Lote' no rodapé do detalhe.
+    rota: /mcdts/lote/{loteId}
+    casos_documento:
+      - CT-03
+    ressalva: Navega para /mcdts/lote/9673174 — confirma que a navegação usa o
+      loteId interno (o mesmo valor que o documento chama 'lote 9673174'), não o
+      'Nº lote' de negócio ('1') mostrado na grelha/detalhe.
+  - id: navegacao-drill-factura
+    tipo: navegacao
+    nome: Ir para a Factura (drill ascendente)
+    como: No rodapé do detalhe da prestação, clicar no botão 'Factura'.
+    promessa: Botão 'Factura' no rodapé do detalhe.
+    rota: /mcdts/factura/{facturaId}
+    casos_documento:
+      - CT-03
+    ressalva: Navega para /mcdts/factura/1036726 — usa o facturaId interno, o mesmo
+      identificador citado no documento como 'factura 1036726', embora esse
+      mesmo valor não funcione no filtro de pesquisa 'Número da Factura' da
+      lista (ver ressalva de filtro-numero-factura).
+  - id: navegacao-voltar
+    tipo: navegacao
+    nome: Voltar à lista
+    como: No rodapé do detalhe da prestação, clicar em 'Voltar'.
+    promessa: Botão 'Voltar' no rodapé do detalhe.
+    casos_documento:
+      - CT-04
+    ressalva: "Testado a partir de uma pesquisa por requisição: 'Voltar' repôs
+      exatamente a URL de pesquisa anterior
+      (?numeroRequisicao=...&pagina=1&tamanho=10), confirmando que os filtros
+      ficam preservados, como o CT-04 espera."
+insumos_necessarios:
+  - descricao: Utilizador de perfil de consulta MCDT em Qualidade, com sessão ativa
+    obtivel: tela
+    razao: Já disponível na sessão usada neste mapeamento (utilizador PRRmanta_dev).
+  - descricao: "Número comercial da factura (ex.: 'FTLFLPNF2025-105') e 'Nº lote' de
+      negócio correspondentes a um facturaId/loteId internos conhecidos"
+    obtivel: bd
+    razao: Os filtros da tela não aceitam os identificadores internos citados no
+      documento (facturaId, loteId); é preciso consultar a BD ou fazer drill a
+      partir de outro registo para obter os valores de negócio equivalentes.
+  - descricao: Registo de prestação MCDT com Área da Prestação preenchida (não nula)
+    obtivel: bd
+    razao: Todos os registos exercitados nesta passagem (convenção 01532M21N) têm
+      Área da Prestação nula na API e '—' na grelha; não foi possível validar o
+      filtro/coluna Área com um valor real.
+  - descricao: Registo de prestação MCDT com Taxa Moderadora > 0
+    obtivel: bd
+    razao: A massa usada tem taxa moderadora 0 em todos os registos, tal como o
+      próprio documento assinala; é preciso procurar massa alternativa para
+      confirmar a formatação de valores não nulos.
+  - descricao: Registo de prestação MCDT com imagem digitalizada associada
+      (guidDocumento preenchido)
+    obtivel: bd
+    razao: O botão 'Ver Prestação' (ver imagem) ficou desabilitado no único registo
+      testado, que tem guidDocumento nulo; sem um registo com documento
+      associado não é possível exercer essa ação.
+  - descricao: Valor real de Nº Linha RSP com mais de 20 carateres, para confirmar
+      se o limite do campo (maxlength=20) é intencional
+    obtivel: bd
+    razao: O valor já existe nos registos correntes (22 carateres observados no
+      detalhe), mas a UI não permite introduzi-lo por completo no filtro; a
+      limitação está no campo, não na disponibilidade do dado.
+casos_sem_accao: []

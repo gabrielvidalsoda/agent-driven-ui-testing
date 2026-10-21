@@ -1,0 +1,501 @@
+documento: consulta-area-prestacao/medicamentos-prestacoes.md
+rota: /medicamentos/prestacoes
+mapeado_em: corridas/consulta-area-prestacao__medicamentos-prestacoes__mapa
+mapeado_contra:
+  ui: origin/develop 2c7a89e, build de 2026-08-27
+  api: jar de origin/develop 99d79ef, construido a 2026-08-27
+accoes:
+  - id: ac-01
+    tipo: filtro
+    nome: Pesquisa de Prestações
+    como: Formulário 'Pesquisa Prestações' no topo do ecrã, com botões
+      Limpar/Pesquisar
+    promessa: 'Mensagem de validação ao pesquisar sem nada preenchido: "Deverá estar
+      preenchido, pelo menos: número da factura; ou data da factura com NIF,
+      código convenção, número de lote ou tipo de lote; ou tipo de lote com
+      número de lote; ou número de receita; ou nº linha RSP." — ou seja, a tela
+      promete impedir pesquisa livre sobre a tabela de 86,4M de registos.'
+    rota: /medicamentos/prestacoes
+    entradas:
+      - campo: Número da Factura
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Data da Factura
+        obrigatorio: false
+        origem_valores: datepicker, formato DD/MM/YYYY
+      - campo: NIF Prestador
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Código Convenção
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Tipo de Lote
+        obrigatorio: false
+        origem_valores: combobox fixo com 22 opções (Normal, Doenças Profissionais,
+          Paramiloidose, Lúpus/Hemofilia/Talassemia/Depranocitose, Pensionistas,
+          Pensionistas c/ regulamentação própria, Convenções bilaterais,
+          Normal+Convenções bilaterais, Manipulados/Prod. Dietéticos, 3º
+          Protocolo Diabetes SNS, Diabetes ADSE, Diabetes Outros Subsistemas,
+          Cuidados Farmacêuticos, Pensionistas Ind. Lanifícios,
+          Ostomia/incontinência, Câmaras expansoras, Asilo/Refugiados, Vítimas
+          de Incêndios, Benefício adicional, e 4 opções sobre receitas sem
+          papel/materializadas com/sem sucesso na validação); pelo menos 4
+          rótulos aparecem com mojibake (ex. "Diabetes ADSE (3Âº Protocolo)",
+          "Cuidados FarmacÃªuticos")
+      - campo: Número do Lote
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Número de Receita
+        obrigatorio: false
+        origem_valores: texto livre; aceita 19 dígitos, aceita prescrição alfanumérica
+          terminada em letra, e tolera espaços à volta do valor
+      - campo: Valor SNS
+        obrigatorio: false
+        origem_valores: texto livre
+      - campo: Nº Linha RSP
+        obrigatorio: false
+        origem_valores: texto livre
+    casos_documento:
+      - CT-01
+      - CT-02
+      - CT-03
+      - CT-09
+      - CT-11
+      - CT-12
+    equivalente_aproximado: true
+    ressalva: "Confirmado: pesquisar sem nenhum critério dispara o alerta acima e
+      não executa a query (CT-12 exato). Confirmado: Número da Receita isolado
+      devolve exatamente o registo esperado, incluindo com espaços à volta e com
+      a prescrição alfanumérica 301100008110821090X (CT-02 exato). Divergência:
+      Número da Factura sozinho (\"E017-1\") devolveu 16.851 resultados de
+      dezenas de prestadores diferentes (o número de factura não é único nem
+      está implicitamente amarrado ao NIF), o que não bate com o cenário do
+      documento de obter só as prestações de uma fatura específica. Não foi
+      possível reproduzir a pesquisa por Tipo de Lote + Número de Lote para o
+      lote 28479554 (o valor 'Normal' devolveu 0 resultados) por não sabermos o
+      código interno correto sem acesso à BD. O campo Valor SNS não consta na
+      mensagem de critérios mínimos, sugerindo que sozinho pode não disparar
+      pesquisa — não confirmado por falta de massa."
+  - id: ac-02
+    tipo: filtro
+    nome: Ordenação das colunas da grelha de resultados
+    como: Clicar no cabeçalho de qualquer coluna da grelha (ex. 'Ordenar por Data
+      Factura')
+    promessa: Cabeçalho anuncia-se como "Ordenar por <coluna>" em 15 das 16 colunas
+      visíveis
+    rota: /medicamentos/prestacoes
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: "Confirmado: clicar em 'Ordenar por Data Factura' adiciona
+      sort=dataFatura,asc à URL e reordena de facto os resultados (a primeira
+      linha passou a ser a fatura mais antiga). Ação não é mencionada em nenhum
+      CT do documento."
+  - id: ac-03
+    tipo: consulta
+    nome: Seleção de registos da grelha
+    como: Faixa "0 itens selecionados" com botão "Limpar seleção" acima de cada
+      tabela (resultados, embalagens, diplomas, erros, reclamações)
+    promessa: Sugere suporte a seleção múltipla de linhas
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: Elemento presente em todas as tabelas do ecrã mas não encontrámos
+      checkboxes clicáveis nas linhas nesta sessão; pode ser funcionalidade
+      planeada e ainda não exposta, ou exigir outro estado. Não confirmado como
+      ação funcional.
+  - id: ac-04
+    tipo: filtro
+    nome: Alterar tamanho de página
+    como: Combobox "Resultados por página" junto à paginação
+    promessa: "Opções fixas: 10, 15, 20, 50"
+    rota: /medicamentos/prestacoes
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: "Confirmado: mudar para 50 manteve o total de 16.851 resultados e
+      ajustou o parâmetro tamanho na resposta. Testado com o conjunto de
+      'E017-1' (16.851 registos globais), não com o lote 28479554 do documento
+      (não localizado)."
+  - id: ac-05
+    tipo: navegacao
+    nome: Paginação dos resultados
+    como: Controlos 'Go to first/previous/next/last page' e números de página por
+      baixo da grelha
+    promessa: Paginação numerada com reticências para grandes volumes (ex. 1686
+      páginas a 10/página, 338 a 50/página)
+    rota: /medicamentos/prestacoes
+    casos_documento:
+      - CT-09
+    equivalente_aproximado: true
+    ressalva: Estrutura de paginação server-side confirmada (contagem total estável
+      entre tamanhos de página), mas não testada especificamente sobre o lote de
+      1.393 receitas do documento (28479554), por não termos conseguido isolar
+      esse lote via os filtros disponíveis.
+  - id: ac-06
+    tipo: exportacao
+    nome: Exportar XLSX
+    como: Botão "Exportar XLSX" acima da grelha de resultados (só ativo quando há
+      resultados)
+    promessa: Rótulo "Exportar XLSX"
+    rota: /medicamentos/prestacoes
+    casos_documento:
+      - CT-10
+    equivalente_aproximado: true
+    ressalva: "Confirmado: gera e transfere um ficheiro real
+      'prestacoes-medicamentos.xlsx' com resultados que incluem receitas de 19
+      dígitos e a prescrição alfanumérica 301100008110821090X. Não abrimos o
+      ficheiro para confirmar ausência de truncatura/notação científica (fora do
+      alcance desta sessão de browser)."
+  - id: ac-07
+    tipo: navegacao
+    nome: Ver detalhe da prestação
+    como: Botão "Ver detalhe" na última coluna de cada linha da grelha de resultados
+    promessa: "Abre uma página de detalhe com duas tabs: 'Detalhe Prescrição' e
+      'Prestação'"
+    rota: /medicamentos/prestacoes/{id}
+    casos_documento:
+      - CT-04
+      - CT-05
+      - CT-06
+      - CT-07
+    equivalente_aproximado: false
+    ressalva: Confirmado para a prestação 7956833437 (receita 8010000005762935404) e
+      para 7956833431 (receita 301100008110821090X), ambas do lote/fatura do
+      drill do documento.
+  - id: ac-08
+    tipo: consulta
+    nome: Tab 'Detalhe Prescrição'
+    como: Tab "Detalhe Prescrição" na página de detalhe da prestação
+    promessa: "Mostra: Número Factura, Data Factura, Número de Lote, Tipo de Lote,
+      Chave Prescrição, Data Prescrição, Ind. BDNP, Ind. Electrónico, Número da
+      Receita, Tipo de Receita, Número Via, Excepção, Cód./Nome Local de
+      Prescrição, Código/Nome Prescritor, Entidade Responsável, Utente,
+      Beneficiário, Regime, País/Número Migrante, Guid Doc. Prescrição, Ind.
+      Doente Prof; bloco 'Localização dos arquivos' (Caixa/Pasta/Lugar/Estado da
+      Caixa); totais comunicados e apurados (PVP/PVU/Comp./Fee); tabela
+      'Embalagens (Prescrição)' (Nº Linha, Nº Registo, Nome, DCI, Dimensão,
+      Dosagem, Forma, Quantidade); tabela 'Diplomas'; tabela 'Erros'"
+    rota: /medicamentos/prestacoes/{id}
+    casos_documento:
+      - CT-04
+      - CT-06
+    equivalente_aproximado: true
+    ressalva: "RGPD respeitado: campo 'Utente' aparece sempre vazio (—), sem nome de
+      utente em lado nenhum; 'Beneficiário' mostra apenas um número. Nome/Código
+      do Prescritor e Local de Prescrição também vieram vazios no registo
+      testado, não confirmámos com um registo que os tenha preenchidos.
+      'Diplomas' mostrou o estado vazio elegante ('Sem diplomas para esta
+      prescrição'); 'Erros' mostrou 'Sem erros de conferência registados' — só
+      testámos o caminho vazio, não um registo com erros reais."
+  - id: ac-09
+    tipo: consulta
+    nome: Tab 'Prestação'
+    como: Tab "Prestação" na página de detalhe da prestação
+    promessa: "Mostra: NIF Prestador, Cód./Desc. Convenção, Número Factura, Data
+      Factura, Número de Lote, Tipo de Lote, Chave Prestação, Número da Receita,
+      Data Prestação, Tem Data Matrix?, Ind. Direito Opção, Estado, Guid Doc.
+      Prestação; totais comunicados e apurados (PVP/PVU/Comp./Fee) + Total BAS
+      PNB + Total SNS Apurado; tabela 'Embalagens (Prestação)' com botão 'Ver
+      linha' por registo (Nº Linha, Linha Prestação, Nome, DCI, Dosagem,
+      Dimensão, Quantidade, Just. Tec.); tabela 'Reclamações'; tabela 'Erros'"
+    rota: /medicamentos/prestacoes/{id}
+    casos_documento:
+      - CT-03
+      - CT-05
+      - CT-06
+      - CT-07
+    equivalente_aproximado: true
+    ressalva: "Divergências relevantes face ao documento: (1) 'Estado' mostra um
+      código cru não traduzido (ex. \"13\"), que nem sequer consta do
+      subconjunto de estados citado no documento (11 RECP, 12 CONF, 24 CCE, 25
+      CSE) — não há tradução para descrição do catálogo TRCFESTADO nem indicação
+      de origem da conferência (automática/manual); (2) a tabela 'Embalagens
+      (Prestação)' tem só 8 colunas de dados (Nº Linha, Linha Prestação, Nome,
+      DCI, Dosagem, Dimensão, Quantidade, Just. Tec.), muito aquém das ~28
+      colunas de valores comunicados/apurados por embalagem descritas no
+      documento (não há PVP/PVU/Fee/SNS por linha, nem PRef, nem PVP5max
+      visíveis); (3) 'Tem Data Matrix?' e a maioria dos campos de identificação
+      vieram vazios no registo testado. Comparticipação a 100% (CT-03)
+      confirmada na grelha para a prestação 7956833435 (PVP=Comp=127,48), sem
+      qualquer destaque visual diferenciado."
+  - id: ac-10
+    tipo: consulta
+    nome: Ver Prescrição / Ver Prestação (visualizador de documento digitalizado)
+    como: Botões "Ver Prescrição" (tab Prescrição) e "Ver Prestação" (tab Prestação)
+    promessa: Abre um visualizador modal de imagem com zoom
+      (diminuir/aumentar/repor), rotação a 90° para a esquerda/direita, e botão
+      "Guardar imagem"
+    rota: /medicamentos/prestacoes/{id}
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: Ambos os visualizadores abriram (modal com título 'Prescrição' /
+      'Prestação'), mas cada clique gerou um erro de consola do browser,
+      sugerindo que a imagem/ficheiro digitalizado não carregou nesta massa de
+      ambiente. O botão 'Guardar imagem' (exportação da imagem) não foi
+      acionado. Não referido em nenhum CT do documento, apesar de o documento
+      falar em 'Data Matrix' na tab Prestação.
+  - id: ac-11
+    tipo: navegacao
+    nome: Ir para Factura
+    como: Botão "Ir para Factura" presente em ambas as tabs do detalhe da prestação
+    promessa: Navega para o detalhe da fatura mãe
+    rota: /medicamentos/factura/{id}
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: false
+    ressalva: "Confirmado: a partir da prestação 7956833437 navegou exatamente para
+      /medicamentos/factura/603530 (fatura E017-1, tal como o documento previa).
+      A segunda metade do CT-08 — 'Detalhe do processamento' (execução de
+      conferência que processou a prestação) — NÃO existe em lado nenhum da
+      página de detalhe da prestação; os únicos botões de rodapé são 'Voltar',
+      'Alterar' e 'Lote'. Ver casos_sem_accao."
+  - id: ac-12
+    tipo: navegacao
+    nome: Lote
+    como: Botão "Lote" no rodapé da página de detalhe da prestação
+    promessa: Navega para o detalhe do lote da prestação
+    rota: /medicamentos/lote/{id}
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: "Confirmado: a partir da prestação 7956833437 navegou para
+      /medicamentos/lote/28479552 (o lote do drill do documento). Ação existente
+      na tela mas não mencionada em nenhum CT — o documento só cita 'Facturas de
+      Medicamentos' e o 'detalhe da execução de conferência' como ecrãs
+      relacionados, não 'Lotes'."
+  - id: ac-13
+    tipo: consulta
+    nome: Ver linha (embalagem da prestação)
+    como: Botão "Ver linha" na primeira coluna de cada linha da tabela 'Embalagens
+      (Prestação)'
+    promessa: Sugere abrir detalhe da linha de embalagem dispensada
+    rota: /medicamentos/prestacoes/{id}
+    casos_documento:
+      - CT-05
+    equivalente_aproximado: false
+    ressalva: Clicado em duas linhas diferentes; nenhum modal, painel ou navegação
+      percetível resultou do clique nesta sessão. Ação presente na tela mas
+      comportamento não confirmado/aparentemente sem efeito.
+  - id: ac-14
+    tipo: edicao
+    nome: Alterar prestação (número de receita/via)
+    como: Botão "Alterar" no rodapé da página de detalhe da prestação, abre modal
+      "Alteração de prestações"
+    promessa: Modal com texto "Para submeter uma alteração, preencha os campos
+      abaixo", campos Número da receita e Número da Via, checkbox "Confirmo o
+      número de prescrição", bloco read-only "Dados actuais da prestação" (N.
+      Receita Actual, N. Via Actual, N. Factura, N. Lote, Convenção, Estado,
+      Utente, Data Prestação) e botões Cancelar/Actualizar
+    rota: /medicamentos/prestacoes/{id}
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: "Achado central desta exploração: o documento descreve este ecrã como
+      'em modo estritamente de leitura' e todos os 12 cenários assumem que não
+      há escrita. Esta ação de edição existe de facto na UI e apresenta um botão
+      'Actualizar' que submeteria uma alteração real (não acionado, por regra de
+      não submeter nada). Não é coberta por nenhum CT do documento porque o
+      documento parte do princípio de que o ecrã não permite alterações."
+  - id: ac-15
+    tipo: navegacao
+    nome: Menu lateral — ecrãs irmãos de Medicamentos e outras áreas de prestação
+    como: Submenu 'Consulta por Área de Prestação > Medicamentos' com itens Facturas
+      / Lotes / Prestações, e submenus equivalentes para MCDT, Cuidados
+      Respiratórios Domiciliários, Cuidados Continuados, Hemodiálise, Unidades
+      Terapêuticas de Sangue, Tratamentos Termais, Saúde Oral, Vacinas, Dispensa
+      em Proximidade, Programa Troca de Seringas
+    promessa: Rótulos dos itens de menu (Facturas, Lotes, Prestações, Prestação IPATIMUP)
+    casos_documento: []
+    equivalente_aproximado: false
+    ressalva: Apenas navegação de menu observada (não aberta cada tela irmã em
+      detalhe); 'Faturação de Migrantes' aparece como '(em breve)', não
+      clicável.
+  - id: ir-para-factura-prestacao
+    tipo: navegacao
+    nome: Ir para Factura
+    como: No detalhe de uma prestação (tab Detalhe Prescrição ou tab Prestação),
+      clicar no botão 'Ir para Factura'
+    promessa: Abre o detalhe da fatura mãe da prestação, pela chave interna
+    rota: /medicamentos/factura/{idFactura}
+    casos_documento:
+      - CT-08
+    equivalente_aproximado: true
+    ressalva: "Cobre só metade do CT-08. Verificado com a prestação 7956833439
+      (fatura E017-1, lote 28479552): o botão navegou corretamente para
+      /medicamentos/factura/603530, batendo com a fatura mãe esperada (603530,
+      E017-1). Já a segunda navegação do cenário, 'Detalhe do processamento'
+      (execução de conferência que processou a prestação), não foi encontrada em
+      nenhum dos três locais explorados — nem como botão, ícone, nem como efeito
+      de outra ação (o botão 'Lote' leva ao lote, não a uma execução de
+      conferência)."
+insumos_necessarios:
+  - descricao: Prestação real (por lote/fatura/receita conhecidos) para localizar
+      registos sem percorrer os 86,4M de linhas da tabela
+    obtivel: bd
+    razao: A tela exige sempre um critério mínimo (número da factura, ou data+outro
+      campo, ou tipo+número de lote, ou número de receita, ou nº linha RSP); não
+      há forma de 'listar tudo' ou explorar por tentativa a partir do próprio
+      ecrã.
+  - descricao: Prestação com erros de conferência registados, para ver a secção
+      'Erros' preenchida (código+descrição do catálogo TRCFERROS)
+    obtivel: bd
+    razao: Todas as prestações abertas nesta sessão mostraram o estado vazio ('Sem
+      erros de conferência registados'); precisaria de uma query dirigida a
+      TRCFERROS/TDCFPRESTACAOMED para achar um caso com erro real.
+  - descricao: Prestação com reclamação associada, para ver a secção 'Reclamações'
+      preenchida e a ligação ao módulo de Reclamações
+    obtivel: nao
+    razao: Mesmo obtendo o dado em BD, quase todas as funcionalidades do menu
+      'Reclamações' aparecem marcadas '(em breve)' nesta build, pelo que o
+      destino da ligação pode simplesmente não existir ainda no ambiente.
+  - descricao: Combinação correta de Tipo de Lote + Número de Lote para o lote
+      28479554 (1.393 receitas), usada para testar paginação de facto sobre esse
+      lote
+    obtivel: bd
+    razao: Tentámos 'Normal' + 28479554 e devolveu 0 resultados; o ecrã não expõe
+      qual dos 22 tipos de lote corresponde ao registo, só uma query resolve
+      isto.
+  - descricao: Ficheiro/imagem digitalizada real de prescrição e de prestação (Data
+      Matrix), para o visualizador 'Ver Prescrição'/'Ver Prestação' carregar sem
+      erro
+    obtivel: nao
+    razao: Em ambas as tentativas desta sessão o visualizador abriu mas gerou um
+      erro de consola ao carregar a imagem, sugerindo que o arquivo digital não
+      está disponível nesta massa/ambiente de desenvolvimento.
+  - descricao: Confirmação de negócio/perfil sobre o botão 'Alterar' (edição de
+      número de receita/via) num ecrã descrito como só-leitura
+    obtivel: nao
+    razao: Depende de esclarecimento do dono do produto sobre se esta ação deveria
+      existir aqui e que perfil a deveria ver; não é algo que se obtenha só com
+      dados de BD ou com outro ecrã da aplicação.
+  - descricao: Prestação com Nº Linha RSP conhecido, para testar esse filtro isoladamente
+    obtivel: bd
+    razao: Não localizámos nenhum valor de Nº Linha RSP nos registos consultados
+      nesta sessão; precisaria de uma query específica para obter um valor real
+      de teste.
+casos_sem_accao: []
+repescagem:
+  feita_em: 2026-08-27
+  alvos:
+    - alvo: "CT-08: navegação 'Ir para Fatura' e 'Detalhe do processamento' a partir
+        do detalhe da prestação"
+      procurei:
+        - Botão 'Ir para Factura' na tab 'Detalhe Prescrição' e na tab
+          'Prestação' do detalhe de uma prestação real do lote 28479552
+          (prestação 7956833439, fatura E017-1)
+        - "Um botão, ícone ou link rotulado 'Detalhe do processamento' (ou
+          equivalente: 'Ver processamento', 'Execução de conferência', 'Detalhe
+          da conferência') na tab 'Detalhe Prescrição'"
+        - O mesmo na tab 'Prestação', incluindo o botão 'Ver linha' de cada
+          embalagem (abre apenas os detalhes da própria linha, sem navegação)
+        - "O mesmo no detalhe do Lote (28479552), acedido pelo botão 'Lote' no
+          rodapé do detalhe da prestação — botões presentes: 'Ver Lote' e 'Ir
+          para Factura', mais o botão 'Factura' no rodapé"
+        - Qualquer ícone sem rótulo ou menu de contexto junto ao campo 'Estado'
+          (valor '13') que pudesse abrir a execução de conferência
+      onde:
+        - http://localhost:4174/medicamentos/prestacoes/7956833439 (tab Detalhe
+          Prescrição)
+        - http://localhost:4174/medicamentos/prestacoes/7956833439 (tab
+          Prestação)
+        - http://localhost:4174/medicamentos/lote/28479552 (tab Detalhe do Lote)
+      resultado: encontrado
+      accao: ir-para-factura-prestacao
+      captura: "ct08-prescricao-tab-ir-para-factura-alterar.png (botão 'Ir para
+        Factura' visível); ct08-ir-para-factura-destino.png (destino:
+        /medicamentos/factura/603530)"
+    - alvo: Prestação com reclamação associada, para ver a secção 'Reclamações'
+        preenchida e a ligação ao módulo de Reclamações
+      procurei:
+        - A secção 'Reclamações' na tab Prestação do detalhe, em 3 prestações
+          distintas do mesmo lote conhecido (7956833439 PVP 6,68; 7956833435 PVP
+          127,48 comparticipação 100%; 7956833429 PVP 17,20), à procura de uma
+          com registos preenchidos (não vazia)
+        - Um filtro de pesquisa por reclamação/decisão/ID notificação no ecrã de
+          pesquisa de Prestações — não existe nenhum campo desse tipo no
+          formulário
+        - O ecrã irmão 'Saúde Oral > Prestações' (mesma secção de menu), para
+          ver se a pesquisa por NIF Prestador 501137688 devolvia alguma
+          prestação cujo detalhe desse acesso a reclamações por outro caminho —
+          pesquisa devolveu 0 resultados, sem massa disponível para comparar
+        - Menus 'Reclamações' e 'Conferência > Aprovações Pendentes' na
+          navegação lateral, para ver se davam acesso a uma lista de reclamações
+          que apontasse de volta a uma prestação
+      onde:
+        - http://localhost:4174/medicamentos/prestacoes/7956833439 (tab
+          Prestação, secção Reclamações)
+        - http://localhost:4174/medicamentos/prestacoes/7956833435 (tab
+          Prestação, secção Reclamações)
+        - http://localhost:4174/medicamentos/prestacoes/7956833429 (tab
+          Prestação, secção Reclamações)
+        - http://localhost:4174/saude-oral/prestacoes (pesquisa por NIF
+          Prestador 501137688)
+        - Menu lateral 'Reclamações' e submenu 'Conferência'
+      resultado: nao_existe
+      accao: null
+      nota: "Achado novo relevante: a secção 'Reclamações' do detalhe da prestação NÃO
+        está em '(em breve)' — é uma tabela real, com cabeçalho (Tipo, ID
+        Notificação, Cód. Erro, Desc. Erro, Valor Apurado, Decisão) e faz uma
+        pesquisa efetiva ao backend, devolvendo 'A pesquisa não retornou
+        resultados' quando vazia (confirmado nas 3 prestações testadas, ver
+        captura). Isto sugere que a secção funcionaria e mostraria dados se
+        existisse uma prestação com reclamação associada — mas não encontrei
+        nenhuma nesta sessão. Sem acesso a SQL nesta sessão (só tinha o browser)
+        não consegui localizar por BD uma prestação com reclamação, ao contrário
+        da primeira passagem que diz tê-la obtido em BD. O ecrã irmão de Saúde
+        Oral não tem massa para o mesmo prestador, pelo que não serviu de
+        atalho. A ligação ao módulo de Reclamações continua por confirmar: todos
+        os itens desse menu aparecem '(em breve)', reforçando a hipótese
+        original de que o destino ainda não existe no ambiente."
+    - alvo: Ficheiro/imagem digitalizada real de prescrição e de prestação (Data
+        Matrix), para o visualizador 'Ver Prescrição'/'Ver Prestação' carregar
+        sem erro
+      procurei:
+        - Botão 'Ver Prescrição' no detalhe da prescrição de duas prestações
+          diferentes (7956833439, chave 8010000006351578902; e via navegação
+          para a fatura E017-1/603530), para ver se o documento carregava
+        - Erros de consola após abrir cada visualizador, para confirmar se é
+          falha de massa (arquivo em falta) ou de ambiente (serviço em baixo)
+      onde:
+        - http://localhost:4174/medicamentos/prestacoes/7956833439 (botão Ver
+          Prescrição)
+        - http://localhost:4174/medicamentos/factura/603530 (carregamento
+          automático de documento associado)
+      resultado: nao_existe
+      accao: null
+      nota: "Reconfirmado com um documento diferente do da primeira passagem (GUID
+        {5633B148-AC81-4A73-8CAE-27562652CDAF}_160126_C, e também
+        {fcd166f0-c086-4a90-ae31-d0a53bd64361}_050126_A na página da fatura): em
+        ambos os casos a chamada a /ccmsns/api/documentos/{guid} devolve 502 Bad
+        Gateway. Um 502 (não um 404) aponta para uma falha do serviço/gateway de
+        documentos em si, não apenas para 'este ficheiro não existe' — reforça a
+        hipótese da primeira passagem de que é um problema de ambiente/infra
+        desta massa de desenvolvimento, e não algo que uma prestação diferente
+        resolvesse. O visualizador abre normalmente (modal com controlos de
+        zoom/rotação/download) mas a imagem nunca chega a carregar — ver
+        captura."
+    - alvo: Confirmação de negócio/perfil sobre o botão 'Alterar' (edição de número de
+        receita/via) num ecrã descrito como só-leitura
+      procurei:
+        - Reconfirmação visual de que o botão 'Alterar' está mesmo presente no
+          rodapé do detalhe da prestação (tab Detalhe Prescrição), com captura
+        - Um texto de ajuda, tooltip ou indicação de perfil junto ao botão que
+          esclarecesse a que perfil se destina ou porque existe num ecrã de
+          consulta
+        - Um ecrã equivalente na Saúde Oral (mesma secção de menu) para comparar
+          se o padrão 'Alterar' num ecrã de consulta se repete — sem massa
+          disponível para chegar a um detalhe de prestação nesse domínio e
+          comparar
+      onde:
+        - http://localhost:4174/medicamentos/prestacoes/7956833439 (rodapé do
+          detalhe, tab Detalhe Prescrição e tab Prestação)
+        - http://localhost:4174/saude-oral/prestacoes (sem resultados de
+          pesquisa para comparar)
+      resultado: nao_existe
+      accao: null
+      nota: O botão 'Alterar' está de facto presente e visível (ver captura) — mas
+        isso já era sabido pela primeira passagem; o que falta não é encontrar o
+        botão, é uma confirmação de negócio sobre a sua intenção/perfil-alvo, e
+        essa informação não existe em lado nenhum da aplicação para eu
+        'encontrar' por outro caminho — não há tooltip, texto de ajuda, nem
+        indicação de perfil junto ao botão. Não há também um ecrã irmão com
+        massa disponível para comparar o padrão. Mantenho como dependente de
+        esclarecimento do dono do produto, como a primeira passagem já tinha
+        concluído.

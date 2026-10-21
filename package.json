@@ -1,0 +1,39 @@
+﻿{
+  "name": "agent-driven-ui-testing",
+  "version": "1.0.0",
+  "description": "This README would normally document whatever steps are necessary to get your application up and running.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "correr": "node src/cli/correr-documento.mjs",
+    "correr-sessao": "node src/cli/correr-sessao.mjs",
+    "mapear": "node src/cli/mapear-documento.mjs",
+    "mapear-sessao": "node src/cli/mapear-sessao.mjs",
+    "demo": "node scripts/demo.mjs",
+    "relatorio": "node src/cli/relatorio.mjs",
+    "insumos": "node src/cli/insumos.mjs",
+    "de-para": "node src/cli/de-para.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://danielschutlz@bitbucket.org/morpheustecnologia/UI-automated-tests.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://bitbucket.org/morpheustecnologia/UI-automated-tests/issues"
+  },
+  "homepage": "https://bitbucket.org/morpheustecnologia/UI-automated-tests#readme",
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}
